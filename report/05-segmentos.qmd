@@ -1,9 +1,200 @@
 ---
 title: "Segmentos"
+description: "Perfil, nombre comercial y recomendaciones de marketing de cada segmento."
 ---
 
-Perfiles, nombres comerciales y recomendaciones de marketing por segmento.
+```{python}
+#| include: false
+import json
+
+import pandas as pd
+from IPython.display import display
+
+from segmentacion.config import get_config
+from segmentacion.segments.naming import ARCHETYPES, archetype
+from segmentacion.segments.recommendations import recommendations_for
+from segmentacion.viz import segment_charts as sc
+from segmentacion.viz.fmt import num, pct
+from segmentacion.viz.theme import enable_theme
+
+enable_theme()
+config = get_config()
+profiles = pd.read_csv(config.segment_profiles_file)
+scores = pd.read_csv(config.archetype_scores_file)
+tests = pd.read_csv(config.segment_tests_file).set_index("variable")
+robust = json.loads(config.naming_robustness_file.read_text(encoding="utf-8"))
+by_name = profiles.set_index("segment")
+vip = by_name.loc["VIP"]
+risk = by_name.loc["En riesgo de abandono"]
+deals = by_name.loc["Cazadores de ofertas"]
+new = by_name.loc["Nuevos con potencial"]
+weakest = profiles.loc[profiles["margin"].idxmin()]
+```
+
+Los cinco clústeres de K-Means (ver [Clustering](04-clustering.qmd)) se convierten aquí en
+segmentos de negocio: un **perfil** (cómo es el centroide), un **nombre** asignado con reglas
+explícitas, sus **KPIs** en unidades reales y **2–3 acciones** de marketing con el indicador que
+mide su efecto.
+
+## Panorama
+
+```{python}
+#| label: fig-perfil-segmentos
+#| fig-cap: "Centroide de cada segmento en z-score. La tendencia de ingreso (T) no entró al modelo: se añade para el perfilado."
+sc.centroid_heatmap(profiles)
+```
+
+```{python}
+#| label: fig-tamano-valor
+#| fig-cap: "Peso de cada segmento en número de socios y en ingreso."
+sc.size_value_chart(profiles)
+```
+
+::: {.insight}
+**El valor está muy concentrado.** Los **VIP** son el `{python} pct(vip["pct"])` de los socios
+pero aportan el `{python} pct(vip["revenue_share"])` del ingreso: su ingreso mediano
+(`{python} num(vip["revenue_median"])`) es más de dos veces el de los **Nuevos con potencial**
+(`{python} num(new["revenue_median"])`), el siguiente segmento. En el otro extremo, **En riesgo de
+abandono** y **Cazadores de ofertas** suman el
+`{python} pct(risk["pct"] + deals["pct"])` de los socios y solo el
+`{python} pct(risk["revenue_share"] + deals["revenue_share"])` del ingreso. Ambos llevan meses
+sin volar, pero no se parecen: unos pagaban tarifas casi completas (C mediano
+`{python} num(risk["C_median"], 2)`) y los otros compran con mucho descuento
+(`{python} num(deals["C_median"], 2)`). Por eso necesitan acciones distintas.
+:::
+
+## Cómo se asignan los nombres
+
+Cada nombre es un **arquetipo** con pesos sobre las features del centroide (en z-score). La
+puntuación de un clúster para un arquetipo es el producto de su centroide por esos pesos, y los
+nombres se reparten con una asignación óptima (algoritmo húngaro) que maximiza la puntuación
+total: **ningún nombre se repite**. Las reglas están en `src/segmentacion/segments/naming.py`.
+
+```{python}
+#| label: tbl-reglas
+#| tbl-cap: "Regla de cada arquetipo y puntuación de cada segmento (la asignada, resaltada)."
+table = scores.set_index("assigned")[[a.name for a in ARCHETYPES]]
+table = table.loc[list(profiles["segment"])]
+table.index.name = "Segmento ↓ · Arquetipo →"
+table.columns = [f"{a.name} ({a.rule})" for a in ARCHETYPES]
+
+
+def highlight(frame):
+    styles = pd.DataFrame("", index=frame.index, columns=frame.columns)
+    for i, name in enumerate(frame.index):
+        styles.iloc[i, list(profiles["segment"]).index(name)] = "background-color: #2a78d633"
+    return styles
+
+
+table.style.format(lambda v: num(v, 2)).apply(highlight, axis=None)
+```
+
+::: {.insight}
+Cada segmento queda con el arquetipo para el que mejor puntúa. La asignación más ajustada es la
+de **`{python} weakest["segment"]`** (margen de `{python} num(weakest["margin"], 2)` sobre su
+siguiente mejor opción): son socios activos que se parecen en parte a los VIP, pero con
+menos antigüedad y la mitad de vuelos.
+
+**Los nombres son robustos.** Al multiplicar cada peso por un factor aleatorio de ±`{python} pct(robust["perturbation_scale"], 0)`
+(`{python} num(robust["perturbation_runs"])` repeticiones), la asignación es la misma en el
+`{python} pct(robust["perturbation_agreement"], 0)` de los casos. Y al reentrenar K-Means con
+`{python} robust["seeds"]` semillas distintas y nombrar sus clústeres con las mismas reglas, al
+menos el `{python} pct(robust["seed_name_agreement_min"])` de los socios conserva su nombre. La hipótesis inicial del plan «Dormidos / bajo valor» se
+renombró a **Veteranos ocasionales**: ese grupo vuela poco pero no está inactivo (su recencia es
+la típica del programa).
+:::
+
+## ¿Los segmentos difieren en valor real?
+
+Se contrastan con variables que **no entraron al modelo**. Con más de 60.000 socios casi
+cualquier diferencia es estadísticamente significativa, así que lo que importa es el **tamaño del
+efecto**: V de Cramér para variables categóricas y ε² de Kruskal-Wallis para numéricas (ambos de
+0 a 1).
+
+```{python}
+#| label: tbl-pruebas
+#| tbl-cap: "Validación externa de los segmentos."
+labels = {
+    "FFP_TIER": "Nivel del programa (FFP_TIER)",
+    "GENDER": "Género",
+    "revenue_total": "Ingreso total",
+    "revenue_trend": "Tendencia de ingreso",
+    "AGE": "Edad",
+}
+view = tests.rename(index=labels)[
+    ["test", "statistic", "dof", "p_value", "effect_name", "effect", "magnitude"]
+]
+view.columns = ["Prueba", "Estadístico", "gl", "p-valor", "Efecto", "Valor", "Magnitud"]
+view.index.name = None
+view.style.format(
+    {
+        "Estadístico": lambda v: num(v),
+        "p-valor": lambda v: "< 0,001" if v < 0.001 else num(v, 3),
+        "Valor": lambda v: num(v, 3),
+    }
+)
+```
+
+::: {.insight}
+**Sí, y sobre todo en ingreso:** el segmento explica el
+`{python} pct(tests.loc["revenue_total", "effect"], 0)` de la variabilidad (en rangos) del
+ingreso total, un efecto **grande** aunque el ingreso no se usó para segmentar. La asociación con
+el **nivel del programa** es mediana (V = `{python} num(tests.loc["FFP_TIER", "effect"], 2)`):
+el `{python} pct(vip["elite_pct"], 0)` de los VIP está en los niveles altos, frente a menos del
+`{python} pct(profiles.loc[profiles["segment"] != "VIP", "elite_pct"].max(), 0)` en el resto.
+La **tendencia de ingreso** tiene un efecto pequeño en conjunto (ε² =
+`{python} num(tests.loc["revenue_trend", "effect"], 3)`, casi mediano) porque solo un segmento
+cae con fuerza: **En riesgo de abandono**, con una tendencia mediana de
+`{python} num(risk["trend_median"], 2)`. Edad y género apenas difieren (efectos pequeños): los
+segmentos se distinguen por **comportamiento**, no por demografía.
+:::
+
+## Fichas de segmento
+
+```{python}
+#| output: asis
+def kpi_table(row):
+    return "\n".join(
+        [
+            "| Indicador | Valor |",
+            "|---|---|",
+            f"| Socios | {num(row['members'])} ({pct(row['pct'])}) |",
+            f"| % del ingreso total | {pct(row['revenue_share'])} |",
+            f"| Ingreso mediano por socio | {num(row['revenue_median'])} |",
+            f"| Socios con caída fuerte de ingreso | {pct(row['falling_pct'], 0)} |",
+            f"| Vuelos · km (medianas) | {num(row['F_median'])} · {num(row['M_median'])} |",
+            f"| Meses sin volar · antigüedad (medianas) | {num(row['R_median'], 1)} · "
+            f"{num(row['L_median'], 0)} |",
+            f"| Descuento medio C (mediana) | {num(row['C_median'], 2)} |",
+            f"| En niveles altos del programa | {pct(row['elite_pct'])} |",
+            f"| Edad mediana · % mujeres | {num(row['age_median'])} · "
+            f"{pct(row['female_pct'], 0)} |",
+        ]
+    )
+
+
+print("::: {.panel-tabset}\n")
+for _, row in profiles.iterrows():
+    name = row["segment"]
+    print(f"## {name}\n")
+    print(f"*{archetype(name).description}*\n")
+    print(f"**Regla:** {archetype(name).rule}\n")
+    display(sc.segment_profile_chart(profiles, name))
+    print()
+    print(kpi_table(row) + "\n")
+    print("**Acciones recomendadas**\n")
+    print("| Acción | KPI para medirla |")
+    print("|---|---|")
+    for rec in recommendations_for(name):
+        print(f"| {rec.action} | {rec.kpi} |")
+    print()
+print(":::\n")
+```
 
 ::: {.callout-note}
-En construcción (Fase 9).
+## Cómo usar las recomendaciones
+Son hipótesis de partida. Cada acción debería lanzarse como experimento, con un **grupo de
+control** dentro del segmento, para medir su efecto real con el KPI indicado. Los socios marcados
+como atípicos por DBSCAN (ver [Clustering](04-clustering.qmd)) conviene revisarlos antes de
+cualquier campaña masiva.
 :::

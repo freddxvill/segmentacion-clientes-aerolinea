@@ -39,3 +39,4 @@ format:
     toc-title: "En esta página"
     code-fold: true
     code-summary: "Ver código"
+    include-after-body: _tabs-resize.html

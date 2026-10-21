@@ -58,3 +58,13 @@ def test_projection_params_loaded_from_yaml():
     assert projection.tsne_perplexities == (30, 50)
     assert projection.trust_sample_size <= projection.tsne_sample_size
     assert config.tsne_file.parent == config.paths.processed_dir
+
+
+def test_segment_artifacts_live_in_processed_dir():
+    config = get_config()
+    for path in (
+        config.segment_profiles_file,
+        config.archetype_scores_file,
+        config.segment_tests_file,
+    ):
+        assert path.parent == config.paths.processed_dir

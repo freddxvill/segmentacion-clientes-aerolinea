@@ -103,3 +103,17 @@ def test_kmeans_stability_meets_main_criterion(scaled_features):
     seeds = range(CONFIG.modeling.stability_seeds)
     pairs = stability_ari(scaled_features, CONFIG.k_selection.chosen_k, seeds)
     assert pairs["ari"].mean() >= CONFIG.quality.min_stability_ari
+
+
+@pytest.mark.skipif(
+    not CONFIG.segment_profiles_file.exists(), reason="Ejecuta `uv run poe segments`."
+)
+def test_segments_differ_in_real_revenue():
+    # Criterio de éxito (§9): diferencias significativas de ingreso entre segmentos, con un
+    # tamaño de efecto relevante (el ingreso no entró al modelo).
+    tests = pd.read_csv(CONFIG.segment_tests_file).set_index("variable")
+    assert tests.loc["revenue_total", "p_value"] < 0.001
+    assert tests.loc["revenue_total", "magnitude"] == "grande"
+    profiles = pd.read_csv(CONFIG.segment_profiles_file)
+    assert profiles["segment"].is_unique
+    assert 4 <= len(profiles) <= 6

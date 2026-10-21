@@ -72,6 +72,19 @@ def test_pipeline_end_to_end_on_fixture(tmp_config, flight_csv, capsys):
     projection = json.loads(tmp_config.projection_metrics_file.read_text(encoding="utf-8"))
     assert all(0 <= v <= 1 for v in projection["trustworthiness"].values())
 
+    segments = pd.read_parquet(tmp_config.segments_file)
+    names = segments.groupby("cluster")["segment"].first()
+    assert names.is_unique and len(names) == k
+    profiles = pd.read_csv(tmp_config.segment_profiles_file)
+    assert profiles["pct"].sum() == pytest.approx(1)
+    assert {"z_L", "z_T", "revenue_share", "margin"} <= set(profiles.columns)
+    tests = pd.read_csv(tmp_config.segment_tests_file)
+    assert tests["effect"].between(0, 1).all()
+    assert len(pd.read_csv(tmp_config.archetype_scores_file)) == k
+    robustness = json.loads(tmp_config.naming_robustness_file.read_text(encoding="utf-8"))
+    assert 0 <= robustness["perturbation_agreement"] <= 1
+    assert 0 <= robustness["seed_name_agreement_min"] <= robustness["seed_name_agreement_mean"] <= 1
+
 
 def test_features_step_requires_clean_file(tmp_config, capsys):
     assert main(["--step", "features"], config=tmp_config) == 1

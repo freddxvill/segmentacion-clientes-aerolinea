@@ -29,6 +29,7 @@ from segmentacion.models.k_selection import (
 )
 from segmentacion.models.kmeans import (
     fit_kmeans,
+    load_model,
     save_model,
     stability_ari,
     subsample_stability,
@@ -43,6 +44,19 @@ from segmentacion.projection.reduce import (
     neighborhood_preservation,
     pca_project,
     tsne_project,
+)
+from segmentacion.segments.naming import (
+    archetype_scores,
+    assignment_margin,
+    name_segments,
+    ordered_segments,
+    perturbation_agreement,
+)
+from segmentacion.segments.profile import (
+    association_tests,
+    centroids_z,
+    segment_kpis,
+    trend_z,
 )
 
 
@@ -345,6 +359,84 @@ def run_projection(config: Config) -> dict:
     return metrics
 
 
+def run_segments(config: Config) -> dict:
+    """Fase 9: centroides en z-score, nombres, KPIs y pruebas estadísticas por segmento."""
+    if not config.kmeans_file.exists():
+        raise FileNotFoundError(f"No existe {config.kmeans_file}. Ejecuta `uv run poe cluster`.")
+    kmeans = load_model(config.kmeans_file)
+    segments = pd.read_parquet(config.segments_file)
+    lrfmc = pd.read_parquet(config.lrfmc_file)[list(LRFMC_COLUMNS)]
+    profile = pd.read_parquet(config.profile_file)
+    features = pd.read_parquet(config.scaled_file)[list(LRFMC_COLUMNS)]
+    labels = segments["cluster"].to_numpy()
+
+    centroids = centroids_z(kmeans.cluster_centers_, LRFMC_COLUMNS)
+    centroids = centroids.join(trend_z(labels, profile["revenue_trend"]))
+    names = name_segments(centroids)
+    scores = archetype_scores(centroids)
+    margins = assignment_margin(centroids, names)
+    kpis = segment_kpis(labels, lrfmc, profile)
+    tests = association_tests(labels, profile)
+
+    order = ordered_segments(names)
+    table = (
+        centroids.add_prefix("z_")
+        .join(kpis)
+        .join(margins)
+        .assign(segment=lambda d: d.index.map(names))
+        .reset_index()
+    )
+    table["order"] = table["segment"].map(order.index)
+    table = table.sort_values("order").drop(columns="order")
+    table = table[["cluster", "segment", *[c for c in table if c not in ("cluster", "segment")]]]
+
+    segments["segment"] = segments["cluster"].map(names)
+    segments.to_parquet(config.segments_file, index=False)
+    table.to_csv(config.segment_profiles_file, index=False)
+    scores.assign(assigned=scores.index.map(names)).reset_index().to_csv(
+        config.archetype_scores_file, index=False
+    )
+    tests.to_csv(config.segment_tests_file, index=False)
+
+    # Robustez de los nombres: pesos perturbados (±30 %) y K-Means con otras semillas.
+    final_names = segments["segment"]
+    seed_agreement = []
+    for seed in range(5):
+        model = fit_kmeans(features, kmeans.n_clusters, seed)
+        other = centroids_z(model.cluster_centers_, LRFMC_COLUMNS).join(
+            trend_z(model.labels_, profile["revenue_trend"])
+        )
+        other_names = pd.Series(model.labels_).map(name_segments(other))
+        seed_agreement.append(float((other_names.to_numpy() == final_names.to_numpy()).mean()))
+    robustness = {
+        "perturbation_runs": 500,
+        "perturbation_scale": 0.3,
+        "perturbation_agreement": perturbation_agreement(centroids, 500, 0.3, config.random_state),
+        "seeds": len(seed_agreement),
+        "seed_name_agreement_min": min(seed_agreement),
+        "seed_name_agreement_mean": float(np.mean(seed_agreement)),
+    }
+    config.naming_robustness_file.write_text(json.dumps(robustness, indent=2), "utf-8")
+
+    for row in table.itertuples():
+        print(
+            f"  · clúster {row.cluster} → {row.segment}: {row.pct:.1%} de los socios, "
+            f"{row.revenue_share:.1%} del ingreso"
+        )
+    for row in tests.itertuples():
+        print(f"  · {row.variable}: {row.effect_name} = {row.effect:.3f} ({row.magnitude})")
+    print(
+        f"  · robustez de los nombres: {robustness['perturbation_agreement']:.0%} de las "
+        f"perturbaciones de pesos · ≥ {robustness['seed_name_agreement_min']:.1%} de socios con el "
+        "mismo nombre con otras semillas"
+    )
+    print(
+        f"segments: {len(order)} segmentos → {config.segment_profiles_file.name}, "
+        f"{config.segment_tests_file.name}, columna `segment` en {config.segments_file.name}"
+    )
+    return {"names": names}
+
+
 STEPS: dict[str, Callable[[Config], object]] = {
     "clean": run_clean,
     "features": run_features,
@@ -352,6 +444,7 @@ STEPS: dict[str, Callable[[Config], object]] = {
     "k_selection": run_k_selection,
     "clustering": run_clustering,
     "projection": run_projection,
+    "segments": run_segments,
 }
 
 

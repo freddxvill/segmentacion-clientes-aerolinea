@@ -36,6 +36,10 @@ data:
   pca_projection_filename: pca_projection.parquet
   tsne_filename: tsne.parquet
   projection_metrics_filename: projection.json
+  segment_profiles_filename: segment_profiles.csv
+  archetype_scores_filename: archetype_scores.csv
+  segment_tests_filename: segment_tests.csv
+  naming_robustness_filename: naming_robustness.json
 
 cleaning:
   date_format: "%m/%d/%Y"

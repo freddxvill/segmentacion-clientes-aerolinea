@@ -48,6 +48,10 @@ class DataParams:
     pca_projection_filename: str = "pca_projection.parquet"
     tsne_filename: str = "tsne.parquet"
     projection_metrics_filename: str = "projection.json"
+    segment_profiles_filename: str = "segment_profiles.csv"
+    archetype_scores_filename: str = "archetype_scores.csv"
+    segment_tests_filename: str = "segment_tests.csv"
+    naming_robustness_filename: str = "naming_robustness.json"
 
 
 @dataclass(frozen=True)
@@ -214,6 +218,22 @@ class Config:
     @property
     def projection_metrics_file(self) -> Path:
         return self.paths.processed_dir / self.data.projection_metrics_filename
+
+    @property
+    def segment_profiles_file(self) -> Path:
+        return self.paths.processed_dir / self.data.segment_profiles_filename
+
+    @property
+    def archetype_scores_file(self) -> Path:
+        return self.paths.processed_dir / self.data.archetype_scores_filename
+
+    @property
+    def segment_tests_file(self) -> Path:
+        return self.paths.processed_dir / self.data.segment_tests_filename
+
+    @property
+    def naming_robustness_file(self) -> Path:
+        return self.paths.processed_dir / self.data.naming_robustness_filename
 
 
 def load_config(params_file: Path = DEFAULT_PARAMS_FILE, root: Path = PROJECT_ROOT) -> Config:

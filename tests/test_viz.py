@@ -335,3 +335,45 @@ def test_wrap_subtitle_breaks_long_text_at_separators():
     assert " · ".join(lines) == text  # solo se corta en los separadores
     assert wrap_subtitle("Corto") == ["Corto"]
     assert chart_title("T", "Corto").to_dict()["subtitle"] == ["Corto"]
+
+
+@pytest.fixture
+def segment_profiles():
+    import pandas as pd
+
+    from segmentacion.segments.naming import SEGMENT_ORDER
+
+    rows = []
+    for i, name in enumerate(SEGMENT_ORDER):
+        rows.append(
+            {
+                "segment": name,
+                **{f"z_{c}": (i - 2) * 0.5 for c in ["L", "R", "F", "M", "C", "T"]},
+                "pct": 0.2,
+                "revenue_share": [0.5, 0.2, 0.15, 0.1, 0.05][i],
+            }
+        )
+    return pd.DataFrame(rows)
+
+
+def test_segment_charts_are_valid_vegalite(segment_profiles):
+    from segmentacion.viz import segment_charts as sc
+
+    charts = [
+        sc.centroid_heatmap(segment_profiles),
+        sc.size_value_chart(segment_profiles),
+        sc.segment_profile_chart(segment_profiles, "VIP"),
+    ]
+    for chart in charts:
+        spec = json.dumps(chart.to_dict(validate=True), ensure_ascii=False)
+        assert "title" in spec and "tooltip" in spec
+
+
+def test_segment_profile_uses_segment_color(segment_profiles):
+    from segmentacion.viz import segment_charts as sc
+    from segmentacion.viz.theme import segment_colors
+
+    spec = sc.segment_profile_chart(segment_profiles, "En riesgo de abandono").to_dict()
+    colors = segment_colors(list(segment_profiles["segment"]))
+    bar = next(layer for layer in spec["layer"] if layer["mark"]["type"] == "bar")
+    assert bar["mark"]["color"] == colors["En riesgo de abandono"]
