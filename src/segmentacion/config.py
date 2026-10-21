@@ -43,6 +43,11 @@ class DataParams:
     k_distance_filename: str = "k_distance.csv"
     kmeans_filename: str = "kmeans.joblib"
     gmm_filename: str = "gmm.joblib"
+    pca_variance_filename: str = "pca_variance.csv"
+    pca_loadings_filename: str = "pca_loadings.csv"
+    pca_projection_filename: str = "pca_projection.parquet"
+    tsne_filename: str = "tsne.parquet"
+    projection_metrics_filename: str = "projection.json"
 
 
 @dataclass(frozen=True)
@@ -87,6 +92,15 @@ class ModelingParams:
 
 
 @dataclass(frozen=True)
+class ProjectionParams:
+    pca_sample_size: int = 4_000
+    tsne_sample_size: int = 8_000
+    tsne_perplexities: tuple[int, ...] = (30, 50)
+    trust_sample_size: int = 2_000
+    trust_neighbors: int = 10
+
+
+@dataclass(frozen=True)
 class QualityParams:
     min_stability_ari: float = 0.90
     min_silhouette: float = 0.20
@@ -102,6 +116,7 @@ class Config:
     preprocessing: PreprocessingParams = field(default_factory=PreprocessingParams)
     k_selection: KSelectionParams = field(default_factory=KSelectionParams)
     modeling: ModelingParams = field(default_factory=ModelingParams)
+    projection: ProjectionParams = field(default_factory=ProjectionParams)
     quality: QualityParams = field(default_factory=QualityParams)
 
     @property
@@ -180,6 +195,26 @@ class Config:
     def gmm_file(self) -> Path:
         return self.paths.models_dir / self.data.gmm_filename
 
+    @property
+    def pca_variance_file(self) -> Path:
+        return self.paths.processed_dir / self.data.pca_variance_filename
+
+    @property
+    def pca_loadings_file(self) -> Path:
+        return self.paths.processed_dir / self.data.pca_loadings_filename
+
+    @property
+    def pca_projection_file(self) -> Path:
+        return self.paths.processed_dir / self.data.pca_projection_filename
+
+    @property
+    def tsne_file(self) -> Path:
+        return self.paths.processed_dir / self.data.tsne_filename
+
+    @property
+    def projection_metrics_file(self) -> Path:
+        return self.paths.processed_dir / self.data.projection_metrics_filename
+
 
 def load_config(params_file: Path = DEFAULT_PARAMS_FILE, root: Path = PROJECT_ROOT) -> Config:
     """Lee el YAML de parámetros y devuelve un `Config` con rutas absolutas."""
@@ -210,6 +245,13 @@ def load_config(params_file: Path = DEFAULT_PARAMS_FILE, root: Path = PROJECT_RO
             ),
         }
     )
+    projection_raw = raw.get("projection", {})
+    projection = ProjectionParams(
+        **{
+            **projection_raw,
+            "tsne_perplexities": tuple(projection_raw.get("tsne_perplexities", (30, 50))),
+        }
+    )
     return Config(
         paths=paths,
         data=data,
@@ -218,6 +260,7 @@ def load_config(params_file: Path = DEFAULT_PARAMS_FILE, root: Path = PROJECT_RO
         preprocessing=preprocessing,
         k_selection=k_selection,
         modeling=modeling,
+        projection=projection,
         quality=QualityParams(**raw.get("quality", {})),
     )
 

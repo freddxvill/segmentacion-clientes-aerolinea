@@ -31,6 +31,11 @@ data:
   k_distance_filename: k_distance.csv
   kmeans_filename: kmeans.joblib
   gmm_filename: gmm.joblib
+  pca_variance_filename: pca_variance.csv
+  pca_loadings_filename: pca_loadings.csv
+  pca_projection_filename: pca_projection.parquet
+  tsne_filename: tsne.parquet
+  projection_metrics_filename: projection.json
 
 cleaning:
   date_format: "%m/%d/%Y"
@@ -72,6 +77,16 @@ modeling:
   agglomerative_sample_size: 10000
   dbscan_min_samples: 10
   silhouette_sample_size: 10000
+
+projection:
+  # Solo para visualizar (no se clusteriza sobre las proyecciones). PCA se ajusta con todos los
+  # socios; los gráficos usan muestras estratificadas por clúster para no inflar el HTML.
+  pca_sample_size: 4000
+  tsne_sample_size: 8000
+  tsne_perplexities: [30, 50]
+  # Trustworthiness (vecinos conservados) es O(n²): submuestra de la muestra de t-SNE.
+  trust_sample_size: 2000
+  trust_neighbors: 10
 
 quality:
   # Criterio principal: estabilidad. K-Means con distintas semillas debe dar los mismos

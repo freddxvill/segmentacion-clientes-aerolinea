@@ -239,3 +239,99 @@ def test_model_sizes_chart_shows_dbscan_noise(segments):
     assert len(noise) == 1 and noise[0]["pct"] == segments["dbscan_outlier"].mean()
     for model in mc.SEGMENT_COLUMNS:
         assert abs(sum(r["pct"] for r in rows if r["modelo"] == model) - 1) < 1e-9
+
+
+@pytest.fixture
+def projections():
+    import numpy as np
+    import pandas as pd
+
+    from segmentacion.projection.reduce import pca_project
+
+    rng = np.random.default_rng(1)
+    features = pd.DataFrame(rng.normal(size=(120, 5)), columns=list("LRFMC"))
+    clusters = rng.integers(0, 4, len(features))
+    pca = pca_project(features, n=3)
+    points = pca.scores.assign(cluster=clusters, MEMBER_NO=range(len(features)))
+    tsne = pd.concat(
+        [
+            pd.DataFrame(
+                {
+                    "MEMBER_NO": range(len(features)),
+                    "cluster": clusters,
+                    "perplexity": perplexity,
+                    "TSNE1": rng.normal(size=len(features)).astype("float32"),
+                    "TSNE2": rng.normal(size=len(features)).astype("float32"),
+                }
+            )
+            for perplexity in (30, 50)
+        ]
+    )
+    return pca, points, tsne
+
+
+def test_projection_charts_are_valid_vegalite(projections):
+    from segmentacion.viz import projection_charts as pc
+
+    pca, points, tsne = projections
+    charts = [
+        pc.pca_variance_chart(pca.explained),
+        pc.pca_loadings_chart(pca.loadings),
+        pc.pca_scatter_chart(points, pca.loadings, pca.explained),
+        pc.tsne_chart(tsne, 30),
+    ]
+    for chart in charts:
+        spec = json.dumps(chart.to_dict(validate=True), ensure_ascii=False)
+        assert "title" in spec and "tooltip" in spec
+
+
+def test_tsne_chart_switches_perplexity_and_is_compact(projections):
+    from segmentacion.viz import projection_charts as pc
+
+    _, _, tsne = projections
+    spec = pc.tsne_chart(tsne, 50).to_dict()
+    values = spec["data"]["values"]
+    assert len(values) == tsne["MEMBER_NO"].nunique()  # una fila por socio
+    assert set(values[0]) == {"c", "x30", "y30", "x50", "y50"}
+    assert all(len(str(v)) <= 6 for v in values[0].values())  # sin float32 sin redondear
+    param = next(p for p in spec["params"] if p["name"] == "perplexity")
+    assert param["value"] == 50 and param["bind"]["options"] == [30, 50]
+
+
+def test_arrow_labels_merge_parallel_features():
+    import pandas as pd
+
+    from segmentacion.viz.projection_charts import _arrow_labels
+
+    arrows = pd.DataFrame(
+        {"letra": ["F", "M", "R"], "PC1": [1.0, 1.0, -1.0], "PC2": [0.0, 0.1, 0.0]}
+    )
+    assert sorted(_arrow_labels(arrows)["texto"]) == ["F · M", "R"]
+
+
+def test_pca_3d_uses_segment_palette(projections):
+    from segmentacion.viz.charts_3d import figure_html, pca_3d_figure
+    from segmentacion.viz.projection_charts import cluster_names
+    from segmentacion.viz.theme import plotly_color_map
+
+    pca, points, _ = projections
+    fig = pca_3d_figure(points, pca.explained)
+    names = sorted(cluster_names(points["cluster"]).unique())
+    assert [t.name for t in fig.data] == names
+    assert {t.name: t.marker.color for t in fig.data} == plotly_color_map(names)
+    html = figure_html(fig)
+    assert "cdn.plot.ly" in html and len(html) < 500_000  # plotly.js no va incrustado
+
+
+def test_wrap_subtitle_breaks_long_text_at_separators():
+    from segmentacion.viz.theme import SUBTITLE_MAX_CHARS, chart_title, wrap_subtitle
+
+    text = (
+        "Cada franja es un clúster (alto ∝ nº de socios) · línea discontinua = silhouette "
+        "medio · valores < 0 = socios más cerca de otro clúster"
+    )
+    lines = wrap_subtitle(text)
+    assert len(lines) > 1 and all(len(line) <= SUBTITLE_MAX_CHARS for line in lines)
+    assert " · ".join(lines) == text  # solo se corta en los separadores
+    assert wrap_subtitle("Corto") == ["Corto"]
+    assert chart_title("T", "Corto").to_dict()["subtitle"] == ["Corto"]

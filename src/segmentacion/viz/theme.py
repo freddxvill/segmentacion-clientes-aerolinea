@@ -5,6 +5,7 @@ ejes lo sobrescribe `report/styles.scss` según el tema activo de Quarto, por es
 un gris medio legible en ambos fondos.
 """
 
+import textwrap
 from collections.abc import Sequence
 
 import altair as alt
@@ -80,6 +81,31 @@ TIME_FORMAT_LOCALE = {
         "dic",
     ],  # fmt: skip
 }
+
+
+SUBTITLE_MAX_CHARS = 70  # ≈ 420 px a 12 px: cabe en la columna de contenido de una tableta
+
+
+def wrap_subtitle(text: str, width: int = SUBTITLE_MAX_CHARS) -> list[str]:
+    """Parte un subtítulo en líneas de hasta `width` caracteres, cortando en « · » si se puede.
+
+    Vega incluye el ancho del título al ajustar `width="container"`: un subtítulo de una sola
+    línea más ancho que la columna encoge el área de dibujo del gráfico.
+    """
+    lines: list[str] = []
+    for part in text.split(" · "):
+        if lines and len(lines[-1]) + 3 + len(part) <= width:
+            lines[-1] += " · " + part
+        else:
+            lines.extend(textwrap.wrap(part, width) or [""])
+    return lines
+
+
+def chart_title(text: str, subtitle: str | None = None, **kwargs) -> alt.Title:
+    """`alt.Title` con el subtítulo partido en líneas (ver `wrap_subtitle`)."""
+    if subtitle is None:
+        return alt.Title(text, **kwargs)
+    return alt.Title(text, subtitle=wrap_subtitle(subtitle), **kwargs)
 
 
 def segment_colors(segments: Sequence[str]) -> dict[str, str]:

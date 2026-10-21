@@ -12,7 +12,7 @@ from segmentacion.features.lrfmc import LRFMC_COLUMNS
 from segmentacion.models.baseline import BASELINE_SEGMENTS
 from segmentacion.viz.eda_charts import LRFMC_LABELS
 from segmentacion.viz.fmt import num
-from segmentacion.viz.theme import CATEGORICAL, INK, MAIN, NEUTRAL, SEQUENTIAL
+from segmentacion.viz.theme import CATEGORICAL, INK, MAIN, NEUTRAL, SEQUENTIAL, chart_title
 
 ALERT = CATEGORICAL[7]  # rojo: umbrales y socios atípicos
 
@@ -73,7 +73,7 @@ def transform_comparison_chart(comparison: pd.DataFrame, chosen: tuple[str, str]
     return (bars + ticks).properties(
         width="container",
         height=alt.Step(34),
-        title=alt.Title(
+        title=chart_title(
             "Silhouette de K-Means según el preprocesamiento",
             subtitle=f"Barra = media · marcas = cada k ({', '.join(map(str, ks))}) · "
             "azul = opción elegida",
@@ -121,7 +121,7 @@ def skew_comparison_chart(comparison: pd.DataFrame) -> alt.LayerChart:
     return (cells + text).properties(
         width="container",
         height=alt.Step(44),
-        title=alt.Title(
+        title=chart_title(
             "Asimetría de cada feature según la transformación",
             subtitle="Objetivo: |asimetría| < 1 (idealmente cerca de 0)",
         ),
@@ -169,7 +169,7 @@ def scaled_distribution_chart(scaled: pd.DataFrame) -> alt.LayerChart:
     return (zero + whisker + box + median).properties(
         width="container",
         height=alt.Step(36),
-        title=alt.Title(
+        title=chart_title(
             "Features listas para K-Means",
             subtitle="Caja = cuartiles · línea blanca = mediana · bigotes = P1–P99",
         ),
@@ -231,7 +231,7 @@ def k_metrics_chart(table: pd.DataFrame, chosen_k: int) -> alt.FacetChart:
         .facet(
             facet=alt.Facet("panel:N", title=None, sort=list(K_METRICS.values())),
             columns=2,
-            title=alt.Title(
+            title=chart_title(
                 "Métricas de K-Means según el número de segmentos",
                 subtitle=f"Línea discontinua = k elegido ({chosen_k}) · pasa el cursor para "
                 "comparar un mismo k en los cuatro paneles",
@@ -294,7 +294,7 @@ def silhouette_plot_chart(curves: pd.DataFrame, chosen_k: int) -> alt.LayerChart
         .properties(
             width="container",
             height=320,
-            title=alt.Title(
+            title=chart_title(
                 "Silhouette plot",
                 subtitle="Cada franja es un clúster (alto ∝ nº de socios) · línea discontinua = "
                 "silhouette medio · valores < 0 = socios más cerca de otro clúster",
@@ -304,8 +304,8 @@ def silhouette_plot_chart(curves: pd.DataFrame, chosen_k: int) -> alt.LayerChart
 
 
 STABILITY_LABELS = {
-    "semillas": "Semillas distintas (cada par)",
-    "submuestras": "Submuestras del 80 % (vs modelo completo)",
+    "semillas": "Pares de semillas",
+    "submuestras": "Submuestras del 80 %",
 }
 
 
@@ -357,7 +357,7 @@ def stability_chart(stability: pd.DataFrame, threshold: float) -> alt.LayerChart
     return (rule + ticks + mean).properties(
         width="container",
         height=alt.Step(56),
-        title=alt.Title(
+        title=chart_title(
             "Estabilidad de K-Means",
             subtitle="Cada marca es una comparación · rombo = media · línea roja = umbral "
             f"(ARI ≥ {num(threshold, 2)})",
@@ -438,7 +438,7 @@ def model_sizes_chart(segments: pd.DataFrame) -> alt.Chart:
         .properties(
             width="container",
             height=alt.Step(36),
-            title=alt.Title(
+            title=chart_title(
                 "Tamaño de los grupos de cada modelo",
                 subtitle="Cada tramo es un grupo, de mayor a menor · rojo = ruido de DBSCAN",
             ),
@@ -481,7 +481,7 @@ def k_distance_chart(curve: pd.DataFrame, eps: float, min_samples: int) -> alt.L
     return (line + rule + point).properties(
         width="container",
         height=280,
-        title=alt.Title(
+        title=chart_title(
             "Gráfico k-distance para elegir eps de DBSCAN",
             subtitle=f"Codo de la curva = eps ({num(eps, 2)}): por encima, la distancia se "
             "dispara y los socios quedan como ruido",
@@ -529,7 +529,7 @@ def crosstab_chart(segments: pd.DataFrame, column: str, title: str) -> alt.Layer
     return (cells + text).properties(
         width="container",
         height=alt.Step(40),
-        title=alt.Title(
+        title=chart_title(
             title, subtitle="Cada fila suma 100 %: a qué grupo va cada clúster de K-Means"
         ),
     )

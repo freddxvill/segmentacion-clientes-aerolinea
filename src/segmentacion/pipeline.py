@@ -25,6 +25,7 @@ from segmentacion.models.k_selection import (
     find_elbow,
     silhouette_curve,
     silhouette_profile,
+    stratified_sample,
 )
 from segmentacion.models.kmeans import (
     fit_kmeans,
@@ -37,6 +38,11 @@ from segmentacion.preprocessing.transform import (
     make_preprocessor,
     save_preprocessor,
     skewness,
+)
+from segmentacion.projection.reduce import (
+    neighborhood_preservation,
+    pca_project,
+    tsne_project,
 )
 
 
@@ -266,12 +272,86 @@ def run_clustering(config: Config) -> dict:
     return metrics
 
 
+def run_projection(config: Config) -> dict:
+    """Fase 8: PCA 2D/3D y t-SNE 2D de los segmentos (solo para visualizar)."""
+    if not config.segments_file.exists():
+        raise FileNotFoundError(f"No existe {config.segments_file}. Ejecuta `uv run poe cluster`.")
+    features = pd.read_parquet(config.scaled_file)[list(LRFMC_COLUMNS)]
+    segments = pd.read_parquet(config.segments_file)
+    labels = segments["cluster"].to_numpy()
+    params, seed = config.projection, config.random_state
+
+    pca = pca_project(features, n=3)
+    pca_sample = stratified_sample(labels, params.pca_sample_size, seed)
+    pca_points = pca.scores.iloc[pca_sample].round(4)
+    pca_points.insert(0, "cluster", labels[pca_sample])
+    pca_points.insert(0, "MEMBER_NO", segments["MEMBER_NO"].to_numpy()[pca_sample])
+
+    tsne_sample = stratified_sample(labels, params.tsne_sample_size, seed)
+    frames = []
+    for perplexity in params.tsne_perplexities:
+        frame = tsne_project(features, tsne_sample, perplexity, seed)
+        frames.append(frame.assign(perplexity=perplexity))
+    tsne = pd.concat(frames, ignore_index=True)
+    tsne = tsne.assign(
+        MEMBER_NO=segments["MEMBER_NO"].to_numpy()[tsne["position"]],
+        cluster=labels[tsne["position"]],
+    )[["MEMBER_NO", "cluster", "perplexity", "TSNE1", "TSNE2"]].round(4)
+
+    # Vecinos conservados por cada proyección, sobre los mismos socios para todas.
+    trust_idx = stratified_sample(labels[tsne_sample], params.trust_sample_size, seed)
+    trust_positions = tsne_sample[trust_idx]
+    original = features.iloc[trust_positions]
+    trust = {
+        "PCA 2D": pca.scores.iloc[trust_positions, :2],
+        "PCA 3D": pca.scores.iloc[trust_positions, :3],
+        **{
+            f"t-SNE (perplexity {p})": frames[i].iloc[trust_idx][["TSNE1", "TSNE2"]]
+            for i, p in enumerate(params.tsne_perplexities)
+        },
+    }
+    trust = {
+        name: neighborhood_preservation(original, emb, params.trust_neighbors)
+        for name, emb in trust.items()
+    }
+
+    config.paths.processed_dir.mkdir(parents=True, exist_ok=True)
+    pca.explained.to_csv(config.pca_variance_file, index=False)
+    pca.loadings.rename_axis("component").reset_index().to_csv(
+        config.pca_loadings_file, index=False
+    )
+    pca_points.to_parquet(config.pca_projection_file, index=False)
+    tsne.to_parquet(config.tsne_file, index=False)
+    metrics = {
+        "pca_sample_size": len(pca_sample),
+        "tsne_sample_size": len(tsne_sample),
+        "tsne_perplexities": list(params.tsne_perplexities),
+        "trust_sample_size": len(trust_positions),
+        "trust_neighbors": params.trust_neighbors,
+        "trustworthiness": trust,
+    }
+    config.projection_metrics_file.write_text(
+        json.dumps(metrics, indent=2, ensure_ascii=False), "utf-8"
+    )
+
+    cumulative = pca.explained.set_index("component")["cumulative"]
+    print(f"  · PCA: varianza explicada 2D {cumulative['PC2']:.1%} · 3D {cumulative['PC3']:.1%}")
+    for name, value in trust.items():
+        print(f"  · trustworthiness {name}: {value:.3f}")
+    print(
+        f"projection: {config.pca_projection_file.name} ({len(pca_sample):,} socios), "
+        f"{config.tsne_file.name} ({len(tsne_sample):,} socios × {len(frames)} perplexities)"
+    )
+    return metrics
+
+
 STEPS: dict[str, Callable[[Config], object]] = {
     "clean": run_clean,
     "features": run_features,
     "transform": run_transform,
     "k_selection": run_k_selection,
     "clustering": run_clustering,
+    "projection": run_projection,
 }
 
 

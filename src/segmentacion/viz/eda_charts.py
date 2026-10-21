@@ -13,7 +13,7 @@ import pandas as pd
 from scipy import stats
 
 from segmentacion.features.lrfmc import LRFMC_COLUMNS, build_lrfmc, revenue_trend
-from segmentacion.viz.theme import DIVERGING, GENDER_COLORS, MAIN, NEUTRAL, TIER_COLORS
+from segmentacion.viz.theme import DIVERGING, GENDER_COLORS, MAIN, NEUTRAL, TIER_COLORS, chart_title
 
 LRFMC_LABELS: dict[str, str] = {
     "L": "L · Antigüedad (meses)",
@@ -392,7 +392,7 @@ def frequency_km_scatter(df: pd.DataFrame, n: int = 4000, seed: int = 42) -> alt
     scatter = (
         alt.Chart(
             data,
-            title=alt.Title(
+            title=chart_title(
                 "Vuelos vs km volados",
                 subtitle=f"Muestra aleatoria de {_es_int(len(data))} socios"
                 " · arrastra para seleccionar",
@@ -512,7 +512,7 @@ def tier_boxplot_chart(df: pd.DataFrame) -> alt.FacetChart:
         .facet(
             facet=alt.Facet("variable:N", title=None, sort=list(LRFMC_LABELS.values())),
             columns=3,
-            title=alt.Title(
+            title=chart_title(
                 "Métricas LRFMC por nivel del programa",
                 subtitle="Caja = cuartiles · línea blanca = mediana · bigotes = P5–P95",
             ),
@@ -551,7 +551,7 @@ def age_gender_chart(df: pd.DataFrame, bin_width: int = 5) -> alt.Chart:
     return (
         alt.Chart(
             pyramid,
-            title=alt.Title(
+            title=chart_title(
                 "Edad y género de los socios", subtitle="% de los socios del nivel elegido"
             ),
         )
@@ -653,7 +653,7 @@ def enrollment_chart(df: pd.DataFrame) -> alt.Chart:
     )
     base = alt.Chart(
         monthly,
-        title=alt.Title(
+        title=chart_title(
             "Altas mensuales en el programa",
             subtitle="Rueda del ratón para hacer zoom · arrastra para desplazarte",
         ),
@@ -697,7 +697,7 @@ def revenue_trend_chart(df: pd.DataFrame, bins: int = 40) -> alt.LayerChart:
     brush = alt.selection_interval(name="rango", encodings=["x"])
     base = alt.Chart(
         hist,
-        title=alt.Title(
+        title=chart_title(
             "Balance de ingresos: año 2 vs año 1",
             subtitle="(Y2 − Y1) / (Y1 + Y2) · −1 = dejó de volar · +1 = solo voló el año 2"
             " · arrastra para seleccionar un rango",

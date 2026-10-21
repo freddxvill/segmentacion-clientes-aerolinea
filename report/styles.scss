@@ -26,6 +26,13 @@ $font-family-sans-serif: system-ui, -apple-system, "Segoe UI", Roboto, sans-seri
   }
 }
 
+// En pantallas estrechas, una tabla ancha o un gráfico de ancho fijo (facets) se desplaza
+// dentro de su propia caja en vez de ensanchar toda la página.
+.cell-output-display {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
 // Controles enlazados (selectores, radios) de Altair.
 .vega-bindings {
   display: flex;

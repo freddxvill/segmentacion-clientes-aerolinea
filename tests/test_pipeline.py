@@ -62,6 +62,16 @@ def test_pipeline_end_to_end_on_fixture(tmp_config, flight_csv, capsys):
     assert tmp_config.kmeans_file.exists() and tmp_config.gmm_file.exists()
     assert "clustering: k = 5" in capsys.readouterr().out
 
+    explained = pd.read_csv(tmp_config.pca_variance_file)
+    assert explained["cumulative"].iloc[-1] == pytest.approx(1)
+    assert len(pd.read_csv(tmp_config.pca_loadings_file)) == 3
+    points = pd.read_parquet(tmp_config.pca_projection_file)
+    assert {"MEMBER_NO", "cluster", "PC1", "PC2", "PC3"} <= set(points.columns)
+    tsne = pd.read_parquet(tmp_config.tsne_file)
+    assert sorted(tsne["perplexity"].unique()) == list(tmp_config.projection.tsne_perplexities)
+    projection = json.loads(tmp_config.projection_metrics_file.read_text(encoding="utf-8"))
+    assert all(0 <= v <= 1 for v in projection["trustworthiness"].values())
+
 
 def test_features_step_requires_clean_file(tmp_config, capsys):
     assert main(["--step", "features"], config=tmp_config) == 1

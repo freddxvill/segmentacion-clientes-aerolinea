@@ -46,6 +46,7 @@ uv run poe features      # features LRFMC → data/processed/lrfmc.parquet
 uv run poe transform     # Yeo-Johnson + StandardScaler → models/preprocessor.joblib
 uv run poe select-k      # métricas para k = 2…10 → data/processed/k_selection.csv
 uv run poe cluster       # K-Means k = 5, estabilidad y benchmark → data/processed/segments.parquet
+uv run poe project       # PCA 2D/3D y t-SNE de los segmentos → data/processed/tsne.parquet
 uv run poe test          # tests unitarios
 uv run poe test-data     # tests sobre el dataset real
 uv run poe notebooks     # re-ejecuta los notebooks de notebooks/
@@ -62,6 +63,6 @@ Para ver todas las tareas disponibles: `uv run poe`.
 | [`02_eda.ipynb`](notebooks/02_eda.ipynb) | Análisis exploratorio de las métricas LRFMC y del perfil de los socios |
 | [`03_features_y_transformacion.ipynb`](notebooks/03_features_y_transformacion.ipynb) | Features LRFMC, variables de perfilado y elección de la transformación y el escalado |
 | [`04_seleccion_k.ipynb`](notebooks/04_seleccion_k.ipynb) | Selección del número de segmentos (Elbow, silhouette, CH, DB): k = 5 |
-| [`05_clustering.ipynb`](notebooks/05_clustering.ipynb) | K-Means final, estabilidad (ARI 0,98 entre semillas) y comparación con quintiles, GMM, Ward y DBSCAN |
+| [`05_clustering.ipynb`](notebooks/05_clustering.ipynb) | K-Means final, estabilidad (ARI 0,98 entre semillas), comparación con quintiles, GMM, Ward y DBSCAN, y proyecciones PCA / t-SNE |
 
 Los gráficos son interactivos en JupyterLab, VS Code o nbviewer; en GitHub se ven como imagen.

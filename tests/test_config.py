@@ -50,3 +50,11 @@ def test_modeling_params_loaded_from_yaml():
     assert modeling.dbscan_min_samples == 2 * 5
     assert config.kmeans_file.parent == config.paths.models_dir
     assert config.segments_file.parent == config.paths.processed_dir
+
+
+def test_projection_params_loaded_from_yaml():
+    config = get_config()
+    projection = config.projection
+    assert projection.tsne_perplexities == (30, 50)
+    assert projection.trust_sample_size <= projection.tsne_sample_size
+    assert config.tsne_file.parent == config.paths.processed_dir

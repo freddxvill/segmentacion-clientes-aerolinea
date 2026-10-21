@@ -39,6 +39,21 @@ stab = metrics["stability"]
 lrfmc = pd.read_parquet(config.lrfmc_file)
 outliers = lrfmc[segments["dbscan_outlier"].to_numpy()]
 gmm_cov = {"full": "completa", "diag": "diagonal"}
+
+# Fase 8: proyecciones (solo para visualizar).
+from IPython.display import HTML
+
+from segmentacion.viz import charts_3d
+from segmentacion.viz import projection_charts as pc
+
+explained = pd.read_csv(config.pca_variance_file)
+loadings = pd.read_csv(config.pca_loadings_file, index_col="component")
+pca_points = pd.read_parquet(config.pca_projection_file)
+tsne = pd.read_parquet(config.tsne_file)
+projection = json.loads(config.projection_metrics_file.read_text(encoding="utf-8"))
+trust = projection["trustworthiness"]
+cumulative = explained.set_index("component")["cumulative"]
+variance = explained.set_index("component")["variance"]
 ```
 
 ## Selección del número de segmentos
@@ -375,6 +390,104 @@ perfilado: la probabilidad de pertenencia de GMM y la marca de atípico de DBSCA
 
 ## Reducción de dimensionalidad
 
-::: {.callout-note}
-En construcción (Fase 8): proyecciones PCA 2D/3D y t-SNE de los segmentos.
+Los segmentos viven en un espacio de cinco dimensiones (L, R, F, M, C). Para verlos se proyectan
+a 2D y 3D con dos técnicas complementarias. Las proyecciones **solo sirven para visualizar**:
+K-Means se entrenó con las cinco features y aquí no se vuelve a agrupar nada.
+
+### PCA: qué ejes ordenan a los clientes
+
+PCA busca las direcciones de máxima varianza. Se ajusta con los
+`{python} num(metrics["members"])` socios; los gráficos muestran una muestra estratificada de
+`{python} num(projection["pca_sample_size"])` (cada clúster con su proporción real).
+
+```{python}
+#| label: fig-pca-varianza
+#| fig-cap: "Varianza explicada por cada componente principal y acumulada."
+pc.pca_variance_chart(explained)
+```
+
+```{python}
+#| label: fig-pca-loadings
+#| fig-cap: "Loadings: peso de cada feature en las tres primeras componentes."
+pc.pca_loadings_chart(loadings)
+```
+
+::: {.insight}
+Dos componentes explican el `{python} pct(cumulative["PC2"])` de la varianza y tres el
+`{python} pct(cumulative["PC3"])`. Cada una tiene una lectura de negocio clara:
+
+- **PC1 = actividad** (`{python} pct(variance["PC1"])`): crece con los vuelos y los kilómetros y
+  baja con la recencia. Ordena a los socios de inactivos a muy frecuentes.
+- **PC2 = antigüedad + precio** (`{python} pct(variance["PC2"])`): sobre todo el descuento
+  medio (C) y, en menor medida, la antigüedad (L).
+- **PC3 = antigüedad frente a precio** (`{python} pct(variance["PC3"])`): veteranos que compran
+  barato en un extremo, socios recientes que pagan tarifas altas en el otro.
+
+PC2 y PC3 explican casi lo mismo: **el plano 2D deja fuera una dimensión casi tan importante
+como la segunda**, la que distingue la antigüedad del precio. Por eso conviene mirar también la
+vista 3D.
+:::
+
+```{python}
+#| label: fig-pca-2d
+#| fig-cap: "Socios en el plano de las dos primeras componentes. Clic en la leyenda para resaltar un clúster."
+pc.pca_scatter_chart(pca_points, loadings, explained)
+```
+
+::: {.insight}
+A lo largo de **PC1** aparecen, de izquierda a derecha, los dos grupos inactivos (clústeres 3 y
+5), los recientes (1) y los veteranos ocasionales (4), y a la derecha los veteranos muy
+frecuentes (2). **PC2** separa a los dos grupos inactivos entre sí: el 5, que paga tarifas casi
+completas, queda arriba (en la dirección de C) y el 3, que compra con descuento, abajo. Los
+grupos son regiones contiguas de una misma nube, no islas: es el continuo de comportamiento que
+ya anticipaban el silhouette moderado y DBSCAN.
+:::
+
+```{python}
+#| label: fig-pca-3d
+#| fig-cap: "PCA 3D (arrastra para rotar, rueda para hacer zoom, clic en la leyenda para ocultar un clúster)."
+HTML(charts_3d.figure_html(charts_3d.pca_3d_figure(pca_points, explained)))
+```
+
+::: {.insight}
+La tercera componente separa lo que el plano mezclaba: los **veteranos ocasionales** (clúster 4)
+y los **recientes** (1) quedan en extremos opuestos de PC3, igual que los dos grupos inactivos,
+que ya se distinguían en PC2.
+:::
+
+### t-SNE: vecindarios locales
+
+t-SNE es no lineal: coloca cerca a los socios que son vecinos en las cinco dimensiones, pero no
+conserva las distancias globales (el tamaño de cada región y la distancia entre regiones no se
+interpretan). Se calcula sobre una muestra estratificada de
+`{python} num(projection["tsne_sample_size"])` socios con semilla fija, para dos valores de
+*perplexity* (el número efectivo de vecinos que considera).
+
+```{python}
+#| label: fig-tsne
+#| fig-cap: "t-SNE 2D. Cambia la perplexity o haz clic en la leyenda para resaltar un clúster."
+pc.tsne_chart(tsne, default_perplexity=projection["tsne_perplexities"][0])
+```
+
+::: {.insight}
+Cada clúster ocupa una región propia y compacta, con fronteras de contacto pero sin mezclarse:
+K-Means no corta la nube al azar, sino que agrupa a socios que también son vecinos en el espacio
+original. El resultado se mantiene con ambas *perplexities*.
+:::
+
+```{python}
+#| label: tbl-trustworthiness
+#| tbl-cap: "Trustworthiness: proporción de vecindarios del espacio LRFMC que se conservan en cada proyección (1 = todos)."
+trust_table = pd.DataFrame(
+    {"Proyección": list(trust), "Trustworthiness": list(trust.values())}
+).set_index("Proyección")
+trust_table.style.format({"Trustworthiness": lambda v: num(v, 3)})
+```
+
+::: {.insight}
+Medido sobre los mismos `{python} num(projection["trust_sample_size"])` socios y sus
+`{python} projection["trust_neighbors"]` vecinos más cercanos, t-SNE conserva casi todos los
+vecindarios (`{python} num(trust["t-SNE (perplexity 30)"], 3)`), frente a
+`{python} num(trust["PCA 2D"], 3)` del plano PCA y `{python} num(trust["PCA 3D"], 3)` en 3D. PCA
+explica **qué ejes** diferencian a los segmentos; t-SNE muestra **quién está cerca de quién**.
 :::
