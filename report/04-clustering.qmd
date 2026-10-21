@@ -1,0 +1,9 @@
+---
+title: "Clustering"
+---
+
+Selección de k, K-Means, comparación de modelos y reducción de dimensionalidad.
+
+::: {.callout-note}
+En construcción (Fases 6–8).
+:::

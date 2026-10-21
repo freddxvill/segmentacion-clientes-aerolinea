@@ -1,0 +1,33 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+docs/idea.md
+docs/plan-data.md
+
+# Herramientas
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.ipynb_checkpoints/
+.env
+
+# Datos y artefactos (no se versionan; se regeneran con el pipeline)
+data/raw/*
+data/interim/*
+data/processed/*
+models/*
+!data/*/.gitkeep
+!models/.gitkeep
+
+# Quarto (report/_freeze SÍ se versiona)
+report/_site/
+.quarto/

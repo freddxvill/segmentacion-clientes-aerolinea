@@ -1,0 +1,9 @@
+---
+title: "Conclusiones"
+---
+
+Conclusiones de negocio y limitaciones.
+
+::: {.callout-note}
+En construcción (Fase 10).
+:::

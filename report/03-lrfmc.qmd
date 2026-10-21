@@ -1,0 +1,9 @@
+---
+title: "Features LRFMC"
+---
+
+Construcción de las métricas LRFMC, tratamiento de asimetría y escalado.
+
+::: {.callout-note}
+En construcción (Fases 4–5).
+:::

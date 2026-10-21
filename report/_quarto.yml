@@ -1,0 +1,41 @@
+project:
+  type: website
+  output-dir: _site
+
+lang: es
+
+execute:
+  freeze: auto
+
+website:
+  title: "Segmentación LRFMC"
+  description: "Segmentación avanzada de clientes de una aerolínea con LRFMC y K-Means."
+  page-navigation: true
+  navbar:
+    left:
+      - href: index.qmd
+        text: Inicio
+      - href: 01-datos.qmd
+        text: Datos
+      - href: 02-eda.qmd
+        text: EDA
+      - href: 03-lrfmc.qmd
+        text: LRFMC
+      - href: 04-clustering.qmd
+        text: Clustering
+      - href: 05-segmentos.qmd
+        text: Segmentos
+      - href: 06-conclusiones.qmd
+        text: Conclusiones
+  page-footer:
+    center: "Proyecto de portafolio · Segmentación avanzada de clientes"
+
+format:
+  html:
+    theme:
+      light: [cosmo, styles.scss]
+      dark: [darkly, styles.scss]
+    toc: true
+    toc-title: "En esta página"
+    code-fold: true
+    code-summary: "Ver código"

@@ -1,0 +1,68 @@
+[project]
+name = "segmentacoin-avanzada-clientes"
+version = "0.1.0"
+description = "Segmentación avanzada de clientes de una aerolínea con el modelo LRFMC y K-Means."
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "altair>=6.3.0",
+    "ipykernel>=7.4.0",
+    "joblib>=1.6.0",
+    "jupyter>=1.1.1",
+    "kaggle>=2.2.4",
+    "numpy>=2.5.4",
+    "pandas>=3.0.6",
+    "pandera>=0.34.1",
+    "plotly>=7.1.0",
+    "pyarrow>=26.0.0",
+    "pyyaml>=6.0.3",
+    "scikit-learn>=1.9.1",
+    "scipy>=1.18.1",
+    "vegafusion>=2.0.3",
+    "vl-convert-python>=1.9.0.post1",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/segmentacion"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "N"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = ["-ra", "-m", "not data"]
+markers = [
+    "data: tests que requieren el dataset real en data/raw (se ejecutan con `poe test-data`)",
+]
+
+[tool.poe]
+env = { PYTHONUTF8 = "1" }
+
+[tool.poe.tasks]
+download = { cmd = "python -m segmentacion.data.download", help = "Descarga el dataset desde Kaggle y lo verifica" }
+verify-data = { cmd = "python -m segmentacion.data.download --verify-only", help = "Verifica un flight.csv ya presente en data/raw" }
+test = { cmd = "pytest", help = "Tests sin datos reales" }
+test-data = { cmd = "pytest -m data", help = "Tests sobre el dataset real" }
+cov = { cmd = "pytest --cov=segmentacion --cov-report=term-missing", help = "Tests con cobertura" }
+format = { shell = "ruff format . && ruff check --fix .", help = "Formatea el código" }
+lint = { shell = "ruff check . && ruff format --check .", help = "Lint + chequeo de formato" }
+report = { cmd = "quarto render report", help = "Renderiza el sitio Quarto" }
+preview = { cmd = "quarto preview report", help = "Previsualiza el sitio Quarto" }
+publish = { cmd = "quarto publish gh-pages report", help = "Publica el sitio en GitHub Pages" }
+
+[dependency-groups]
+dev = [
+    "poethepoet>=0.49.0",
+    "pytest>=9.1.1",
+    "pytest-cov>=7.1.0",
+    "ruff>=0.17.1",
+]

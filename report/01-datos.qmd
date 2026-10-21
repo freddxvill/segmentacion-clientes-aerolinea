@@ -1,0 +1,9 @@
+---
+title: "Datos"
+---
+
+Fuente, ficha del dataset y trazabilidad de la limpieza.
+
+::: {.callout-note}
+En construcción (Fases 1–3).
+:::

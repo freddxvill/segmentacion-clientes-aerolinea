@@ -1,0 +1,18 @@
+# Parámetros del proyecto. Las rutas son relativas a la raíz del repositorio.
+
+paths:
+  raw_dir: data/raw
+  interim_dir: data/interim
+  processed_dir: data/processed
+  models_dir: models
+  data_card: docs/data-card.md
+
+data:
+  kaggle_competition: sa-customer-segmentation
+  # La competición separa a los socios en train/test (sin solape). Para segmentar se usa la
+  # población completa: raw_filename es la concatenación de source_files.
+  source_files: [flight_train.csv, flight_test.csv]
+  raw_filename: flight.csv
+  max_raw_size_mb: 20
+
+random_state: 42

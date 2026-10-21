@@ -1,0 +1,9 @@
+---
+title: "Segmentos"
+---
+
+Perfiles, nombres comerciales y recomendaciones de marketing por segmento.
+
+::: {.callout-note}
+En construcción (Fase 9).
+:::

@@ -1,0 +1,9 @@
+---
+title: "Segmentación avanzada de clientes"
+---
+
+Segmentación de los socios de un programa de viajero frecuente con el modelo **LRFMC** (Length, Recency, Frequency, Monetary, Coefficient) y K-Means.
+
+::: {.callout-note}
+En construcción (Fase 10).
+:::

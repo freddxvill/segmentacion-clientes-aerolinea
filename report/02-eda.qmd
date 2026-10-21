@@ -1,0 +1,9 @@
+---
+title: "Análisis exploratorio"
+---
+
+EDA interactivo de las variables del programa de viajero frecuente.
+
+::: {.callout-note}
+En construcción (Fase 3).
+:::
