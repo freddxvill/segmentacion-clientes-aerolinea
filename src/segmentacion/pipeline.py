@@ -8,7 +8,7 @@ import sys
 from collections.abc import Callable, Sequence
 
 from segmentacion.config import Config, get_config
-from segmentacion.data.clean import clean, lineage_report, save_clean
+from segmentacion.data.clean import clean, lineage_report, null_summary, save_clean
 from segmentacion.data.load import load_raw
 
 
@@ -19,6 +19,7 @@ def run_clean(config: Config) -> dict:
     raw = load_raw(config.raw_file)
     df, lineage = clean(raw, config.cleaning)
     report = lineage_report(len(raw), len(df), lineage)
+    report["null_counts"] = null_summary(raw, df)
     save_clean(df, report, config.clean_file, config.lineage_file)
     for step in lineage:
         if step.rows:

@@ -19,6 +19,13 @@ NULLABLE_DATE_COLUMNS: tuple[str, ...] = ("LAST_FLIGHT_DATE",)
 
 Action = Literal["drop", "set_null"]
 
+# Sufijos administrativos en pinyin (省 = provincia, 市 = ciudad/municipio) que duplican categorías:
+# "guangdongsheng" y "guangdong" son la misma provincia.
+ADMIN_SUFFIXES: dict[str, tuple[str, ...]] = {
+    "WORK_PROVINCE": ("sheng", "shi"),
+    "WORK_CITY": ("shi",),
+}
+
 
 @dataclass(frozen=True)
 class LineageStep:
@@ -46,11 +53,13 @@ def clean(
         lineage.append(LineageStep(rule, "set_null", int(mask.sum()), description))
         out[column] = out[column].mask(mask)
 
-    # 1. Texto: espacios, mayúsculas/minúsculas y placeholders ("." "-" ...) → nulo.
+    # 1. Texto: ancho completo → ASCII (NFKC), espacios, mayúsculas/minúsculas, sufijos
+    # administrativos y placeholders ("." "-" ...) → nulo.
     for column in TEXT_COLUMNS:
-        out[column] = out[column].astype("str").str.strip().mask(out[column].isna())
-    for column in ("WORK_CITY", "WORK_PROVINCE"):
-        out[column] = out[column].str.lower()
+        text = out[column].astype("str").str.normalize("NFKC").str.strip()
+        out[column] = text.mask(out[column].isna())
+    for column, suffixes in ADMIN_SUFFIXES.items():
+        out[column] = merge_suffix_variants(out[column].str.lower(), suffixes)
     out["WORK_COUNTRY"] = out["WORK_COUNTRY"].str.upper()
     for column in TEXT_COLUMNS:
         is_placeholder = out[column].isin(params.text_placeholders) | (out[column] == "")
@@ -73,6 +82,15 @@ def clean(
         else:
             invalid_dates |= invalid | parsed.isna()
     drop(invalid_dates, "fecha_invalida", "FFP_DATE, FIRST_FLIGHT_DATE o LOAD_TIME inválida")
+    # FIRST_FLIGHT_DATE solo se usa en el EDA: los valores imposibles (1905, posteriores al corte)
+    # se anulan sin descartar al socio.
+    first_flight = out["FIRST_FLIGHT_DATE"]
+    set_null(
+        "FIRST_FLIGHT_DATE",
+        (first_flight < out["FFP_DATE"]) | (first_flight > out["LOAD_TIME"]),
+        "primer_vuelo_fuera_de_ventana",
+        "FIRST_FLIGHT_DATE anterior al alta o posterior al corte → nulo",
+    )
     drop(
         out["FFP_DATE"] > out["LOAD_TIME"],
         "alta_posterior_al_corte",
@@ -104,6 +122,23 @@ def clean(
     return out, lineage
 
 
+def merge_suffix_variants(values: pd.Series, suffixes: tuple[str, ...]) -> pd.Series:
+    """Quita un sufijo solo si la forma sin él ya existe como categoría.
+
+    Así "guangzhoushi" → "guangzhou", pero "huangshi" (una ciudad real) se conserva.
+    """
+    known = set(values.dropna())
+
+    def base(value: str) -> str:
+        for suffix in suffixes:
+            stem = value.removesuffix(suffix)
+            if stem != value and stem in known:
+                return stem
+        return value
+
+    return values.map(base, na_action="ignore")
+
+
 def lineage_report(n_input: int, n_output: int, lineage: list[LineageStep]) -> dict:
     """Resumen serializable del lineage (se muestra en la página Datos del sitio)."""
     return {
@@ -111,6 +146,14 @@ def lineage_report(n_input: int, n_output: int, lineage: list[LineageStep]) -> d
         "output_rows": n_output,
         "dropped_rows": sum(s.rows for s in lineage if s.action == "drop"),
         "steps": [asdict(s) for s in lineage],
+    }
+
+
+def null_summary(raw: pd.DataFrame, cleaned: pd.DataFrame) -> dict[str, dict[str, int]]:
+    """Nulos por columna antes y después de limpiar (los placeholders pasan a contar como nulos)."""
+    return {
+        "raw": {c: int(n) for c, n in raw.isna().sum().items()},
+        "clean": {c: int(n) for c, n in cleaned.isna().sum().items()},
     }
 
 

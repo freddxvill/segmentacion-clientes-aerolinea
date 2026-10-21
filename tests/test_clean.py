@@ -4,7 +4,14 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from segmentacion.data.clean import clean, lineage_report, load_clean, save_clean
+from segmentacion.data.clean import (
+    clean,
+    lineage_report,
+    load_clean,
+    merge_suffix_variants,
+    null_summary,
+    save_clean,
+)
 
 
 def steps_by_rule(lineage):
@@ -87,6 +94,38 @@ def test_text_is_normalized(flight_df):
     assert steps_by_rule(lineage)["pais_invalido"].rows == 1
 
 
+def test_fullwidth_text_is_normalized(flight_df):
+    flight_df.loc[0, ["WORK_PROVINCE", "WORK_COUNTRY"]] = ["ｇｕａｎｇｄｏｎｇ", "ｃｎ"]
+    flight_df.loc[1, "WORK_CITY"] = "－"  # guion de ancho completo → placeholder
+    df, _ = clean(flight_df)
+    assert df.loc[0, ["WORK_PROVINCE", "WORK_COUNTRY"]].tolist() == ["guangdong", "CN"]
+    assert pd.isna(df.loc[1, "WORK_CITY"])
+
+
+def test_admin_suffix_variants_are_merged(flight_df):
+    flight_df.loc[0, ["WORK_CITY", "WORK_PROVINCE"]] = ["Guangzhoushi", "guangdongsheng"]
+    flight_df.loc[1, "WORK_PROVINCE"] = "beijingshi"
+    df, _ = clean(flight_df)
+    assert df.loc[0, ["WORK_CITY", "WORK_PROVINCE"]].tolist() == ["guangzhou", "guangdong"]
+    assert df.loc[1, "WORK_PROVINCE"] == "beijing"
+
+
+def test_suffix_is_kept_when_stem_is_unknown():
+    values = pd.Series(["huangshi", "guangzhoushi", "guangzhou", None])
+    merged = merge_suffix_variants(values, ("shi",))
+    assert merged.tolist()[:3] == ["huangshi", "guangzhou", "guangzhou"]
+    assert pd.isna(merged.iloc[3])
+
+
+def test_first_flight_outside_window_becomes_nan(flight_df):
+    flight_df.loc[0, "FIRST_FLIGHT_DATE"] = "12/31/1905"
+    flight_df.loc[1, "FIRST_FLIGHT_DATE"] = "3/9/2015"
+    df, lineage = clean(flight_df)
+    assert df.loc[[0, 1], "FIRST_FLIGHT_DATE"].isna().all()
+    assert len(df) == len(flight_df)
+    assert steps_by_rule(lineage)["primer_vuelo_fuera_de_ventana"].rows == 2
+
+
 def test_duplicate_member_no_raises(flight_df):
     with pytest.raises(Exception, match="MEMBER_NO"):
         clean(pd.concat([flight_df, flight_df.head(1)]))
@@ -119,3 +158,11 @@ def test_save_and_load_roundtrip(tmp_path, flight_df):
     save_clean(df, report, clean_file, lineage_file)
     pd.testing.assert_frame_equal(load_clean(clean_file), df, check_dtype=False)
     assert json.loads(lineage_file.read_text(encoding="utf-8"))["output_rows"] == len(df)
+
+
+def test_null_summary_counts_placeholders_as_null(flight_df):
+    flight_df.loc[0, "WORK_CITY"] = "."
+    df, _ = clean(flight_df)
+    summary = null_summary(flight_df, df)
+    assert summary["raw"]["WORK_CITY"] == 0
+    assert summary["clean"]["WORK_CITY"] == 1

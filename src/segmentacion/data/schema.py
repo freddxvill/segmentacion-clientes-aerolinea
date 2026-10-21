@@ -68,7 +68,7 @@ def clean_schema(params: CleaningParams | None = None) -> pa.DataFrameSchema:
         **{c: _numeric(False, pa.Check.ge(0)) for c in NON_NEGATIVE_COLUMNS},
         **{c: _numeric(False, pa.Check.ge(0)) for c in REVENUE_COLUMNS},
         "FFP_DATE": pa.Column(checks=_is_datetime),
-        "FIRST_FLIGHT_DATE": pa.Column(checks=_is_datetime),
+        "FIRST_FLIGHT_DATE": pa.Column(checks=_is_datetime, nullable=True),
         "LOAD_TIME": pa.Column(checks=_is_datetime),
         "LAST_FLIGHT_DATE": pa.Column(checks=_is_datetime, nullable=True),
         "GENDER": pa.Column(checks=pa.Check.isin(["Male", "Female"]), nullable=True),

@@ -1,9 +1,142 @@
 ---
 title: "Datos"
+description: "Fuente, ficha del dataset y trazabilidad de la limpieza."
 ---
 
-Fuente, ficha del dataset y trazabilidad de la limpieza.
+```{python}
+#| include: false
+import json
 
-::: {.callout-note}
-En construcción (Fases 1–3).
+import pandas as pd
+
+from segmentacion.config import get_config
+from segmentacion.viz import eda_charts as ec
+from segmentacion.viz.fmt import num, pct
+from segmentacion.viz.theme import enable_theme
+
+enable_theme()
+config = get_config()
+df = pd.read_parquet(config.clean_file)
+report = json.loads(config.lineage_file.read_text(encoding="utf-8"))
+summary = ec.eda_summary(df)
+nulled = {s["rule"]: s["rows"] for s in report["steps"]}
+```
+
+## Fuente
+
+Los datos provienen de la competición de Kaggle
+[`sa-customer-segmentation`](https://www.kaggle.com/competitions/sa-customer-segmentation):
+socios de un **programa de viajero frecuente** (FFP) de una aerolínea, con su actividad durante
+una ventana de observación de dos años que termina el **31 de marzo de 2014** (`LOAD_TIME`).
+
+::: {.callout-warning}
+## Procedencia
+Datos anonimizados de un programa de viajero frecuente de una aerolínea; **procedencia original
+no documentada por el publicador** (aerolínea, país y licencia). El dataset circula desde hace
+años en cursos y publicaciones sobre el modelo LRFMC. Por eso el CSV crudo no se versiona en el
+repositorio: se descarga con `uv run poe download`.
 :::
+
+| Campo | Valor |
+|---|---|
+| Archivos fuente | `flight_train.csv` (55.000) + `flight_test.csv` (7.988) → `flight.csv` |
+| Socios (filas) | `{python} num(report["input_rows"])` |
+| Columnas | 23 |
+| Tamaño del CSV | 8,08 MB |
+| Ventana de observación | 1 de abril de 2012 – 31 de marzo de 2014 |
+| Granularidad | una fila por socio (`MEMBER_NO` único) |
+
+El *test* de la competición no es una muestra aleatoria: solo contiene socios con 2 a 10 vuelos.
+Segmentar únicamente con el *train* excluiría a los clientes de baja frecuencia, así que se usa la
+**población completa** (concatenación de ambos archivos). La ficha completa, con el diccionario
+de las 23 columnas y la huella SHA-256, está en `docs/data-card.md` del repositorio.
+
+## Qué contiene cada socio
+
+| Grupo | Columnas | Uso en el proyecto |
+|---|---|---|
+| Perfil | `GENDER`, `AGE`, `WORK_CITY`, `WORK_PROVINCE`, `WORK_COUNTRY` | Perfilado de segmentos |
+| Programa | `FFP_DATE` (alta), `FFP_TIER` (nivel 4/5/6) | **L** y validación externa |
+| Actividad | `FLIGHT_COUNT`, `SEG_KM_SUM`, `LAST_TO_END`, `avg_discount` | **F**, **M**, **R**, **C** |
+| Ingresos | `SUM_YR_1`, `SUM_YR_2` | Perfilado y riesgo de abandono |
+| Puntos | `BP_SUM`, `Points_Sum`, `Point_NotFlight`, `EXCHANGE_COUNT` | Perfilado |
+
+## Limpieza
+
+Las reglas están en `src/segmentacion/data/clean.py` y cada una deja constancia de cuántas filas
+toca (*data lineage*). El criterio general: **solo se elimina un socio si su fila no sirve para
+calcular LRFMC**; si el problema está en una columna de perfil, se anula ese valor y el socio se
+conserva.
+
+```{python}
+#| label: fig-embudo
+#| fig-cap: "Socios que quedan tras cada regla que elimina filas."
+ec.cleaning_funnel_chart(report)
+```
+
+::: {.insight}
+De `{python} num(report["input_rows"])` socios quedan **`{python} num(report["output_rows"])`**
+(`{python} pct(report["output_rows"] / report["input_rows"])` retenido). Solo dos reglas eliminan
+filas: ingresos nulos (no permiten validar el valor del cliente) y socios con ingreso 0 que sí
+volaron, es decir, viajes pagados íntegramente con puntos, cuyo descuento y valor no son
+comparables con los del resto.
+:::
+
+```{python}
+#| label: fig-anulados
+#| fig-cap: "Reglas que anulan un valor sin descartar al socio."
+ec.nulled_values_chart(report)
+```
+
+::: {.insight}
+La mayoría de las correcciones son de ubicación: valores como `.`, `-` o `0` que significan «sin
+dato». Además, `{python} num(nulled["fecha_invalida_LAST_FLIGHT_DATE"])` socios tienen como último
+vuelo el **29 de febrero de 2014**, una fecha que no existe; se anula, pero el socio se conserva
+porque la recencia (R) se calcula con `LAST_TO_END`, que sí es válido. El EDA destapó
+`{python} num(nulled["primer_vuelo_fuera_de_ventana"])` primeras fechas de vuelo imposibles (año
+1905 o posteriores al corte), tratadas del mismo modo.
+:::
+
+```{python}
+#| label: fig-nulos
+#| fig-cap: "Porcentaje de valores vacíos por columna en el CSV crudo y en el dataset limpio."
+ec.null_values_chart(report)
+```
+
+::: {.insight}
+Tras limpiar hay **más** nulos en ubicación, no menos: los *placeholders* pasan a contarse como lo
+que son, datos ausentes. Las columnas que alimentan LRFMC (fechas de alta, vuelos, km, recencia y
+descuento) quedan **sin ningún nulo**, y los de ingresos desaparecen porque esas filas se
+eliminan.
+:::
+
+```{python}
+#| label: tbl-lineage
+#| tbl-cap: "Reglas de limpieza con efecto sobre el dataset real."
+(
+    ec.lineage_table(report)
+    .style.hide(axis="index")
+    .format({"Filas": num, "% del crudo": lambda v: pct(v, 2)})
+)
+```
+
+### Normalización de texto
+
+Además de las reglas anteriores, el texto de ubicación se normaliza sin contar filas:
+
+- caracteres de **ancho completo** a ASCII (`ｇｕａｎｇｄｏｎｇ` → `guangdong`, `－` → `-`);
+- ciudad y provincia en minúsculas; país en mayúsculas y solo códigos ISO-2;
+- **sufijos administrativos** en pinyin: `guangdongsheng` (*sheng* = provincia) o `guangzhoushi`
+  (*shi* = ciudad) se unen con `guangdong` y `guangzhou`. El sufijo se quita solo si la forma
+  corta ya existe, para no romper nombres reales como *Huangshi*.
+
+## Hipótesis confirmadas en el EDA
+
+| Supuesto | Resultado |
+|---|---|
+| `avg_discount` es el precio pagado sobre la tarifa completa | ✅ Correlación de Spearman de `{python} num(summary["spearman_c_revenue_km"], 2)` con el ingreso por km. 1,0 = tarifa completa; `{python} pct(summary["discount_above_1"])` de los socios supera 1 (cabinas premium). Tras limpiar no hay descuentos 0. |
+| `SUM_YR_2` es el año más reciente | ✅ El `{python} pct(summary["yr2_zero_inactive"], 0)` de los socios con `SUM_YR_2 = 0` lleva más de un año sin volar. |
+| `LOAD_TIME` es una fecha de corte única | ✅ 31/03/2014 para todos los socios. |
+| `GENDER` solo toma *Male*/*Female* | ✅ 3 nulos. |
+| `AGE` en [18, 100] | ✅ 49 edades fuera de rango anuladas; mediana `{python} num(summary["age_median"])` años. |
+| Todos los socios tienen al menos un año de antigüedad | ✅ La última alta es del `{python} summary["enroll_last_date"].strftime("%d/%m/%Y")`. |

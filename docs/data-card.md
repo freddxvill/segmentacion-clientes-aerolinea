@@ -90,9 +90,13 @@
 
 ## Supuestos por confirmar en el EDA (Fase 3)
 
-- [ ] Semántica de `avg_discount` (¿1.0 = tarifa completa? ¿0 = vuelo de canje?).
+- [x] Semántica de `avg_discount`: ≈ precio pagado / tarifa completa (Spearman 0,72 con el
+  ingreso por km). 1,0 = tarifa completa; 4,7% de socios > 1 (cabinas premium). Tras limpiar
+  no quedan descuentos 0 (eran canjes).
 - [x] `LOAD_TIME` es una única fecha de corte para todos los socios.
-- [ ] Rango válido de `AGE` y valores de `GENDER`.
+- [x] `AGE` en [18, 100] (mediana 41) y `GENDER` ∈ {Male, Female} (3 nulos).
+- [x] `SUM_YR_2` es el año reciente: el 93% de los socios con `SUM_YR_2 = 0` lleva más de un año
+  sin volar.
 - [x] Formato de las fechas (`M/D/YYYY`).
 - [ ] Licencia de la competición (¿permite redistribuir?).
 
@@ -105,3 +109,13 @@
 - Anulados sin eliminar la fila: 421 `LAST_FLIGHT_DATE` = `2014/2/29` (inexistente; `LAST_TO_END`
   sigue siendo válido), placeholders de ubicación y 49 edades fuera de [18, 100].
 - Detalle de reglas: `docs/plan-data.md` §3.3.
+
+## Ajustes tras el EDA (Fase 3)
+
+- **Texto:** normalización NFKC (`ｇｕａｎｇｄｏｎｇ` → `guangdong`, `－` → `-`) y unión de sufijos
+  pinyin (`guangdongsheng` → `guangdong`, `guangzhoushi` → `guangzhou`) solo si la forma corta
+  existe (se conserva `huangshi`).
+- **`FIRST_FLIGHT_DATE`:** 8 fechas imposibles (1905 o posteriores al corte) → nulo; el socio se
+  conserva.
+- **Ventana de observación:** 01/04/2012 – 31/03/2014. La última alta es del 31/03/2013, así que
+  todos los socios tienen al menos 12 meses de antigüedad.

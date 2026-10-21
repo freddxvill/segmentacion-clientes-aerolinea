@@ -35,7 +35,7 @@ class CleaningParams:
     date_format: str = "%m/%d/%Y"
     age_min: int = 18
     age_max: int = 100
-    text_placeholders: tuple[str, ...] = (".", "-", "。", "0", "`", "nan")
+    text_placeholders: tuple[str, ...] = (".", "-", "。", "0", "`", "——", "nan")
 
 
 @dataclass(frozen=True)

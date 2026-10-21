@@ -2,6 +2,71 @@
 $font-family-sans-serif: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 
 /*-- scss:rules --*/
+// Gráficos Altair (render SVG). El tema Altair usa un gris medio; aquí el texto de títulos,
+// ejes, leyendas y encabezados toma el color del tema activo (claro u oscuro) de Quarto.
 .vega-embed {
   max-width: 100%;
+  width: 100%;
+
+  [class*="role-title"] text,
+  [class*="role-axis-title"] text,
+  [class*="role-axis-label"] text,
+  [class*="role-legend"] text,
+  [class*="header"] text {
+    fill: $body-color;
+  }
+
+  [class*="role-title-subtitle"] text,
+  [class*="role-axis-label"] text {
+    fill: rgba($body-color, 0.72);
+  }
+
+  summary {
+    color: $body-color;
+  }
+}
+
+// Controles enlazados (selectores, radios) de Altair.
+.vega-bindings {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.25rem;
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+
+  .vega-bind-name {
+    font-weight: 600;
+    margin-right: 0.35rem;
+  }
+
+  .vega-bind-radio label {
+    margin-right: 0.6rem;
+  }
+
+  select {
+    color: $body-color;
+    background-color: $body-bg;
+    border: 1px solid rgba($body-color, 0.3);
+    border-radius: 0.25rem;
+    padding: 0.1rem 0.4rem;
+  }
+}
+
+// Tooltip de vega-embed acorde al tema.
+#vg-tooltip-element {
+  background-color: $body-bg;
+  color: $body-color;
+  border: 1px solid rgba($body-color, 0.2);
+  font-family: $font-family-sans-serif;
+
+  td.key {
+    color: rgba($body-color, 0.7);
+  }
+}
+
+// Párrafos de insight bajo cada gráfico.
+.insight {
+  border-left: 3px solid $primary;
+  padding: 0.25rem 0 0.25rem 0.9rem;
+  margin: 0.5rem 0 1.75rem;
 }

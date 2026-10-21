@@ -1,9 +1,218 @@
 ---
 title: "Análisis exploratorio"
+description: "Distribuciones, relaciones y perfil de los socios del programa de viajero frecuente."
 ---
 
-EDA interactivo de las variables del programa de viajero frecuente.
+```{python}
+#| include: false
+import pandas as pd
 
-::: {.callout-note}
-En construcción (Fase 3).
+from segmentacion.config import get_config
+from segmentacion.viz import eda_charts as ec
+from segmentacion.viz.fmt import num, pct
+from segmentacion.viz.theme import enable_theme
+
+enable_theme()
+config = get_config()
+df = pd.read_parquet(config.clean_file)
+s = ec.eda_summary(df)
+```
+
+Exploración de los **`{python} num(s["n_members"])` socios** del dataset limpio (ver
+[Datos](01-datos.qmd)). Todos los gráficos son interactivos: pasa el cursor para ver el detalle y
+usa los controles bajo cada gráfico. Las métricas LRFMC se calculan con las fórmulas del
+proyecto: **L** = meses desde el alta, **R** = meses desde el último vuelo, **F** = vuelos,
+**M** = km volados y **C** = descuento medio.
+
+## Distribución de las métricas LRFMC
+
+```{python}
+#| label: fig-distribucion
+#| fig-cap: "Histograma de cada métrica LRFMC. Cambia la variable y la escala del eje X."
+ec.distribution_chart(df)
+```
+
+::: {.insight}
+**Qué vemos.** La frecuencia y los kilómetros tienen una cola larga a la derecha (asimetría de
+`{python} num(s["skew"]["F"], 2)` y `{python} num(s["skew"]["M"], 2)`): el socio mediano hizo
+`{python} num(s["flights_median"])` vuelos y `{python} num(s["km_median"])` km en dos años, pero
+hay socios con más de 200 vuelos. En escala logarítmica ambas se vuelven casi simétricas. La
+recencia se concentra en los primeros meses (mediana `{python} num(s["recency_median"], 1)`) y el
+descuento medio se agrupa en torno a `{python} num(s["discount_median"], 2)`.
+
+**Qué implica.** K-Means usa distancias euclídeas: sin transformar, unos pocos viajeros
+intensivos dominarían los centroides. Hace falta corregir la asimetría antes de escalar.
 :::
+
+## Efecto de las transformaciones
+
+```{python}
+#| label: fig-asimetria
+#| fig-cap: "Forma de cada métrica estandarizada (z) según la transformación elegida."
+ec.skewness_chart(df)
+```
+
+::: {.insight}
+**Qué vemos.** `log1p` corrige M y R, pero deja la frecuencia con asimetría
+`{python} num(s["skew_log1p"]["F"], 2)` y el descuento con
+`{python} num(s["skew_log1p"]["C"], 2)`. **Yeo-Johnson** deja las cinco métricas con
+|asimetría| < 0,1 (F: `{python} num(s["skew_yeojohnson"]["F"], 2)`).
+
+**Qué implica.** Yeo-Johnson es la candidata principal para la Fase 5; además admite ceros, a
+diferencia de Box-Cox. `log1p` queda como alternativa más interpretable.
+:::
+
+## Correlación entre variables
+
+```{python}
+#| label: fig-correlacion
+#| fig-cap: "Correlación de Spearman (por rangos, robusta a la asimetría) entre LRFMC y variables de perfil."
+ec.correlation_heatmap(df)
+```
+
+::: {.insight}
+**Qué vemos.** F y M están muy correlacionadas (ρ = `{python} num(s["spearman_fm"], 2)`) y ambas
+se mueven con el ingreso y los puntos. La recencia va en sentido contrario a la frecuencia
+(ρ = `{python} num(s["spearman_rf"], 2)`): quien vuela poco, además, hace tiempo que no vuela. El
+descuento (C) es casi independiente del resto (|ρ| ≤ 0,12 con las demás métricas LRFMC).
+
+**Qué implica.** F y M aportan información parecida, así que en conjunto pesan casi el doble en
+la distancia; conviene tenerlo presente al interpretar los clústeres (la PCA de la Fase 8 lo
+hará visible). C, en cambio, aporta una dimensión propia: la **sensibilidad al precio**. Que M
+correlacione tanto con el ingreso valida usar los km como medida del valor.
+:::
+
+## Vuelos, kilómetros y descuento
+
+```{python}
+#| label: fig-scatter
+#| fig-cap: "Vuelos vs km volados (escala log). Arrastra sobre el gráfico para filtrar el histograma del descuento."
+ec.frequency_km_scatter(df, seed=config.random_state)
+```
+
+::: {.insight}
+**Qué vemos.** Los km crecen casi en proporción a los vuelos; la dispersión vertical para un
+mismo número de vuelos refleja la longitud de las rutas (mediana de
+`{python} num(s["km_per_flight_median"])` km por vuelo). Al seleccionar a los viajeros más
+intensivos (arriba a la derecha), el histograma de descuento se desplaza ligeramente hacia
+tarifas más caras.
+
+**Qué implica.** Volumen (F, M) y precio (C) son ejes distintos: hay viajeros frecuentes que
+cazan ofertas y viajeros ocasionales que pagan tarifa completa. Es justo la clase de matiz que
+un ranking por gasto no captura y la segmentación sí.
+:::
+
+## Métricas por nivel del programa
+
+```{python}
+#| label: fig-niveles
+#| fig-cap: "Distribución de cada métrica por nivel del programa. Haz clic en la leyenda para resaltar un nivel."
+ec.tier_boxplot_chart(df)
+```
+
+::: {.insight}
+**Qué vemos.** Los niveles 5 y 6 son solo el `{python} pct(s["elite_share"])` de los socios,
+pero generan el **`{python} pct(s["elite_revenue_share"])` del ingreso**. Vuelan unas seis veces
+más que el nivel 4 (mediana de `{python} num(s["tier_flights_median"][5])` y
+`{python} num(s["tier_flights_median"][6])` vuelos frente a
+`{python} num(s["tier_flights_median"][4])`), su último vuelo es reciente
+(`{python} num(s["recency_median_elite"], 1)` meses de mediana) y pagan tarifas más cercanas a la
+completa.
+
+**Qué implica.** El nivel del programa solo separa a la élite: el nivel 4 agrupa al
+`{python} pct(1 - s["elite_share"], 0)` de los socios con perfiles muy distintos. La segmentación LRFMC debe abrir ese bloque; el nivel servirá
+como **validación externa** de los clústeres.
+:::
+
+## Edad y género
+
+```{python}
+#| label: fig-edad
+#| fig-cap: "Pirámide de edad por género. Filtra por nivel del programa."
+ec.age_gender_chart(df)
+```
+
+::: {.insight}
+**Qué vemos.** El `{python} pct(s["male_share"])` de los socios son hombres y la edad mediana es
+de `{python} num(s["age_median"])` años, con el grueso entre 30 y 50. En los niveles 5–6 la
+proporción de hombres sube al `{python} pct(s["male_share_elite"])` y la edad mediana a
+`{python} num(s["age_median_elite"])`.
+
+**Qué implica.** Es el perfil típico del viajero de negocios. Edad y género no entran al
+clustering (LRFMC describe comportamiento, no demografía), pero sirven para describir y
+nombrar los segmentos.
+:::
+
+## Dónde trabajan los socios
+
+```{python}
+#| label: fig-ubicaciones
+#| fig-cap: "Top 15 provincias o ciudades de trabajo. Cambia la dimensión y el orden."
+ec.top_locations_chart(df)
+```
+
+::: {.insight}
+**Qué vemos.** El `{python} pct(s["country_cn_share"])` de los socios trabaja en China.
+`{python} s["top_province"].title()` concentra el `{python} pct(s["top_province_share"])` y las
+tres primeras provincias suman el `{python} pct(s["top3_province_share"])`; por ciudad dominan
+Cantón (Guangzhou), Pekín, Shanghái y Shenzhen.
+
+**Qué implica.** La base de socios es coherente con una aerolínea con *hub* en el sur de China.
+La ubicación es útil para el perfilado regional de los segmentos, no como variable de
+clustering.
+:::
+
+## Evolución de las altas
+
+```{python}
+#| label: fig-altas
+#| fig-cap: "Altas mensuales en el programa (FFP_DATE). Usa la rueda del ratón para hacer zoom."
+ec.enrollment_chart(df)
+```
+
+::: {.insight}
+**Qué vemos.** Las altas crecen de forma sostenida, con su máximo en
+`{python} s["enroll_peak_year"]`. Destaca una caída abrupta en
+`{python} s["enroll_min_month"].strftime("%m/%Y")` (`{python} num(s["enroll_min_count"])` altas),
+que coincide con el brote de gripe A (H1N1). No hay altas posteriores al
+`{python} s["enroll_last_date"].strftime("%d/%m/%Y")`: todos los socios llevan al menos un año en
+el programa.
+
+**Qué implica.** La antigüedad (L) mezcla cohortes muy distintas: 4 de cada 10 socios se dieron
+de alta en 2011–2012. Un socio reciente con pocos vuelos no es lo mismo que uno antiguo con
+pocos vuelos, y L permite distinguirlos.
+:::
+
+## Tendencia de ingresos: año 1 vs año 2
+
+```{python}
+#| label: fig-tendencia
+#| fig-cap: "Balance de ingresos entre el año reciente (Y2) y el anterior (Y1). Arrastra para seleccionar un rango."
+ec.revenue_trend_chart(df)
+```
+
+::: {.insight}
+**Qué vemos.** La distribución tiene dos picos en los extremos: el
+`{python} pct(s["balance_lost"])` de los socios **no generó ingresos en el año reciente**
+(balance −1) y el `{python} pct(s["balance_new"])` solo los generó en ese año (+1). En total, el
+`{python} pct(s["balance_declining"])` ingresó menos en el año 2 que en el año 1. Pasa el cursor
+sobre la barra de −1: su recencia mediana supera el año.
+
+**Qué implica.** El balance −1 es una señal directa de **abandono**. La fórmula original del
+plan, `(Y2 − Y1) / (Y1 + 1)`, explota cuando `SUM_YR_1 = 0` (el
+`{python} pct(s["revenue_yr1_zero"])` de los socios); por eso en la Fase 4 se usará esta versión
+acotada en [−1, 1] como variable de perfilado.
+:::
+
+## Conclusiones del EDA
+
+1. **F y M necesitan transformación** (asimetría > 3); Yeo-Johnson normaliza las cinco métricas.
+2. **F y M son redundantes** (ρ ≈ 0,9); C aporta una dimensión independiente de sensibilidad al
+   precio.
+3. **El nivel del programa solo identifica a la élite** (`{python} pct(s["elite_share"], 0)` de
+   los socios, `{python} pct(s["elite_revenue_share"], 0)` del ingreso): el valor del clustering
+   está en diferenciar al resto.
+4. **Hay una señal clara de abandono**: un `{python} pct(s["balance_lost"])` de socios sin
+   ingresos en el año reciente, que la recencia (R) debería capturar.
+5. La semántica de `avg_discount` queda confirmada (≈ precio pagado / tarifa completa) y las
+   reglas de limpieza se ajustaron con lo aprendido (ver [Datos](01-datos.qmd)).

@@ -22,6 +22,6 @@ cleaning:
   age_min: 18
   age_max: 100
   # Valores de texto que significan "sin dato" (tras strip) en columnas de ubicación/género.
-  text_placeholders: [".", "-", "。", "0", "`", "nan"]
+  text_placeholders: [".", "-", "。", "0", "`", "——", "nan"]
 
 random_state: 42
