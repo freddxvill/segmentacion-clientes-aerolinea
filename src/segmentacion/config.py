@@ -28,6 +28,8 @@ class DataParams:
     max_raw_size_mb: float
     clean_filename: str
     lineage_filename: str
+    lrfmc_filename: str = "lrfmc.parquet"
+    profile_filename: str = "profile.parquet"
 
 
 @dataclass(frozen=True)
@@ -60,6 +62,14 @@ class Config:
     @property
     def lineage_file(self) -> Path:
         return self.paths.interim_dir / self.data.lineage_filename
+
+    @property
+    def lrfmc_file(self) -> Path:
+        return self.paths.processed_dir / self.data.lrfmc_filename
+
+    @property
+    def profile_file(self) -> Path:
+        return self.paths.processed_dir / self.data.profile_filename
 
 
 def load_config(params_file: Path = DEFAULT_PARAMS_FILE, root: Path = PROJECT_ROOT) -> Config:

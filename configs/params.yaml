@@ -16,6 +16,8 @@ data:
   max_raw_size_mb: 20
   clean_filename: flight_clean.parquet
   lineage_filename: cleaning_lineage.json
+  lrfmc_filename: lrfmc.parquet
+  profile_filename: profile.parquet
 
 cleaning:
   date_format: "%m/%d/%Y"

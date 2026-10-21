@@ -70,24 +70,18 @@ def test_chart_spec_is_valid_vegalite(cleaned, make_chart):
     assert not any(t in {"socios", "inicio", "x0", "pct"} for t in _titles(spec))
 
 
-def test_lrfmc_preview_formulas(cleaned):
+def test_lrfmc_frame_uses_official_features(cleaned):
     df, _ = cleaned
-    lrfmc = ec.lrfmc_preview(df)
-    assert list(lrfmc.columns) == ["L", "R", "F", "M", "C"]
-    row = df.iloc[0]
-    expected_l = (row["LOAD_TIME"] - row["FFP_DATE"]).days / (365.25 / 12)
-    assert lrfmc.iloc[0]["L"] == pytest.approx(expected_l)
-    assert lrfmc.iloc[0]["R"] == pytest.approx(row["LAST_TO_END"] / 30)
-    assert (lrfmc[["L", "F", "M"]] >= 0).all().all()
+    frame = ec.lrfmc_frame(df)
+    assert list(frame.columns) == ["L", "R", "F", "M", "C"]
+    assert frame.index.equals(df.index)
 
 
 def test_revenue_balance_is_bounded(flight_df):
     flight_df.loc[0, ["SUM_YR_1", "SUM_YR_2"]] = [0, 500]
     flight_df.loc[1, ["SUM_YR_1", "SUM_YR_2"]] = [800, 0]
-    flight_df.loc[2, ["SUM_YR_1", "SUM_YR_2"]] = [0, 0]
     balance = ec.revenue_balance(flight_df)
     assert balance.iloc[0] == 1 and balance.iloc[1] == -1
-    assert balance.isna().iloc[2]
     assert balance.dropna().between(-1, 1).all()
 
 

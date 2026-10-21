@@ -8,8 +8,9 @@ import sys
 from collections.abc import Callable, Sequence
 
 from segmentacion.config import Config, get_config
-from segmentacion.data.clean import clean, lineage_report, null_summary, save_clean
+from segmentacion.data.clean import clean, lineage_report, load_clean, null_summary, save_clean
 from segmentacion.data.load import load_raw
+from segmentacion.features.lrfmc import build_lrfmc, build_profile_features
 
 
 def run_clean(config: Config) -> dict:
@@ -32,7 +33,24 @@ def run_clean(config: Config) -> dict:
     return report
 
 
-STEPS: dict[str, Callable[[Config], object]] = {"clean": run_clean}
+def run_features(config: Config) -> dict:
+    """Fase 4: flight_clean.parquet → data/processed/lrfmc.parquet + profile.parquet."""
+    if not config.clean_file.exists():
+        raise FileNotFoundError(f"No existe {config.clean_file}. Ejecuta `uv run poe clean`.")
+    df = load_clean(config.clean_file)
+    lrfmc = build_lrfmc(df)
+    profile = build_profile_features(df)
+    config.paths.processed_dir.mkdir(parents=True, exist_ok=True)
+    lrfmc.to_parquet(config.lrfmc_file, index=False)
+    profile.to_parquet(config.profile_file, index=False)
+    print(
+        f"features: {len(lrfmc):,} socios → {config.lrfmc_file.name} "
+        f"(L, R, F, M, C) + {config.profile_file.name} ({profile.shape[1] - 1} variables)"
+    )
+    return {"rows": len(lrfmc)}
+
+
+STEPS: dict[str, Callable[[Config], object]] = {"clean": run_clean, "features": run_features}
 
 
 def main(argv: Sequence[str] | None = None, config: Config | None = None) -> int:

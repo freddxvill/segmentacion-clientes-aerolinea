@@ -52,6 +52,7 @@ download = { cmd = "python -m segmentacion.data.download", help = "Descarga el d
 verify-data = { cmd = "python -m segmentacion.data.download --verify-only", help = "Verifica un flight.csv ya presente en data/raw" }
 pipeline = { cmd = "python -m segmentacion.pipeline --step all", help = "Ejecuta todo el pipeline" }
 clean = { cmd = "python -m segmentacion.pipeline --step clean", help = "Fase 2: limpieza" }
+features = { cmd = "python -m segmentacion.pipeline --step features", help = "Fase 4: features LRFMC y de perfilado" }
 test = { cmd = "pytest", help = "Tests sin datos reales" }
 test-data = { cmd = "pytest -m data", help = "Tests sobre el dataset real" }
 cov = { cmd = "pytest --cov=segmentacion --cov-report=term-missing", help = "Tests con cobertura" }

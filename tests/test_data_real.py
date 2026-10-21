@@ -1,5 +1,6 @@
 """Tests sobre el dataset real. Se ejecutan con `uv run poe test-data`."""
 
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -8,6 +9,7 @@ from segmentacion.data.clean import clean
 from segmentacion.data.download import count_rows, file_size_mb
 from segmentacion.data.load import EXPECTED_COLUMNS, load_raw, read_header
 from segmentacion.data.schema import clean_schema
+from segmentacion.features.lrfmc import LRFMC_COLUMNS, build_lrfmc
 
 CONFIG = get_config()
 
@@ -63,3 +65,13 @@ def test_invalid_feb_29_dates_are_kept_as_null(cleaned):
     _, _, lineage = cleaned
     step = next(s for s in lineage if s.rule == "fecha_invalida_LAST_FLIGHT_DATE")
     assert step.action == "set_null" and step.rows == 421
+
+
+def test_lrfmc_real_is_finite_and_non_negative(cleaned):
+    _, df, _ = cleaned
+    lrfmc = build_lrfmc(df)[list(LRFMC_COLUMNS)]
+    assert len(lrfmc) == len(df)
+    assert np.isfinite(lrfmc.to_numpy()).all()
+    assert (lrfmc >= 0).all().all()
+    # Todos los socios se dieron de alta al menos 12 meses antes del corte (ver data card).
+    assert lrfmc["L"].min() >= 11.9

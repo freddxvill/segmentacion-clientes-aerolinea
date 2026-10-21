@@ -12,9 +12,8 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
+from segmentacion.features.lrfmc import LRFMC_COLUMNS, build_lrfmc, revenue_trend
 from segmentacion.viz.theme import DIVERGING, GENDER_COLORS, MAIN, NEUTRAL, TIER_COLORS
-
-DAYS_PER_MONTH = 365.25 / 12
 
 LRFMC_LABELS: dict[str, str] = {
     "L": "L · Antigüedad (meses)",
@@ -40,37 +39,19 @@ TIER_LABELS = {4: "Nivel 4", 5: "Nivel 5", 6: "Nivel 6"}
 # --- Datos auxiliares ---------------------------------------------------------------------
 
 
-def lrfmc_preview(df: pd.DataFrame) -> pd.DataFrame:
-    """Métricas LRFMC para explorar en el EDA.
-
-    Vista previa con las fórmulas del proyecto; la versión oficial (con tests de
-    fórmulas y artefacto `lrfmc.parquet`) es `features/lrfmc.py`, de la Fase 4.
-    """
-    return pd.DataFrame(
-        {
-            "L": (df["LOAD_TIME"] - df["FFP_DATE"]).dt.days / DAYS_PER_MONTH,
-            "R": df["LAST_TO_END"] / 30,
-            "F": df["FLIGHT_COUNT"],
-            "M": df["SEG_KM_SUM"],
-            "C": df["avg_discount"],
-        },
-        index=df.index,
-    )
+def lrfmc_frame(df: pd.DataFrame) -> pd.DataFrame:
+    """Métricas L, R, F, M, C con las fórmulas oficiales (`features/lrfmc.py`)."""
+    return build_lrfmc(df)[list(LRFMC_COLUMNS)]
 
 
 def revenue_balance(df: pd.DataFrame) -> pd.Series:
-    """Balance de ingresos año 2 vs año 1, acotado a [-1, 1].
-
-    -1 = solo ingresó en el año 1 (dejó de volar), +1 = solo en el año 2 (cliente nuevo o
-    reactivado). A diferencia de `(Y2 - Y1) / (Y1 + 1)`, no explota cuando `SUM_YR_1 = 0`.
-    """
-    total = df["SUM_YR_1"] + df["SUM_YR_2"]
-    return ((df["SUM_YR_2"] - df["SUM_YR_1"]) / total).where(total > 0)
+    """Balance de ingresos año 2 vs año 1 en [-1, 1] (ver `features.lrfmc.revenue_trend`)."""
+    return revenue_trend(df)
 
 
 def eda_summary(df: pd.DataFrame) -> dict[str, Any]:
     """Cifras que citan los párrafos de insight (se calculan, no se escriben a mano)."""
-    lrfmc = lrfmc_preview(df)
+    lrfmc = lrfmc_frame(df)
     revenue = df["SUM_YR_1"] + df["SUM_YR_2"]
     revenue_per_km = revenue / df["SEG_KM_SUM"]
     balance = revenue_balance(df)
@@ -235,7 +216,7 @@ def nulled_values_chart(report: dict) -> alt.Chart:
 
 def distribution_chart(df: pd.DataFrame, bins: int = 40) -> alt.Chart:
     """Histograma de cada métrica LRFMC con selector de variable y de escala (lineal/log)."""
-    lrfmc = lrfmc_preview(df)
+    lrfmc = lrfmc_frame(df)
     frames = []
     for column, label in LRFMC_LABELS.items():
         values = lrfmc[column]
@@ -291,7 +272,7 @@ def distribution_chart(df: pd.DataFrame, bins: int = 40) -> alt.Chart:
 
 def skewness_chart(df: pd.DataFrame, bins: int = 30) -> alt.FacetChart:
     """Forma de cada métrica estandarizada según la transformación elegida (+ asimetría)."""
-    lrfmc = lrfmc_preview(df)
+    lrfmc = lrfmc_frame(df)
     transforms = {
         "Sin transformar": lambda v: v,
         "log1p": np.log1p,
@@ -352,7 +333,7 @@ def skewness_chart(df: pd.DataFrame, bins: int = 30) -> alt.FacetChart:
 
 def correlation_heatmap(df: pd.DataFrame) -> alt.Chart:
     """Matriz de correlación de Spearman (triángulo inferior) de LRFMC y variables de perfil."""
-    lrfmc = lrfmc_preview(df)
+    lrfmc = lrfmc_frame(df)
     data = pd.DataFrame(
         {
             **{label: lrfmc[c] for c, label in LRFMC_SHORT.items()},
@@ -471,7 +452,7 @@ def frequency_km_scatter(df: pd.DataFrame, n: int = 4000, seed: int = 42) -> alt
 
 
 def _box_stats(df: pd.DataFrame) -> pd.DataFrame:
-    lrfmc = lrfmc_preview(df).assign(nivel=df["FFP_TIER"])
+    lrfmc = lrfmc_frame(df).assign(nivel=df["FFP_TIER"])
     rows = []
     for tier, group in lrfmc.groupby("nivel"):
         for column, label in LRFMC_LABELS.items():

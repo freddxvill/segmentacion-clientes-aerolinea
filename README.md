@@ -42,6 +42,7 @@ Ficha completa del dataset (diccionario, procedencia y hallazgos): [`docs/data-c
 uv sync                  # instala dependencias
 uv run poe download      # descarga los datos de Kaggle (ver Datos)
 uv run poe clean         # limpieza → data/interim/flight_clean.parquet
+uv run poe features      # features LRFMC → data/processed/lrfmc.parquet
 uv run poe test          # tests unitarios
 uv run poe test-data     # tests sobre el dataset real
 uv run poe notebooks     # re-ejecuta los notebooks de notebooks/
@@ -56,5 +57,6 @@ Para ver todas las tareas disponibles: `uv run poe`.
 |---|---|
 | [`01_datos_y_limpieza.ipynb`](notebooks/01_datos_y_limpieza.ipynb) | Carga, diagnóstico de calidad y limpieza (62.988 → 62.044 socios) |
 | [`02_eda.ipynb`](notebooks/02_eda.ipynb) | Análisis exploratorio de las métricas LRFMC y del perfil de los socios |
+| [`03_features_y_transformacion.ipynb`](notebooks/03_features_y_transformacion.ipynb) | Cálculo de las features LRFMC y de las variables de perfilado |
 
 Los gráficos son interactivos en JupyterLab, VS Code o nbviewer; en GitHub se ven como imagen.
