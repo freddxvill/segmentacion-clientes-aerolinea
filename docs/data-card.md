@@ -110,7 +110,7 @@
   689 con ingreso nulo y 255 con ingreso 0 que sí volaron (canjes).
 - Anulados sin eliminar la fila: 421 `LAST_FLIGHT_DATE` = `2014/2/29` (inexistente; `LAST_TO_END`
   sigue siendo válido), placeholders de ubicación y 49 edades fuera de [18, 100].
-- Detalle de reglas: `docs/plan-data.md` §3.3.
+- Detalle de reglas: `src/segmentacion/data/clean.py` y `data/interim/cleaning_lineage.json`.
 
 ## Ajustes tras el EDA (Fase 3)
 

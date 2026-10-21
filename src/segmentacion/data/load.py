@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pandas as pd
 
-# Diccionario esperado (plan-data.md §3.2). Se confirma contra el archivo real en la Fase 1.
+# Diccionario esperado (ver docs/data-card.md). Se confirma contra el archivo real en la Fase 1.
 EXPECTED_COLUMNS: tuple[str, ...] = (
     "MEMBER_NO",
     "FFP_DATE",

@@ -4,7 +4,7 @@ Segmentación de los socios de un programa de viajero frecuente de una aerolíne
 **LRFMC** (Length, Recency, Frequency, Monetary, Coefficient) y K-Means. Los resultados se
 publican como sitio Quarto en GitHub Pages.
 
-> 🚧 Proyecto en construcción. El plan completo está en `docs/plan-data.md`.
+> 🚧 Proyecto en construcción.
 
 ## Requisitos
 

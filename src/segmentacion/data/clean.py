@@ -1,4 +1,4 @@
-"""Limpieza del dataset crudo (Fase 2, reglas de plan-data.md §3.3).
+"""Limpieza del dataset crudo (Fase 2).
 
 Cada regla deja un `LineageStep` para mostrar en el sitio cuántas filas elimina o modifica.
 """

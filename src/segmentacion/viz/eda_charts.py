@@ -43,7 +43,7 @@ TIER_LABELS = {4: "Nivel 4", 5: "Nivel 5", 6: "Nivel 6"}
 def lrfmc_preview(df: pd.DataFrame) -> pd.DataFrame:
     """Métricas LRFMC para explorar en el EDA.
 
-    Vista previa con las fórmulas de plan-data.md §3.4; la versión oficial (con tests de
+    Vista previa con las fórmulas del proyecto; la versión oficial (con tests de
     fórmulas y artefacto `lrfmc.parquet`) es `features/lrfmc.py`, de la Fase 4.
     """
     return pd.DataFrame(
