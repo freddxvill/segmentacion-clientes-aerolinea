@@ -77,3 +77,47 @@ $font-family-sans-serif: system-ui, -apple-system, "Segoe UI", Roboto, sans-seri
   padding: 0.25rem 0 0.25rem 0.9rem;
   margin: 0.5rem 0 1.75rem;
 }
+
+// Tarjetas de cifras clave de la portada.
+.kpis {
+  margin: 0.5rem 0 1.5rem;
+}
+
+.kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba($body-color, 0.15);
+  border-top: 3px solid $primary;
+  border-radius: 0.375rem;
+
+  p {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .kpi-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .kpi-label {
+    font-size: 0.875rem;
+    color: rgba($body-color, 0.75);
+    line-height: 1.35;
+  }
+}
+
+// Identificadores largos (`WORK_PROVINCE`, `SUM_YR_1 + SUM_YR_2`) dentro de tablas: en
+// pantallas estrechas se parten en vez de ensanchar la tabla más allá de la página.
+@media (max-width: 575.98px) {
+  td code,
+  th code {
+    word-break: break-word;
+  }
+}

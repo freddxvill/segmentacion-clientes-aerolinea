@@ -1,9 +1,127 @@
 ---
 title: "Segmentación avanzada de clientes"
+subtitle: "Cinco segmentos de socios de un programa de viajero frecuente, con el modelo LRFMC y K-Means"
+toc: false
 ---
 
-Segmentación de los socios de un programa de viajero frecuente con el modelo **LRFMC** (Length, Recency, Frequency, Monetary, Coefficient) y K-Means.
+```{python}
+#| include: false
+import json
 
-::: {.callout-note}
-En construcción (Fase 10).
+import pandas as pd
+
+from segmentacion.config import get_config
+from segmentacion.segments.naming import archetype
+from segmentacion.segments.recommendations import recommendations_for
+from segmentacion.viz import segment_charts as sc
+from segmentacion.viz.fmt import num, pct
+from segmentacion.viz.theme import enable_theme
+
+enable_theme()
+config = get_config()
+metrics = json.loads(config.metrics_file.read_text(encoding="utf-8"))
+lineage = json.loads(config.lineage_file.read_text(encoding="utf-8"))
+profiles = pd.read_csv(config.segment_profiles_file)
+tests = pd.read_csv(config.segment_tests_file).set_index("variable")
+by_name = profiles.set_index("segment")
+vip = by_name.loc["VIP"]
+risk = by_name.loc["En riesgo de abandono"]
+stab = metrics["stability"]
+```
+
+## El problema
+
+Una aerolínea tiene `{python} num(lineage["output_rows"])` socios en su programa de viajero
+frecuente y los trata casi igual: mismos correos, mismas promociones. Pero no valen lo mismo ni
+se comportan igual. La pregunta de negocio es **a quién retener, a quién hacer crecer y a quién
+reactivar**, y con qué acción en cada caso.
+
+## El enfoque
+
+Se describe a cada socio con cinco métricas, el modelo **LRFMC**, la versión de RFM para
+aviación:
+
+| | Métrica | Pregunta |
+|---|---|---|
+| **L** | Antigüedad como socio | ¿Hace cuánto que es cliente? |
+| **R** | Meses desde el último vuelo | ¿Qué tan reciente es su última compra? |
+| **F** | Número de vuelos | ¿Con qué frecuencia vuela? |
+| **M** | Kilómetros volados | ¿Cuánto consume? |
+| **C** | Descuento medio de sus tarifas | ¿Paga tarifa completa o compra en oferta? |
+
+Las métricas se transforman (Yeo-Johnson) y se escalan, y **K-Means** las agrupa en
+`{python} metrics["k"]` segmentos. El ingreso de cada socio **no entra al modelo**: se reserva
+para comprobar después si los segmentos difieren en valor real.
+
+## Resumen ejecutivo
+
+::: {.grid .kpis}
+::: {.g-col-12 .g-col-sm-6 .g-col-lg-3 .kpi}
+[`{python} num(lineage["output_rows"])`]{.kpi-value}
+[socios analizados (`{python} pct(lineage["output_rows"] / lineage["input_rows"])` del total)]{.kpi-label}
 :::
+::: {.g-col-12 .g-col-sm-6 .g-col-lg-3 .kpi}
+[`{python} pct(vip["revenue_share"], 0)`]{.kpi-value}
+[del ingreso viene de los VIP, el `{python} pct(vip["pct"], 0)` de los socios]{.kpi-label}
+:::
+::: {.g-col-12 .g-col-sm-6 .g-col-lg-3 .kpi}
+[`{python} pct(risk["pct"], 0)`]{.kpi-value}
+[de los socios está en riesgo de abandono, con ingresos en caída]{.kpi-label}
+:::
+::: {.g-col-12 .g-col-sm-6 .g-col-lg-3 .kpi}
+[`{python} num(stab["seed_ari_mean"], 2)`]{.kpi-value}
+[de estabilidad (ARI entre semillas): los segmentos son reproducibles]{.kpi-label}
+:::
+:::
+
+```{python}
+#| label: fig-resumen
+#| fig-cap: "Peso de cada segmento en número de socios y en ingreso."
+sc.size_value_chart(profiles)
+```
+
+```{python}
+#| label: tbl-resumen
+#| tbl-cap: "Los cinco segmentos, de mayor a menor valor, con su acción prioritaria."
+summary = pd.DataFrame(
+    {
+        "Segmento": profiles["segment"],
+        "Socios": profiles["pct"].map(lambda v: pct(v)),
+        "Ingreso": profiles["revenue_share"].map(lambda v: pct(v)),
+        "Quiénes son": profiles["segment"].map(lambda s: archetype(s).description),
+        "Acción prioritaria": profiles["segment"].map(lambda s: recommendations_for(s)[0].action),
+    }
+)
+summary.style.hide(axis="index").set_properties(**{"text-align": "left"})
+```
+
+::: {.insight}
+**Tres mensajes para negocio.**
+
+1. **Proteger a los VIP.** Uno de cada cinco socios genera más de la mitad del ingreso. Perder a
+   unos pocos cuesta más que cualquier campaña: la prioridad es el reconocimiento (sin
+   descuentos) y una alerta temprana cuando dejan de volar.
+2. **Hacer crecer a los nuevos.** Los **Nuevos con potencial** son el segmento más grande
+   (`{python} pct(by_name.loc["Nuevos con potencial", "pct"])`) y el semillero de los futuros VIP.
+3. **Reactivar con acciones distintas.** En riesgo de abandono y Cazadores de ofertas llevan
+   meses sin volar, pero los primeros pagaban tarifas casi completas y los segundos compran en
+   oferta: un mismo descuento sería un error para unos u otros.
+
+El segmento explica el `{python} pct(tests.loc["revenue_total", "effect"], 0)` de la variabilidad
+del ingreso (efecto **grande**), aunque el ingreso no se usó para segmentar.
+:::
+
+## Cómo leer este sitio
+
+| Capítulo | Qué contiene |
+|---|---|
+| [Datos](01-datos.qmd) | Fuente, ficha del dataset y trazabilidad de la limpieza. |
+| [EDA](02-eda.qmd) | Exploración interactiva de las métricas y del perfil de los socios. |
+| [LRFMC](03-lrfmc.qmd) | Construcción de las métricas, tratamiento de la asimetría y escalado. |
+| [Clustering](04-clustering.qmd) | Elección de *k*, K-Means, estabilidad, comparación de modelos y PCA/t-SNE. |
+| [Segmentos](05-segmentos.qmd) | Perfil, nombre y recomendaciones de cada segmento. |
+| [Conclusiones](06-conclusiones.qmd) | Conclusiones de negocio, limitaciones y próximos pasos. |
+
+Todos los gráficos son interactivos: pasa el cursor por encima para ver el detalle. El código
+de cada gráfico está plegado bajo **Ver código**, y el proyecto completo (pipeline, tests y
+notebooks) se reproduce con un comando.

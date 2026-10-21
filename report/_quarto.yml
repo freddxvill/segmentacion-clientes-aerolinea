@@ -10,6 +10,8 @@ execute:
 website:
   title: "Segmentación LRFMC"
   description: "Segmentación avanzada de clientes de una aerolínea con LRFMC y K-Means."
+  site-url: https://freddxvill.github.io/segmentacion-clientes-aerolinea/
+  repo-url: https://github.com/freddxvill/segmentacion-clientes-aerolinea
   page-navigation: true
   navbar:
     left:
@@ -27,6 +29,10 @@ website:
         text: Segmentos
       - href: 06-conclusiones.qmd
         text: Conclusiones
+    right:
+      - icon: github
+        href: https://github.com/freddxvill/segmentacion-clientes-aerolinea
+        aria-label: Código en GitHub
   page-footer:
     center: "Proyecto de portafolio · Segmentación avanzada de clientes"
 

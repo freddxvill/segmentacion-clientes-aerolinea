@@ -1,0 +1,36 @@
+name: Publicar sitio
+
+# Renderiza el sitio Quarto desde report/_freeze (sin Python ni datos: las salidas de los
+# .qmd están congeladas) y lo publica en la rama gh-pages.
+# Las páginas se re-ejecutan en local con `uv run poe report` y se versiona report/_freeze.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "report/**"
+      - ".github/workflows/publish.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: quarto-dev/quarto-actions/setup@v2
+        with:
+          version: 1.7.31
+      - name: Renderizar y publicar en gh-pages
+        uses: quarto-dev/quarto-actions/publish@v2
+        with:
+          target: gh-pages
+          path: report
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
