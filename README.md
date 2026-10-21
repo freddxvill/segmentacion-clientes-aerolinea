@@ -10,19 +10,45 @@ publican como sitio Quarto en GitHub Pages.
 
 - [uv](https://docs.astral.sh/uv/) y Python 3.13
 - [Quarto](https://quarto.org/) ≥ 1.5
-- Cuenta de Kaggle con la API configurada y las reglas de la competición
-  [`sa-customer-segmentation`](https://www.kaggle.com/competitions/sa-customer-segmentation) aceptadas
+- Cuenta de Kaggle (para descargar los datos, ver [Datos](#datos))
+
+## Datos
+
+El dataset **no está incluido en el repositorio**: debe descargarse desde la competición de Kaggle
+[**sa-customer-segmentation**](https://www.kaggle.com/competitions/sa-customer-segmentation/data)
+(datos anonimizados de 62.988 socios de un programa de viajero frecuente; requiere iniciar sesión
+y aceptar las reglas de la competición).
+
+**Opción A: descarga automática** (requiere la API de Kaggle configurada en
+`~/.kaggle/kaggle.json`):
+
+```bash
+uv run poe download
+```
+
+**Opción B: descarga manual**
+
+1. Entra en <https://www.kaggle.com/competitions/sa-customer-segmentation/data>, acepta las reglas
+   y descarga los archivos (*Download All*).
+2. Copia `flight_train.csv` y `flight_test.csv` en `data/raw/` (`sample.csv` no se usa).
+3. Ejecuta `uv run poe verify-data`: une ambos archivos en `data/raw/flight.csv`, verifica
+   tamaño, columnas y socios únicos, y actualiza `docs/data-card.md`.
+
+Ficha completa del dataset (diccionario, procedencia y hallazgos): [`docs/data-card.md`](docs/data-card.md).
 
 ## Puesta en marcha
 
 ```bash
 uv sync                  # instala dependencias
-uv run poe download      # descarga data/raw/flight.csv y actualiza docs/data-card.md
+uv run poe download      # descarga los datos de Kaggle (ver Datos)
+uv run poe clean         # limpieza → data/interim/flight_clean.parquet
 uv run poe test          # tests unitarios
 uv run poe test-data     # tests sobre el dataset real
 uv run poe notebooks     # re-ejecuta los notebooks de notebooks/
 uv run poe preview       # previsualiza el sitio Quarto
 ```
+
+Para ver todas las tareas disponibles: `uv run poe`.
 
 ## Notebooks
 
@@ -32,8 +58,3 @@ uv run poe preview       # previsualiza el sitio Quarto
 | [`02_eda.ipynb`](notebooks/02_eda.ipynb) | Análisis exploratorio de las métricas LRFMC y del perfil de los socios |
 
 Los gráficos son interactivos en JupyterLab, VS Code o nbviewer; en GitHub se ven como imagen.
-
-Si descargas el archivo manualmente, cópialo en `data/raw/flight.csv` y ejecuta
-`uv run poe verify-data`.
-
-Para ver todas las tareas disponibles: `uv run poe`.
