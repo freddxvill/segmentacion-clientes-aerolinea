@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="es" xml:lang="es"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.31">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="Conclusiones de negocio, solidez del modelo, limitaciones y próximos pasos.">
+
+<title>Conclusiones – Segmentación LRFMC</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script><script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-e1a5c8363afafaef2c763b6775fbf3ca.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-8ef56b68f8fa1e9d2ba328e99e439f80.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-e1a5c8363afafaef2c763b6775fbf3ca.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-47b5be2e1b7e7ee0db7edaaf558e6f56.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-98b8a34c0e5c8f299d82c62b4877cdb0.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-47b5be2e1b7e7ee0db7edaaf558e6f56.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "Sin resultados",
+    "search-matching-documents-text": "documentos encontrados",
+    "search-copy-link-title": "Copiar el enlace en la búsqueda",
+    "search-hide-matches-text": "Ocultar resultados adicionales",
+    "search-more-match-text": "resultado adicional en este documento",
+    "search-more-matches-text": "resultados adicionales en este documento",
+    "search-clear-button-title": "Borrar",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancelar",
+    "search-submit-button-title": "Enviar",
+    "search-label": "Buscar"
+  }
+}</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" integrity="sha512-c3Nl8+7g4LMSTdrm621y7kf9v3SDPnhxLNhcjFJbKECVnmZHTdo+IRO05sNLTH/D3vA6u1X32ehoLC7WFVdheg==" crossorigin="anonymous"></script>
+
+
+
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
+
+
+
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">Segmentación LRFMC</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Buscar"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Navegación de palanca" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="./index.html"> 
+<span class="menu-text">Inicio</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./01-datos.html"> 
+<span class="menu-text">Datos</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./02-eda.html"> 
+<span class="menu-text">EDA</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./03-lrfmc.html"> 
+<span class="menu-text">LRFMC</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./04-clustering.html"> 
+<span class="menu-text">Clustering</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./05-segmentos.html"> 
+<span class="menu-text">Segmentos</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link active" href="./06-conclusiones.html" aria-current="page"> 
+<span class="menu-text">Conclusiones</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/freddxvill/segmentacion-clientes-aerolinea"> <i class="bi bi-github" role="img" aria-label="Código en GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Alternar modo oscuro"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">En esta página</h2>
+   
+  <ul>
+  <li><a href="#conclusiones-de-negocio" id="toc-conclusiones-de-negocio" class="nav-link active" data-scroll-target="#conclusiones-de-negocio">Conclusiones de negocio</a>
+  <ul class="collapse">
+  <li><a href="#plan-de-acción" id="toc-plan-de-acción" class="nav-link" data-scroll-target="#plan-de-acción">Plan de acción</a></li>
+  </ul></li>
+  <li><a href="#solidez-del-modelo" id="toc-solidez-del-modelo" class="nav-link" data-scroll-target="#solidez-del-modelo">Solidez del modelo</a></li>
+  <li><a href="#limitaciones" id="toc-limitaciones" class="nav-link" data-scroll-target="#limitaciones">Limitaciones</a></li>
+  <li><a href="#próximos-pasos" id="toc-próximos-pasos" class="nav-link" data-scroll-target="#próximos-pasos">Próximos pasos</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Conclusiones</h1>
+</div>
+
+<div>
+  <div class="description">
+    Conclusiones de negocio, solidez del modelo, limitaciones y próximos pasos.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="conclusiones-de-negocio" class="level2">
+<h2 class="anchored" data-anchor-id="conclusiones-de-negocio">Conclusiones de negocio</h2>
+<p><strong>1. El valor está muy concentrado y hay que protegerlo.</strong> Los <strong>VIP</strong> son el 21,3 % de los socios y aportan el 55,9 % del ingreso. Vuelan una mediana de 24 veces en dos años y su último vuelo fue hace menos de un mes. Para ellos el descuento no es la palanca: pagan tarifas por encima de la media. Lo que funciona es el reconocimiento (upgrades, prioridad, atención dedicada) y una <strong>alerta temprana</strong> cuando un VIP deja de volar.</p>
+<p><strong>2. El crecimiento está en los socios recientes.</strong> Los <strong>Nuevos con potencial</strong> son el segmento más grande (23,1 %), llevan una mediana de 24 meses en el programa y ya vuelan más que la media. Son el grupo con mejor tendencia de ingreso (mediana 0,16): un <em>fast track</em> de nivel puede convertir una parte en VIP.</p>
+<p><strong>3. Hay que reactivar a dos grupos, con acciones distintas.</strong> <strong>En riesgo de abandono</strong> (19,4 %) y <strong>Cazadores de ofertas</strong> (14,4 %) llevan meses sin volar (medianas de 11,5 y 8,7 meses). Pero los primeros pagaban tarifas casi completas (C = 0,82) y el 61 % tiene una caída fuerte de ingreso: se recuperan con servicio y flexibilidad, no con precio. Los segundos compran con mucho descuento (C = 0,50): las ofertas los reactivan, pero conviene limitarlas a temporada baja para no erosionar el margen.</p>
+<p><strong>4. Los Veteranos ocasionales son fieles, pero de baja frecuencia.</strong> Llevan una mediana de 74 meses en el programa y siguen volando, poco (6 vuelos). No necesitan reactivación sino recordatorios oportunos: campañas de ocio en sus fechas habituales y canjes fáciles de sus puntos.</p>
+<p><strong>5. Los segmentos son de comportamiento, no de demografía.</strong> Edad y género apenas difieren entre segmentos (efectos pequeños), mientras que el ingreso sí (ε² = 0,67, efecto grande). Segmentar por datos demográficos habría dejado fuera lo que de verdad separa a los socios.</p>
+<section id="plan-de-acción" class="level3">
+<h3 class="anchored" data-anchor-id="plan-de-acción">Plan de acción</h3>
+<div class="cell" data-execution_count="2">
+<details class="code-fold">
+<summary>Ver código</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>plan <span class="op">=</span> pd.DataFrame(recommendations_table())</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>plan.columns <span class="op">=</span> [<span class="st">"Segmento"</span>, <span class="st">"Acción"</span>, <span class="st">"KPI"</span>]</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>plan.style.hide(axis<span class="op">=</span><span class="st">"index"</span>).set_properties(<span class="op">**</span>{<span class="st">"text-align"</span>: <span class="st">"left"</span>})</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div id="tbl-plan" class="cell quarto-float quarto-figure quarto-figure-center anchored" data-execution_count="2">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-plan-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Tabla&nbsp;1: Acciones recomendadas por segmento y KPI con el que medir cada una.
+</figcaption>
+<div aria-describedby="tbl-plan-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output cell-output-display" data-execution_count="2">
+<style type="text/css">
+#T_d81c9_row0_col0, #T_d81c9_row0_col1, #T_d81c9_row0_col2, #T_d81c9_row1_col0, #T_d81c9_row1_col1, #T_d81c9_row1_col2, #T_d81c9_row2_col0, #T_d81c9_row2_col1, #T_d81c9_row2_col2, #T_d81c9_row3_col0, #T_d81c9_row3_col1, #T_d81c9_row3_col2, #T_d81c9_row4_col0, #T_d81c9_row4_col1, #T_d81c9_row4_col2, #T_d81c9_row5_col0, #T_d81c9_row5_col1, #T_d81c9_row5_col2, #T_d81c9_row6_col0, #T_d81c9_row6_col1, #T_d81c9_row6_col2, #T_d81c9_row7_col0, #T_d81c9_row7_col1, #T_d81c9_row7_col2, #T_d81c9_row8_col0, #T_d81c9_row8_col1, #T_d81c9_row8_col2, #T_d81c9_row9_col0, #T_d81c9_row9_col1, #T_d81c9_row9_col2, #T_d81c9_row10_col0, #T_d81c9_row10_col1, #T_d81c9_row10_col2, #T_d81c9_row11_col0, #T_d81c9_row11_col1, #T_d81c9_row11_col2 {
+  text-align: left;
+}
+</style>
+
+<table id="T_d81c9" class="do-not-create-environment cell caption-top table table-sm table-striped small" data-quarto-postprocess="true">
+<thead>
+<tr class="header">
+<th id="T_d81c9_level0_col0" class="col_heading level0 col0" data-quarto-table-cell-role="th">Segmento</th>
+<th id="T_d81c9_level0_col1" class="col_heading level0 col1" data-quarto-table-cell-role="th">Acción</th>
+<th id="T_d81c9_level0_col2" class="col_heading level0 col2" data-quarto-table-cell-role="th">KPI</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td id="T_d81c9_row0_col0" class="data row0 col0">VIP</td>
+<td id="T_d81c9_row0_col1" class="data row0 col1">Reconocimiento sin descuento: upgrades, sala VIP y embarque prioritario en sus rutas habituales.</td>
+<td id="T_d81c9_row0_col2" class="data row0 col2">Tasa de retención a 12 meses y vuelos por socio frente a un grupo de control.</td>
+</tr>
+<tr class="even">
+<td id="T_d81c9_row1_col0" class="data row1 col0">VIP</td>
+<td id="T_d81c9_row1_col1" class="data row1 col1">Acceso anticipado a ventas y un canal de atención dedicado.</td>
+<td id="T_d81c9_row1_col2" class="data row1 col2">NPS del segmento y reclamaciones por cada 1.000 vuelos.</td>
+</tr>
+<tr class="odd">
+<td id="T_d81c9_row2_col0" class="data row2 col0">VIP</td>
+<td id="T_d81c9_row2_col1" class="data row2 col1">Alerta temprana cuando un VIP pasa más de 3 meses sin volar, con contacto personal.</td>
+<td id="T_d81c9_row2_col2" class="data row2 col2">% de VIP que pasan al segmento «En riesgo de abandono» en el trimestre.</td>
+</tr>
+<tr class="even">
+<td id="T_d81c9_row3_col0" class="data row3 col0">Nuevos con potencial</td>
+<td id="T_d81c9_row3_col1" class="data row3 col1">Fast track de nivel: millas bonus al alcanzar un número de vuelos en los primeros 6 meses.</td>
+<td id="T_d81c9_row3_col2" class="data row3 col2">% de socios que suben de nivel (FFP_TIER) en 12 meses.</td>
+</tr>
+<tr class="odd">
+<td id="T_d81c9_row4_col0" class="data row4 col0">Nuevos con potencial</td>
+<td id="T_d81c9_row4_col1" class="data row4 col1">Bono por vuelo adicional y ofertas de rutas nuevas desde su ciudad.</td>
+<td id="T_d81c9_row4_col2" class="data row4 col2">Vuelos por socio y % que pasa a «VIP» frente a un grupo de control.</td>
+</tr>
+<tr class="even">
+<td id="T_d81c9_row5_col0" class="data row5 col0">Veteranos ocasionales</td>
+<td id="T_d81c9_row5_col1" class="data row5 col1">Campañas de ocio y temporada alineadas con sus fechas habituales de viaje.</td>
+<td id="T_d81c9_row5_col2" class="data row5 col2">Vuelos por socio al año y tasa de conversión de la campaña.</td>
+</tr>
+<tr class="odd">
+<td id="T_d81c9_row6_col0" class="data row6 col0">Veteranos ocasionales</td>
+<td id="T_d81c9_row6_col1" class="data row6 col1">Recordatorio de los puntos acumulados y canjes fáciles para mantener el vínculo.</td>
+<td id="T_d81c9_row6_col2" class="data row6 col2">Tasa de canje y recencia media del segmento.</td>
+</tr>
+<tr class="even">
+<td id="T_d81c9_row7_col0" class="data row7 col0">En riesgo de abandono</td>
+<td id="T_d81c9_row7_col1" class="data row7 col1">Win-back con millas extra de caducidad corta (por ejemplo, 90 días).</td>
+<td id="T_d81c9_row7_col2" class="data row7 col2">% de socios reactivados (al menos un vuelo) en 90 días.</td>
+</tr>
+<tr class="odd">
+<td id="T_d81c9_row8_col0" class="data row8 col0">En riesgo de abandono</td>
+<td id="T_d81c9_row8_col1" class="data row8 col1">Encuesta breve de satisfacción y contacto de servicio al cliente.</td>
+<td id="T_d81c9_row8_col2" class="data row8 col2">Tasa de respuesta y distribución de los motivos de abandono.</td>
+</tr>
+<tr class="even">
+<td id="T_d81c9_row9_col0" class="data row9 col0">En riesgo de abandono</td>
+<td id="T_d81c9_row9_col1" class="data row9 col1">Ofrecer upgrades o flexibilidad en lugar de descuentos: pagaban tarifas casi completas.</td>
+<td id="T_d81c9_row9_col2" class="data row9 col2">Ingreso recuperado por socio contactado frente a un grupo de control.</td>
+</tr>
+<tr class="odd">
+<td id="T_d81c9_row10_col0" class="data row10 col0">Cazadores de ofertas</td>
+<td id="T_d81c9_row10_col1" class="data row10 col1">Alertas de tarifas promocionales en sus rutas habituales, solo en temporada baja.</td>
+<td id="T_d81c9_row10_col2" class="data row10 col2">Tasa de reactivación en 90 días e ingreso por km de los vuelos reactivados.</td>
+</tr>
+<tr class="even">
+<td id="T_d81c9_row11_col0" class="data row11 col0">Cazadores de ofertas</td>
+<td id="T_d81c9_row11_col1" class="data row11 col1">Paquetes (vuelo + servicios) en lugar de descuentos generales sobre la tarifa.</td>
+<td id="T_d81c9_row11_col2" class="data row11 col2">Margen por pasajero frente a una promoción de descuento directo.</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</figure>
+</div>
+</div>
+<p>Cada acción es una <strong>hipótesis</strong>: debería lanzarse como experimento, con un grupo de control dentro del segmento, y medirse con su KPI antes de extenderla.</p>
+</section>
+</section>
+<section id="solidez-del-modelo" class="level2">
+<h2 class="anchored" data-anchor-id="solidez-del-modelo">Solidez del modelo</h2>
+<ul>
+<li><strong>Reproducible.</strong> Con 10 semillas distintas, el ARI medio es 0,98 (mínimo 0,96), y con submuestras del 80 % de los socios, 0,97. El criterio principal del proyecto (ARI ≥ 0,90) se cumple con holgura.</li>
+<li><strong>Separación moderada, como es de esperar.</strong> El silhouette es 0,21, por encima del umbral de 0,20. El comportamiento de los clientes es un continuo, no grupos aislados: los segmentos son una partición útil de ese continuo.</li>
+<li><strong>Mejor que las alternativas.</strong> K-Means supera en silhouette a GMM, Ward y al <em>baseline</em> por quintiles (máximo de los tres: 0,14). DBSCAN encuentra un único grupo denso más un 1,2 % de socios atípicos, lo que confirma que no hay grupos naturales separados.</li>
+<li><strong>Nombres robustos.</strong> La asignación de nombres no cambia en el 100 % de 500 perturbaciones de los pesos de las reglas.</li>
+</ul>
+</section>
+<section id="limitaciones" class="level2">
+<h2 class="anchored" data-anchor-id="limitaciones">Limitaciones</h2>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Procedencia del dataset
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Son datos anonimizados de un programa de viajero frecuente de una aerolínea, con <strong>procedencia original no documentada por el publicador</strong> (aerolínea, país y licencia). Se usan con fines de demostración: las conclusiones ilustran el método, no describen a una aerolínea concreta.</p>
+</div>
+</div>
+<ul>
+<li><strong>Ventana temporal antigua y corta.</strong> Los datos cubren dos años que terminan el 31 de marzo de
+<ol start="2014" type="1">
+<li>Los hábitos de viaje cambiaron mucho después (por ejemplo, con la pandemia), así que los tamaños de los segmentos no son extrapolables a hoy; el método sí.</li>
+</ol></li>
+<li><strong>Una sola foto.</strong> Hay una fecha de corte para todos los socios: no se puede ver cómo se mueven entre segmentos con el tiempo, ni validar que «En riesgo de abandono» abandone de verdad.</li>
+<li><strong>Ingreso sin moneda ni margen.</strong> <code>SUM_YR_1</code> y <code>SUM_YR_2</code> son ingresos por tarifas en una moneda no documentada y sin costes: sirven para comparar segmentos, no para estimar rentabilidad.</li>
+<li><strong>Sesgos de la limpieza.</strong> Se excluyeron 944 socios (1,5 %), entre ellos 255 que solo volaron con canjes de puntos: ese comportamiento queda fuera de la segmentación.</li>
+<li><strong>Sesgo de la partición de Kaggle.</strong> El archivo de test de la competición solo tiene socios con 2 a 10 vuelos; por eso se usan train y test juntos. Usar solo uno sesgaría los segmentos.</li>
+<li><strong>Variables limitadas.</strong> No hay rutas, clase de cabina, canal de compra ni motivo del viaje (ocio o negocio), que afinarían los perfiles y las recomendaciones.</li>
+<li><strong>Recomendaciones sin validar.</strong> Las acciones salen del perfil de cada segmento, no de experimentos: su efecto real está por medir.</li>
+</ul>
+</section>
+<section id="próximos-pasos" class="level2">
+<h2 class="anchored" data-anchor-id="próximos-pasos">Próximos pasos</h2>
+<ol type="1">
+<li><strong>Probar las acciones</strong> con experimentos A/B por segmento y los KPIs del plan de acción.</li>
+<li><strong>Re-segmentar periódicamente</strong> (por ejemplo, cada trimestre) y seguir las transiciones entre segmentos, sobre todo de VIP a En riesgo de abandono.</li>
+<li><strong>Añadir un modelo de abandono</strong> supervisado cuando haya datos de varios periodos, para priorizar a quién contactar dentro de cada segmento.</li>
+<li><strong>Enriquecer los datos</strong> con rutas, clase y canal, y estimar el margen por socio en lugar del ingreso bruto.</li>
+</ol>
+
+
+</section>
+
+</main> <!-- /main -->
+<script>
+  // Los gráficos Altair con width="container" que están en una pestaña oculta se dibujan con
+  // ancho 0. vega-embed recalcula el ancho con el evento "resize" de la ventana, así que se lanza
+  // uno cada vez que se muestra una pestaña.
+  document.addEventListener("shown.bs.tab", () => window.dispatchEvent(new Event("resize")));
+</script>
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copiado");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copiado");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/freddxvill\.github\.io\/segmentacion-clientes-aerolinea\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+      &nbsp;
+    </div>   
+    <div class="nav-footer-center">
+<p>Proyecto de portafolio · Segmentación avanzada de clientes</p>
+</div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

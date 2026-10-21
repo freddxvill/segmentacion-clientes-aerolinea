@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="es" xml:lang="es"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.31">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="Fuente, ficha del dataset y trazabilidad de la limpieza.">
+
+<title>Datos – Segmentación LRFMC</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script><script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-e1a5c8363afafaef2c763b6775fbf3ca.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-8ef56b68f8fa1e9d2ba328e99e439f80.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-e1a5c8363afafaef2c763b6775fbf3ca.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-47b5be2e1b7e7ee0db7edaaf558e6f56.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-98b8a34c0e5c8f299d82c62b4877cdb0.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-47b5be2e1b7e7ee0db7edaaf558e6f56.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "Sin resultados",
+    "search-matching-documents-text": "documentos encontrados",
+    "search-copy-link-title": "Copiar el enlace en la búsqueda",
+    "search-hide-matches-text": "Ocultar resultados adicionales",
+    "search-more-match-text": "resultado adicional en este documento",
+    "search-more-matches-text": "resultados adicionales en este documento",
+    "search-clear-button-title": "Borrar",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancelar",
+    "search-submit-button-title": "Enviar",
+    "search-label": "Buscar"
+  }
+}</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" integrity="sha512-c3Nl8+7g4LMSTdrm621y7kf9v3SDPnhxLNhcjFJbKECVnmZHTdo+IRO05sNLTH/D3vA6u1X32ehoLC7WFVdheg==" crossorigin="anonymous"></script>
+
+
+
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
+
+
+
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">Segmentación LRFMC</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Buscar"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Navegación de palanca" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="./index.html"> 
+<span class="menu-text">Inicio</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link active" href="./01-datos.html" aria-current="page"> 
+<span class="menu-text">Datos</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./02-eda.html"> 
+<span class="menu-text">EDA</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./03-lrfmc.html"> 
+<span class="menu-text">LRFMC</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./04-clustering.html"> 
+<span class="menu-text">Clustering</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./05-segmentos.html"> 
+<span class="menu-text">Segmentos</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./06-conclusiones.html"> 
+<span class="menu-text">Conclusiones</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/freddxvill/segmentacion-clientes-aerolinea"> <i class="bi bi-github" role="img" aria-label="Código en GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Alternar modo oscuro"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">En esta página</h2>
+   
+  <ul>
+  <li><a href="#fuente" id="toc-fuente" class="nav-link active" data-scroll-target="#fuente">Fuente</a></li>
+  <li><a href="#qué-contiene-cada-socio" id="toc-qué-contiene-cada-socio" class="nav-link" data-scroll-target="#qué-contiene-cada-socio">Qué contiene cada socio</a></li>
+  <li><a href="#limpieza" id="toc-limpieza" class="nav-link" data-scroll-target="#limpieza">Limpieza</a>
+  <ul class="collapse">
+  <li><a href="#normalización-de-texto" id="toc-normalización-de-texto" class="nav-link" data-scroll-target="#normalización-de-texto">Normalización de texto</a></li>
+  </ul></li>
+  <li><a href="#hipótesis-confirmadas-en-el-eda" id="toc-hipótesis-confirmadas-en-el-eda" class="nav-link" data-scroll-target="#hipótesis-confirmadas-en-el-eda">Hipótesis confirmadas en el EDA</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Datos</h1>
+</div>
+
+<div>
+  <div class="description">
+    Fuente, ficha del dataset y trazabilidad de la limpieza.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="fuente" class="level2">
+<h2 class="anchored" data-anchor-id="fuente">Fuente</h2>
+<p>Los datos provienen de la competición de Kaggle <a href="https://www.kaggle.com/competitions/sa-customer-segmentation"><code>sa-customer-segmentation</code></a>: socios de un <strong>programa de viajero frecuente</strong> (FFP) de una aerolínea, con su actividad durante una ventana de observación de dos años que termina el <strong>31 de marzo de 2014</strong> (<code>LOAD_TIME</code>).</p>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Procedencia
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Datos anonimizados de un programa de viajero frecuente de una aerolínea; <strong>procedencia original no documentada por el publicador</strong> (aerolínea, país y licencia). El dataset circula desde hace años en cursos y publicaciones sobre el modelo LRFMC. Por eso el CSV crudo no se versiona en el repositorio: se descarga con <code>uv run poe download</code>.</p>
+</div>
+</div>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Campo</th>
+<th>Valor</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Archivos fuente</td>
+<td><code>flight_train.csv</code> (55.000) + <code>flight_test.csv</code> (7.988) → <code>flight.csv</code></td>
+</tr>
+<tr class="even">
+<td>Socios (filas)</td>
+<td>62.988</td>
+</tr>
+<tr class="odd">
+<td>Columnas</td>
+<td>23</td>
+</tr>
+<tr class="even">
+<td>Tamaño del CSV</td>
+<td>8,08 MB</td>
+</tr>
+<tr class="odd">
+<td>Ventana de observación</td>
+<td>1 de abril de 2012 – 31 de marzo de 2014</td>
+</tr>
+<tr class="even">
+<td>Granularidad</td>
+<td>una fila por socio (<code>MEMBER_NO</code> único)</td>
+</tr>
+</tbody>
+</table>
+<p>El <em>test</em> de la competición no es una muestra aleatoria: solo contiene socios con 2 a 10 vuelos. Segmentar únicamente con el <em>train</em> excluiría a los clientes de baja frecuencia, así que se usa la <strong>población completa</strong> (concatenación de ambos archivos). La ficha completa, con el diccionario de las 23 columnas y la huella SHA-256, está en <code>docs/data-card.md</code> del repositorio.</p>
+</section>
+<section id="qué-contiene-cada-socio" class="level2">
+<h2 class="anchored" data-anchor-id="qué-contiene-cada-socio">Qué contiene cada socio</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Grupo</th>
+<th>Columnas</th>
+<th>Uso en el proyecto</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Perfil</td>
+<td><code>GENDER</code>, <code>AGE</code>, <code>WORK_CITY</code>, <code>WORK_PROVINCE</code>, <code>WORK_COUNTRY</code></td>
+<td>Perfilado de segmentos</td>
+</tr>
+<tr class="even">
+<td>Programa</td>
+<td><code>FFP_DATE</code> (alta), <code>FFP_TIER</code> (nivel 4/5/6)</td>
+<td><strong>L</strong> y validación externa</td>
+</tr>
+<tr class="odd">
+<td>Actividad</td>
+<td><code>FLIGHT_COUNT</code>, <code>SEG_KM_SUM</code>, <code>LAST_TO_END</code>, <code>avg_discount</code></td>
+<td><strong>F</strong>, <strong>M</strong>, <strong>R</strong>, <strong>C</strong></td>
+</tr>
+<tr class="even">
+<td>Ingresos</td>
+<td><code>SUM_YR_1</code>, <code>SUM_YR_2</code></td>
+<td>Perfilado y riesgo de abandono</td>
+</tr>
+<tr class="odd">
+<td>Puntos</td>
+<td><code>BP_SUM</code>, <code>Points_Sum</code>, <code>Point_NotFlight</code>, <code>EXCHANGE_COUNT</code></td>
+<td>Perfilado</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="limpieza" class="level2">
+<h2 class="anchored" data-anchor-id="limpieza">Limpieza</h2>
+<p>Las reglas están en <code>src/segmentacion/data/clean.py</code> y cada una deja constancia de cuántas filas toca (<em>data lineage</em>). El criterio general: <strong>solo se elimina un socio si su fila no sirve para calcular LRFMC</strong>; si el problema está en una columna de perfil, se anula ese valor y el socio se conserva.</p>
+<div id="cell-fig-embudo" class="cell" data-execution_count="2">
+<details class="code-fold">
+<summary>Ver código</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>ec.cleaning_funnel_chart(report)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div id="fig-embudo" class="cell-output cell-output-display quarto-float quarto-figure quarto-figure-center anchored" data-execution_count="2">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-embudo-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+
+<style>
+  #altair-viz-eef861de82624c59b5aa0fb2eea4a600.vega-embed {
+    width: 100%;
+    display: flex;
+  }
+
+  #altair-viz-eef861de82624c59b5aa0fb2eea4a600.vega-embed details,
+  #altair-viz-eef861de82624c59b5aa0fb2eea4a600.vega-embed details summary {
+    position: relative;
+  }
+</style>
+<div id="altair-viz-eef861de82624c59b5aa0fb2eea4a600"></div>
+<script type="text/javascript">
+  var VEGA_DEBUG = (typeof VEGA_DEBUG == "undefined") ? {} : VEGA_DEBUG;
+  (function(spec, embedOpt){
+    let outputDiv = document.currentScript.previousElementSibling;
+    if (outputDiv.id !== "altair-viz-eef861de82624c59b5aa0fb2eea4a600") {
+      outputDiv = document.getElementById("altair-viz-eef861de82624c59b5aa0fb2eea4a600");
+    }
+
+    const paths = {
+      "vega": "https://cdn.jsdelivr.net/npm/vega@6?noext",
+      "vega-lib": "https://cdn.jsdelivr.net/npm/vega-lib?noext",
+      "vega-lite": "https://cdn.jsdelivr.net/npm/vega-lite@6.4.1?noext",
+      "vega-embed": "https://cdn.jsdelivr.net/npm/vega-embed@7?noext",
+    };
+
+    function maybeLoadScript(lib, version) {
+      var key = `${lib.replace("-", "")}_version`;
+      return (VEGA_DEBUG[key] == version) ?
+        Promise.resolve(paths[lib]) :
+        new Promise(function(resolve, reject) {
+          var s = document.createElement('script');
+          document.getElementsByTagName("head")[0].appendChild(s);
+          s.async = true;
+          s.onload = () => {
+            VEGA_DEBUG[key] = version;
+            return resolve(paths[lib]);
+          };
+          s.onerror = () => reject(`Error loading script: ${paths[lib]}`);
+          s.src = paths[lib];
+        });
+    }
+
+    function showError(err) {
+      outputDiv.innerHTML = `<div class="error" style="color:red;">${err}</div>`;
+      throw err;
+    }
+
+    function displayChart(vegaEmbed) {
+      vegaEmbed(outputDiv, spec, embedOpt)
+        .catch(err => showError(`Javascript Error: ${err.message}<br>This usually means there's a typo in your chart specification. See the javascript console for the full traceback.`));
+    }
+
+    if(typeof define === "function" && define.amd) {
+      requirejs.config({paths});
+      let deps = ["vega-embed"];
+      require(deps, displayChart, err => showError(`Error loading script: ${err.message}`));
+    } else {
+      maybeLoadScript("vega", "6")
+        .then(() => maybeLoadScript("vega-lite", "6.4.1"))
+        .then(() => maybeLoadScript("vega-embed", "7"))
+        .catch(showError)
+        .then(() => displayChart(vegaEmbed));
+    }
+  })({"config": {"background": "transparent", "font": "system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif", "view": {"stroke": null, "continuousWidth": 560, "continuousHeight": 300}, "title": {"font": "system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif", "fontSize": 15, "fontWeight": 600, "color": "#6f6e69", "subtitleColor": "#6f6e69", "subtitleFontSize": 12, "anchor": "start", "offset": 12}, "axis": {"labelColor": "#6f6e69", "titleColor": "#6f6e69", "labelFont": "system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif", "titleFont": "system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif", "labelFontSize": 11, "titleFontSize": 12, "titleFontWeight": "normal", "gridColor": "#8a897f33", "domainColor": "#8a897f33", "tickColor": "#8a897f33"}, "axisX": {"grid": false}, "legend": {"labelColor": "#6f6e69", "titleColor": "#6f6e69", "labelFont": "system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif", "titleFont": "system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif", "titleFontWeight": "normal"}, "header": {"labelColor": "#6f6e69", "titleColor": "#6f6e69", "labelFont": "system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif"}, "range": {"category": ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#6250d6", "#e34948"], "ramp": ["#cde2fb", "#86b6ef", "#3987e5", "#1c5cab", "#0d366b"]}, "bar": {"color": "#2a78d6", "cornerRadiusEnd": 2}, "line": {"color": "#2a78d6", "strokeWidth": 2}, "area": {"color": "#2a78d6"}, "point": {"color": "#2a78d6", "size": 64}, "circle": {"color": "#2a78d6"}, "rect": {"color": "#2a78d6"}, "tick": {"color": "#2a78d6"}, "text": {"color": "#6f6e69", "font": "system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif"}}, "layer": [{"mark": {"type": "bar", "cornerRadiusEnd": 3, "height": 22}, "encoding": {"color": {"value": "#2a78d6"}, "tooltip": [{"field": "paso", "title": "Paso", "type": "nominal"}, {"field": "socios", "format": ",.0f", "title": "Socios restantes", "type": "quantitative"}, {"field": "eliminadas", "format": ",.0f", "title": "Filas eliminadas", "type": "quantitative"}, {"field": "retenido", "format": ".1%", "title": "% retenido", "type": "quantitative"}], "x": {"axis": {"format": ",.0f"}, "field": "socios", "title": "Socios", "type": "quantitative"}, "y": {"axis": {"labelLimit": 320}, "field": "paso", "sort": {"field": "orden"}, "title": null, "type": "nominal"}}, "title": "Embudo de limpieza"}, {"mark": {"type": "text", "align": "right", "color": "white", "dx": -6, "fontWeight": 600}, "encoding": {"text": {"field": "socios", "format": ",.0f", "type": "quantitative"}, "tooltip": [{"field": "paso", "title": "Paso", "type": "nominal"}, {"field": "socios", "format": ",.0f", "title": "Socios restantes", "type": "quantitative"}, {"field": "eliminadas", "format": ",.0f", "title": "Filas eliminadas", "type": "quantitative"}, {"field": "retenido", "format": ".1%", "title": "% retenido", "type": "quantitative"}], "x": {"field": "socios", "type": "quantitative"}, "y": {"axis": {"labelLimit": 320}, "field": "paso", "sort": {"field": "orden"}, "title": null, "type": "nominal"}}, "title": "Embudo de limpieza"}], "data": {"name": "data-bb9f009ba95593db68ebf91e57d623e2"}, "height": {"step": 36}, "width": "container", "$schema": "https://vega.github.io/schema/vega-lite/v6.4.1.json", "datasets": {"data-bb9f009ba95593db68ebf91e57d623e2": [{"paso": "CSV crudo", "socios": 62988, "eliminadas": 0, "orden": 0, "retenido": 1.0}, {"paso": "SUM_YR_1 o SUM_YR_2 nulo", "socios": 62299, "eliminadas": 689, "orden": 1, "retenido": 0.9890614085222582}, {"paso": "Ingreso total 0 con km volados (vuelos de canje con puntos)", "socios": 62044, "eliminadas": 255, "orden": 2, "retenido": 0.985013018352702}]}}, {"formatLocale": {"decimal": ",", "thousands": ".", "grouping": [3], "currency": ["", " \u00a5"]}, "timeFormatLocale": {"dateTime": "%A, %e de %B de %Y, %X", "date": "%d/%m/%Y", "time": "%H:%M:%S", "periods": ["AM", "PM"], "days": ["domingo", "lunes", "martes", "mi\u00e9rcoles", "jueves", "viernes", "s\u00e1bado"], "shortDays": ["dom", "lun", "mar", "mi\u00e9", "jue", "vie", "s\u00e1b"], "months": ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"], "shortMonths": ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"]}, "renderer": "svg", "actions": {"export": true, "source": false, "compiled": false, "editor": false}, "mode": "vega-lite"});
+</script>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-embudo-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figura&nbsp;1: Socios que quedan tras cada regla que elimina filas.
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="insight">
+<p>De 62.988 socios quedan <strong>62.044</strong> (98,5 % retenido). Solo dos reglas eliminan filas: ingresos nulos (no permiten validar el valor del cliente) y socios con ingreso 0 que sí volaron, es decir, viajes pagados íntegramente con puntos, cuyo descuento y valor no son comparables con los del resto.</p>
+</div>
+<div id="cell-fig-anulados" class="cell" data-execution_count="3">
+<details class="code-fold">
+<summary>Ver código</summary>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>ec.nulled_values_chart(report)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div id="fig-anulados" class="cell-output cell-output-display quarto-float quarto-figure quarto-figure-center anchored" data-execution_count="3">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-anulados-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+
+<style>
+  #altair-viz-779767d2540740d38a5c2d390f1ecf9a.vega-embed {
+    width: 100%;
+    display: flex;
+  }
+
+  #altair-viz-779767d2540740d38a5c2d390f1ecf9a.vega-embed details,
+  #altair-viz-779767d2540740d38a5c2d390f1ecf9a.vega-embed details summary {
+    position: relative;
+  }
+</style>
+<div id="altair-viz-779767d2540740d38a5c2d390f1ecf9a"></div>
+<script type="text/javascript">
+  var VEGA_DEBUG = (typeof VEGA_DEBUG == "undefined") ? {} : VEGA_DEBUG;
+  (function(spec, embedOpt){
+    let outputDiv = document.currentScript.previousElementSibling;
+    if (outputDiv.id !== "altair-viz-779767d2540740d38a5c2d390f1ecf9a") {
+      outputDiv = document.getElementById("altair-viz-779767d2540740d38a5c2d390f1ecf9a");
+    }
+
+    const paths = {
+      "vega": "https://cdn.jsdelivr.net/npm/vega@6?noext",
+      "vega-lib": "https://cdn.jsdelivr.net/npm/vega-lib?noext",
+      "vega-lite": "https://cdn.jsdelivr.net/npm/vega-lite@6.4.1?noext",
+      "vega-embed": "https://cdn.jsdelivr.net/npm/vega-embed@7?noext",
+    };
+
+    function maybeLoadScript(lib, version) {
+      var key = `${lib.replace("-", "")}_version`;
+      return (VEGA_DEBUG[key] == version) ?
+        Promise.resolve(paths[lib]) :
+        new Promise(function(resolve, reject) {
+          var s = document.createElement('script');
+          document.getElementsByTagName("head")[0].appendChild(s);
+          s.async = true;
+          s.onload = () => {
+            VEGA_DEBUG[key] = version;
+            return resolve(paths[lib]);
+          };
+          s.onerror = () => reject(`Error loading script: ${paths[lib]}`);
+          s.src = paths[lib];
+        });
+    }
+
+    function showError(err) {
+      outputDiv.innerHTML = `<div class="error" style="color:red;">${err}</div>`;
+      throw err;
+    }
+
+    function displayChart(vegaEmbed) {
+      vegaEmbed(outputDiv, spec, embedOpt)
+        .catch(err => showError(`Javascript Error: ${err.message}<br>This usually means there's a typo in your chart specification. See the javascript console for the full traceback.`));
+    }
+
+    if(typeof define === "function" && define.amd) {
+      requirejs.config({paths});
+      let deps = ["vega-embed"];
+      require(deps, displayChart, err => showError(`Error loading script: ${err.message}`));
+    } else {
+      maybeLoadScript("vega", "6")
+        .then(() => maybeLoadScript("vega-lite", "6.4.1"))
+        .then(() => maybeLoadScript("vega-embed", "7"))
+        .catch(showError)
+        .then(() => displayChart(vegaEmbed));
+    }
+  })({"config": {"background": "transparent", "font": "system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif", "view": {"stroke": null, "continuousWidth": 560, "continuousHeight": 300}, "title": {"font": "system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif", "fontSize": 15, "fontWeight": 600, "color": "#6f6e69", "subtitleColor": "#6f6e69", "subtitleFontSize": 12, "anchor": "start", "offset": 12}, "axis": {"labelColor": "#6f6e69", "titleColor": "#6f6e69", "labelFont": "system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif", "titleFont": "system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif", "labelFontSize": 11, "titleFontSize": 12, "titleFontWeight": "normal", "gridColor": "#8a897f33", "domainColor": "#8a897f33", "tickColor": "#8a897f33"}, "axisX": {"grid": false}, "legend": {"labelColor": "#6f6e69", "titleColor": "#6f6e69", "labelFont": "system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif", "titleFont": "system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif", "titleFontWeight": "normal"}, "header": {"labelColor": "#6f6e69", "titleColor": "#6f6e69", "labelFont": "system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif"}, "range": {"category": ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#6250d6", "#e34948"], "ramp": ["#cde2fb", "#86b6ef", "#3987e5", "#1c5cab", "#0d366b"]}, "bar": {"color": "#2a78d6", "cornerRadiusEnd": 2}, "line": {"color": "#2a78d6", "strokeWidth": 2}, "area": {"color": "#2a78d6"}, "point": {"color": "#2a78d6", "size": 64}, "circle": {"color": "#2a78d6"}, "rect": {"color": "#2a78d6"}, "tick": {"color": "#2a78d6"}, "text": {"color": "#6f6e69", "font": "system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif"}}, "data": {"name": "data-ce692036334d768cf395fc0b453692aa"}, "mark": {"type": "bar", "cornerRadiusEnd": 3, "height": 16}, "encoding": {"color": {"value": "#9a9992"}, "tooltip": [{"field": "description", "title": "Regla", "type": "nominal"}, {"field": "rows", "format": ",.0f", "title": "Valores", "type": "quantitative"}], "x": {"axis": {"format": ",.0f"}, "field": "rows", "title": "Valores anulados", "type": "quantitative"}, "y": {"axis": {"labelLimit": 360}, "field": "description", "sort": "-x", "title": null, "type": "nominal"}}, "height": {"step": 28}, "title": "Valores anulados (el socio se conserva)", "width": "container", "$schema": "https://vega.github.io/schema/vega-lite/v6.4.1.json", "datasets": {"data-ce692036334d768cf395fc0b453692aa": [{"rule": "placeholder_WORK_CITY", "action": "set_null", "rows": 796, "description": "WORK_CITY sin dato real \u2192 nulo"}, {"rule": "placeholder_WORK_PROVINCE", "action": "set_null", "rows": 1267, "description": "WORK_PROVINCE sin dato real \u2192 nulo"}, {"rule": "pais_invalido", "action": "set_null", "rows": 14, "description": "WORK_COUNTRY no es un c\u00f3digo ISO-2 \u2192 nulo"}, {"rule": "fecha_invalida_LAST_FLIGHT_DATE", "action": "set_null", "rows": 421, "description": "LAST_FLIGHT_DATE inexistente \u2192 nulo"}, {"rule": "primer_vuelo_fuera_de_ventana", "action": "set_null", "rows": 8, "description": "FIRST_FLIGHT_DATE anterior al alta o posterior al corte \u2192 nulo"}, {"rule": "edad_fuera_de_rango", "action": "set_null", "rows": 49, "description": "AGE fuera de [18, 100] \u2192 nulo"}]}}, {"formatLocale": {"decimal": ",", "thousands": ".", "grouping": [3], "currency": ["", " \u00a5"]}, "timeFormatLocale": {"dateTime": "%A, %e de %B de %Y, %X", "date": "%d/%m/%Y", "time": "%H:%M:%S", "periods": ["AM", "PM"], "days": ["domingo", "lunes", "martes", "mi\u00e9rcoles", "jueves", "viernes", "s\u00e1bado"], "shortDays": ["dom", "lun", "mar", "mi\u00e9", "jue", "vie", "s\u00e1b"], "months": ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"], "shortMonths": ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"]}, "renderer": "svg", "actions": {"export": true, "source": false, "compiled": false, "editor": false}, "mode": "vega-lite"});
+</script>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-anulados-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figura&nbsp;2: Reglas que anulan un valor sin descartar al socio.
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="insight">
+<p>La mayoría de las correcciones son de ubicación: valores como <code>.</code>, <code>-</code> o <code>0</code> que significan «sin dato». Además, 421 socios tienen como último vuelo el <strong>29 de febrero de 2014</strong>, una fecha que no existe; se anula, pero el socio se conserva porque la recencia (R) se calcula con <code>LAST_TO_END</code>, que sí es válido. El EDA destapó 8 primeras fechas de vuelo imposibles (año 1905 o posteriores al corte), tratadas del mismo modo.</p>
+</div>
+<div id="cell-fig-nulos" class="cell" data-execution_count="4">
+<details class="code-fold">
+<summary>Ver código</summary>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>ec.null_values_chart(report)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div id="fig-nulos" class="cell-output cell-output-display quarto-float quarto-figure quarto-figure-center anchored" data-execution_count="4">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-nulos-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+
+<style>
+  #altair-viz-84af5fa34f40406f836ed6e980210793.vega-embed {
+    width: 100%;
+    display: flex;
+  }
+
+  #altair-viz-84af5fa34f40406f836ed6e980210793.vega-embed details,
+  #altair-viz-84af5fa34f40406f836ed6e980210793.vega-embed details summary {
+    position: relative;
+  }
+</style>
+<div id="altair-viz-84af5fa34f40406f836ed6e980210793"></div>
+<script type="text/javascript">
+  var VEGA_DEBUG = (typeof VEGA_DEBUG == "undefined") ? {} : VEGA_DEBUG;
+  (function(spec, embedOpt){
+    let outputDiv = document.currentScript.previousElementSibling;
+    if (outputDiv.id !== "altair-viz-84af5fa34f40406f836ed6e980210793") {
+      outputDiv = document.getElementById("altair-viz-84af5fa34f40406f836ed6e980210793");
+    }
+
+    const paths = {
+      "vega": "https://cdn.jsdelivr.net/npm/vega@6?noext",
+      "vega-lib": "https://cdn.jsdelivr.net/npm/vega-lib?noext",
+      "vega-lite": "https://cdn.jsdelivr.net/npm/vega-lite@6.4.1?noext",
+      "vega-embed": "https://cdn.jsdelivr.net/npm/vega-embed@7?noext",
+    };
+
+    function maybeLoadScript(lib, version) {
+      var key = `${lib.replace("-", "")}_version`;
+      return (VEGA_DEBUG[key] == version) ?
+        Promise.resolve(paths[lib]) :
+        new Promise(function(resolve, reject) {
+          var s = document.createElement('script');
+          document.getElementsByTagName("head")[0].appendChild(s);
+          s.async = true;
+          s.onload = () => {
+            VEGA_DEBUG[key] = version;
+            return resolve(paths[lib]);
+          };
+          s.onerror = () => reject(`Error loading script: ${paths[lib]}`);
+          s.src = paths[lib];
+        });
+    }
+
+    function showError(err) {
+      outputDiv.innerHTML = `<div class="error" style="color:red;">${err}</div>`;
+      throw err;
+    }
+
+    function displayChart(vegaEmbed) {
+      vegaEmbed(outputDiv, spec, embedOpt)
+        .catch(err => showError(`Javascript Error: ${err.message}<br>This usually means there's a typo in your chart specification. See the javascript console for the full traceback.`));
+    }
+
+    if(typeof define === "function" && define.amd) {
+      requirejs.config({paths});
+      let deps = ["vega-embed"];
+      require(deps, displayChart, err => showError(`Error loading script: ${err.message}`));
+    } else {
+      maybeLoadScript("vega", "6")
+        .then(() => maybeLoadScript("vega-lite", "6.4.1"))
+        .then(() => maybeLoadScript("vega-embed", "7"))
+        .catch(showError)
+        .then(() => displayChart(vegaEmbed));
+    }
+  })({"config": {"background": "transparent", "font": "system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif", "view": {"stroke": null, "continuousWidth": 560, "continuousHeight": 300}, "title": {"font": "system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif", "fontSize": 15, "fontWeight": 600, "color": "#6f6e69", "subtitleColor": "#6f6e69", "subtitleFontSize": 12, "anchor": "start", "offset": 12}, "axis": {"labelColor": "#6f6e69", "titleColor": "#6f6e69", "labelFont": "system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif", "titleFont": "system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif", "labelFontSize": 11, "titleFontSize": 12, "titleFontWeight": "normal", "gridColor": "#8a897f33", "domainColor": "#8a897f33", "tickColor": "#8a897f33"}, "axisX": {"grid": false}, "legend": {"labelColor": "#6f6e69", "titleColor": "#6f6e69", "labelFont": "system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif", "titleFont": "system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif", "titleFontWeight": "normal"}, "header": {"labelColor": "#6f6e69", "titleColor": "#6f6e69", "labelFont": "system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif"}, "range": {"category": ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#6250d6", "#e34948"], "ramp": ["#cde2fb", "#86b6ef", "#3987e5", "#1c5cab", "#0d366b"]}, "bar": {"color": "#2a78d6", "cornerRadiusEnd": 2}, "line": {"color": "#2a78d6", "strokeWidth": 2}, "area": {"color": "#2a78d6"}, "point": {"color": "#2a78d6", "size": 64}, "circle": {"color": "#2a78d6"}, "rect": {"color": "#2a78d6"}, "tick": {"color": "#2a78d6"}, "text": {"color": "#6f6e69", "font": "system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif"}}, "data": {"name": "data-668859845c7bec0faf296543cdd42505"}, "mark": {"type": "bar", "cornerRadiusEnd": 3}, "encoding": {"color": {"field": "etapa", "scale": {"domain": ["Crudo", "Limpio"], "range": ["#9a9992", "#2a78d6"]}, "title": "Etapa", "type": "nominal"}, "tooltip": [{"field": "columna", "title": "Columna", "type": "nominal"}, {"field": "etapa", "title": "Etapa", "type": "nominal"}, {"field": "nulos", "format": ",.0f", "title": "Filas vac\u00edas", "type": "quantitative"}, {"field": "pct", "format": ".2%", "title": "% de filas", "type": "quantitative"}], "x": {"axis": {"format": "%"}, "field": "pct", "title": "% de socios con el valor vac\u00edo", "type": "quantitative"}, "y": {"field": "columna", "scale": {"paddingInner": 0.3}, "sort": ["WORK_PROVINCE", "WORK_CITY", "AGE", "LAST_FLIGHT_DATE", "WORK_COUNTRY", "FIRST_FLIGHT_DATE", "GENDER", "SUM_YR_1", "SUM_YR_2"], "title": null, "type": "nominal"}, "yOffset": {"field": "etapa", "sort": ["Crudo", "Limpio"], "type": "nominal"}}, "height": {"step": 32}, "title": "Valores nulos por columna, antes y despu\u00e9s de limpiar", "width": "container", "$schema": "https://vega.github.io/schema/vega-lite/v6.4.1.json", "datasets": {"data-668859845c7bec0faf296543cdd42505": [{"columna": "FIRST_FLIGHT_DATE", "etapa": "Crudo", "nulos": 0, "pct": 0.0}, {"columna": "GENDER", "etapa": "Crudo", "nulos": 3, "pct": 4.7628119641836543e-05}, {"columna": "WORK_CITY", "etapa": "Crudo", "nulos": 2269, "pct": 0.03602273448910904}, {"columna": "WORK_PROVINCE", "etapa": "Crudo", "nulos": 3248, "pct": 0.05156537753222836}, {"columna": "WORK_COUNTRY", "etapa": "Crudo", "nulos": 26, "pct": 0.0004127770368959167}, {"columna": "AGE", "etapa": "Crudo", "nulos": 420, "pct": 0.006667936749857116}, {"columna": "SUM_YR_1", "etapa": "Crudo", "nulos": 551, "pct": 0.008747697974217311}, {"columna": "SUM_YR_2", "etapa": "Crudo", "nulos": 138, "pct": 0.002190893503524481}, {"columna": "LAST_FLIGHT_DATE", "etapa": "Crudo", "nulos": 0, "pct": 0.0}, {"columna": "FIRST_FLIGHT_DATE", "etapa": "Limpio", "nulos": 8, "pct": 0.00012894075172458256}, {"columna": "GENDER", "etapa": "Limpio", "nulos": 3, "pct": 4.835278189671846e-05}, {"columna": "WORK_CITY", "etapa": "Limpio", "nulos": 3040, "pct": 0.04899748565534137}, {"columna": "WORK_PROVINCE", "etapa": "Limpio", "nulos": 4450, "pct": 0.07172329314679905}, {"columna": "WORK_COUNTRY", "etapa": "Limpio", "nulos": 40, "pct": 0.0006447037586229128}, {"columna": "AGE", "etapa": "Limpio", "nulos": 461, "pct": 0.007430210818129069}, {"columna": "SUM_YR_1", "etapa": "Limpio", "nulos": 0, "pct": 0.0}, {"columna": "SUM_YR_2", "etapa": "Limpio", "nulos": 0, "pct": 0.0}, {"columna": "LAST_FLIGHT_DATE", "etapa": "Limpio", "nulos": 421, "pct": 0.006785507059506157}]}}, {"formatLocale": {"decimal": ",", "thousands": ".", "grouping": [3], "currency": ["", " \u00a5"]}, "timeFormatLocale": {"dateTime": "%A, %e de %B de %Y, %X", "date": "%d/%m/%Y", "time": "%H:%M:%S", "periods": ["AM", "PM"], "days": ["domingo", "lunes", "martes", "mi\u00e9rcoles", "jueves", "viernes", "s\u00e1bado"], "shortDays": ["dom", "lun", "mar", "mi\u00e9", "jue", "vie", "s\u00e1b"], "months": ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"], "shortMonths": ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"]}, "renderer": "svg", "actions": {"export": true, "source": false, "compiled": false, "editor": false}, "mode": "vega-lite"});
+</script>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-nulos-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figura&nbsp;3: Porcentaje de valores vacíos por columna en el CSV crudo y en el dataset limpio.
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="insight">
+<p>Tras limpiar hay <strong>más</strong> nulos en ubicación, no menos: los <em>placeholders</em> pasan a contarse como lo que son, datos ausentes. Las columnas que alimentan LRFMC (fechas de alta, vuelos, km, recencia y descuento) quedan <strong>sin ningún nulo</strong>, y los de ingresos desaparecen porque esas filas se eliminan.</p>
+</div>
+<div class="cell" data-execution_count="5">
+<details class="code-fold">
+<summary>Ver código</summary>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>(</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    ec.lineage_table(report)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    .style.hide(axis<span class="op">=</span><span class="st">"index"</span>)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    .<span class="bu">format</span>({<span class="st">"Filas"</span>: num, <span class="st">"</span><span class="sc">% d</span><span class="st">el crudo"</span>: <span class="kw">lambda</span> v: pct(v, <span class="dv">2</span>)})</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div id="tbl-lineage" class="cell quarto-float quarto-figure quarto-figure-center anchored" data-execution_count="5">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-lineage-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Tabla&nbsp;1: Reglas de limpieza con efecto sobre el dataset real.
+</figcaption>
+<div aria-describedby="tbl-lineage-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output cell-output-display" data-execution_count="5">
+<style type="text/css">
+</style>
+
+<table id="T_8573a" class="do-not-create-environment cell caption-top table table-sm table-striped small" data-quarto-postprocess="true">
+<thead>
+<tr class="header">
+<th id="T_8573a_level0_col0" class="col_heading level0 col0" data-quarto-table-cell-role="th">Regla</th>
+<th id="T_8573a_level0_col1" class="col_heading level0 col1" data-quarto-table-cell-role="th">Acción</th>
+<th id="T_8573a_level0_col2" class="col_heading level0 col2" data-quarto-table-cell-role="th">Filas</th>
+<th id="T_8573a_level0_col3" class="col_heading level0 col3" data-quarto-table-cell-role="th">% del crudo</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td id="T_8573a_row0_col0" class="data row0 col0">WORK_CITY sin dato real → nulo</td>
+<td id="T_8573a_row0_col1" class="data row0 col1">Anula el valor</td>
+<td id="T_8573a_row0_col2" class="data row0 col2">796</td>
+<td id="T_8573a_row0_col3" class="data row0 col3">1,26 %</td>
+</tr>
+<tr class="even">
+<td id="T_8573a_row1_col0" class="data row1 col0">WORK_PROVINCE sin dato real → nulo</td>
+<td id="T_8573a_row1_col1" class="data row1 col1">Anula el valor</td>
+<td id="T_8573a_row1_col2" class="data row1 col2">1.267</td>
+<td id="T_8573a_row1_col3" class="data row1 col3">2,01 %</td>
+</tr>
+<tr class="odd">
+<td id="T_8573a_row2_col0" class="data row2 col0">WORK_COUNTRY no es un código ISO-2 → nulo</td>
+<td id="T_8573a_row2_col1" class="data row2 col1">Anula el valor</td>
+<td id="T_8573a_row2_col2" class="data row2 col2">14</td>
+<td id="T_8573a_row2_col3" class="data row2 col3">0,02 %</td>
+</tr>
+<tr class="even">
+<td id="T_8573a_row3_col0" class="data row3 col0">LAST_FLIGHT_DATE inexistente → nulo</td>
+<td id="T_8573a_row3_col1" class="data row3 col1">Anula el valor</td>
+<td id="T_8573a_row3_col2" class="data row3 col2">421</td>
+<td id="T_8573a_row3_col3" class="data row3 col3">0,67 %</td>
+</tr>
+<tr class="odd">
+<td id="T_8573a_row4_col0" class="data row4 col0">FIRST_FLIGHT_DATE anterior al alta o posterior al corte → nulo</td>
+<td id="T_8573a_row4_col1" class="data row4 col1">Anula el valor</td>
+<td id="T_8573a_row4_col2" class="data row4 col2">8</td>
+<td id="T_8573a_row4_col3" class="data row4 col3">0,01 %</td>
+</tr>
+<tr class="even">
+<td id="T_8573a_row5_col0" class="data row5 col0">SUM_YR_1 o SUM_YR_2 nulo</td>
+<td id="T_8573a_row5_col1" class="data row5 col1">Elimina el socio</td>
+<td id="T_8573a_row5_col2" class="data row5 col2">689</td>
+<td id="T_8573a_row5_col3" class="data row5 col3">1,09 %</td>
+</tr>
+<tr class="odd">
+<td id="T_8573a_row6_col0" class="data row6 col0">Ingreso total 0 con km volados (vuelos de canje con puntos)</td>
+<td id="T_8573a_row6_col1" class="data row6 col1">Elimina el socio</td>
+<td id="T_8573a_row6_col2" class="data row6 col2">255</td>
+<td id="T_8573a_row6_col3" class="data row6 col3">0,40 %</td>
+</tr>
+<tr class="even">
+<td id="T_8573a_row7_col0" class="data row7 col0">AGE fuera de [18, 100] → nulo</td>
+<td id="T_8573a_row7_col1" class="data row7 col1">Anula el valor</td>
+<td id="T_8573a_row7_col2" class="data row7 col2">49</td>
+<td id="T_8573a_row7_col3" class="data row7 col3">0,08 %</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</figure>
+</div>
+</div>
+<section id="normalización-de-texto" class="level3">
+<h3 class="anchored" data-anchor-id="normalización-de-texto">Normalización de texto</h3>
+<p>Además de las reglas anteriores, el texto de ubicación se normaliza sin contar filas:</p>
+<ul>
+<li>caracteres de <strong>ancho completo</strong> a ASCII (<code>ｇｕａｎｇｄｏｎｇ</code> → <code>guangdong</code>, <code>－</code> → <code>-</code>);</li>
+<li>ciudad y provincia en minúsculas; país en mayúsculas y solo códigos ISO-2;</li>
+<li><strong>sufijos administrativos</strong> en pinyin: <code>guangdongsheng</code> (<em>sheng</em> = provincia) o <code>guangzhoushi</code> (<em>shi</em> = ciudad) se unen con <code>guangdong</code> y <code>guangzhou</code>. El sufijo se quita solo si la forma corta ya existe, para no romper nombres reales como <em>Huangshi</em>.</li>
+</ul>
+</section>
+</section>
+<section id="hipótesis-confirmadas-en-el-eda" class="level2">
+<h2 class="anchored" data-anchor-id="hipótesis-confirmadas-en-el-eda">Hipótesis confirmadas en el EDA</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Supuesto</th>
+<th>Resultado</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>avg_discount</code> es el precio pagado sobre la tarifa completa</td>
+<td>✅ Correlación de Spearman de 0,72 con el ingreso por km. 1,0 = tarifa completa; 4,7 % de los socios supera 1 (cabinas premium). Tras limpiar no hay descuentos 0.</td>
+</tr>
+<tr class="even">
+<td><code>SUM_YR_2</code> es el año más reciente</td>
+<td>✅ El 93 % de los socios con <code>SUM_YR_2 = 0</code> lleva más de un año sin volar.</td>
+</tr>
+<tr class="odd">
+<td><code>LOAD_TIME</code> es una fecha de corte única</td>
+<td>✅ 31/03/2014 para todos los socios.</td>
+</tr>
+<tr class="even">
+<td><code>GENDER</code> solo toma <em>Male</em>/<em>Female</em></td>
+<td>✅ 3 nulos.</td>
+</tr>
+<tr class="odd">
+<td><code>AGE</code> en [18, 100]</td>
+<td>✅ 49 edades fuera de rango anuladas; mediana 41 años.</td>
+</tr>
+<tr class="even">
+<td>Todos los socios tienen al menos un año de antigüedad</td>
+<td>✅ La última alta es del 31/03/2013.</td>
+</tr>
+</tbody>
+</table>
+
+
+</section>
+
+</main> <!-- /main -->
+<script>
+  // Los gráficos Altair con width="container" que están en una pestaña oculta se dibujan con
+  // ancho 0. vega-embed recalcula el ancho con el evento "resize" de la ventana, así que se lanza
+  // uno cada vez que se muestra una pestaña.
+  document.addEventListener("shown.bs.tab", () => window.dispatchEvent(new Event("resize")));
+</script>
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copiado");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copiado");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/freddxvill\.github\.io\/segmentacion-clientes-aerolinea\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+      &nbsp;
+    </div>   
+    <div class="nav-footer-center">
+<p>Proyecto de portafolio · Segmentación avanzada de clientes</p>
+</div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>
