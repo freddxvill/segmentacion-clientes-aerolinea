@@ -3,6 +3,7 @@
 
 def num(value: float, decimals: int = 0) -> str:
     """12345.6 → '12.345,6' (separador de miles '.', decimal ',')."""
+    value = round(value, decimals) + 0.0  # evita "-0,00"
     text = f"{value:,.{decimals}f}"
     return text.replace(",", "\0").replace(".", ",").replace("\0", ".")
 

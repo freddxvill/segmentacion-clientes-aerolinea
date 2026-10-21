@@ -18,6 +18,9 @@ data:
   lineage_filename: cleaning_lineage.json
   lrfmc_filename: lrfmc.parquet
   profile_filename: profile.parquet
+  scaled_filename: lrfmc_scaled.parquet
+  transform_comparison_filename: transform_comparison.csv
+  preprocessor_filename: preprocessor.joblib
 
 cleaning:
   date_format: "%m/%d/%Y"
@@ -25,5 +28,14 @@ cleaning:
   age_max: 100
   # Valores de texto que significan "sin dato" (tras strip) en columnas de ubicación/género.
   text_placeholders: [".", "-", "。", "0", "`", "——", "nan"]
+
+preprocessing:
+  # Elección de la Fase 5 (ver 03-lrfmc.qmd): Yeo-Johnson deja |skew| < 0,1 en las cinco
+  # features y StandardScaler les da el mismo peso en la distancia de K-Means.
+  transform: yeo-johnson
+  scaler: standard
+  # Comparación de alternativas: silhouette de K-Means con estos k fijos, sobre una muestra.
+  compare_ks: [4, 5, 6]
+  silhouette_sample_size: 10000
 
 random_state: 42

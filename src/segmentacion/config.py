@@ -1,6 +1,6 @@
 """Carga de `configs/params.yaml` y resolución de rutas del proyecto."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from functools import cache
 from pathlib import Path
 from typing import Any
@@ -30,6 +30,9 @@ class DataParams:
     lineage_filename: str
     lrfmc_filename: str = "lrfmc.parquet"
     profile_filename: str = "profile.parquet"
+    scaled_filename: str = "lrfmc_scaled.parquet"
+    transform_comparison_filename: str = "transform_comparison.csv"
+    preprocessor_filename: str = "preprocessor.joblib"
 
 
 @dataclass(frozen=True)
@@ -41,11 +44,20 @@ class CleaningParams:
 
 
 @dataclass(frozen=True)
+class PreprocessingParams:
+    transform: str = "yeo-johnson"
+    scaler: str = "standard"
+    compare_ks: tuple[int, ...] = (4, 5, 6)
+    silhouette_sample_size: int = 10_000
+
+
+@dataclass(frozen=True)
 class Config:
     paths: Paths
     data: DataParams
     cleaning: CleaningParams
     random_state: int
+    preprocessing: PreprocessingParams = field(default_factory=PreprocessingParams)
 
     @property
     def raw_file(self) -> Path:
@@ -71,6 +83,18 @@ class Config:
     def profile_file(self) -> Path:
         return self.paths.processed_dir / self.data.profile_filename
 
+    @property
+    def scaled_file(self) -> Path:
+        return self.paths.processed_dir / self.data.scaled_filename
+
+    @property
+    def transform_comparison_file(self) -> Path:
+        return self.paths.processed_dir / self.data.transform_comparison_filename
+
+    @property
+    def preprocessor_file(self) -> Path:
+        return self.paths.models_dir / self.data.preprocessor_filename
+
 
 def load_config(params_file: Path = DEFAULT_PARAMS_FILE, root: Path = PROJECT_ROOT) -> Config:
     """Lee el YAML de parámetros y devuelve un `Config` con rutas absolutas."""
@@ -81,7 +105,17 @@ def load_config(params_file: Path = DEFAULT_PARAMS_FILE, root: Path = PROJECT_RO
     cleaning = CleaningParams(
         **{**cleaning_raw, "text_placeholders": tuple(cleaning_raw["text_placeholders"])}
     )
-    return Config(paths=paths, data=data, cleaning=cleaning, random_state=raw["random_state"])
+    pre_raw = raw.get("preprocessing", {})
+    preprocessing = PreprocessingParams(
+        **{**pre_raw, "compare_ks": tuple(pre_raw.get("compare_ks", (4, 5, 6)))}
+    )
+    return Config(
+        paths=paths,
+        data=data,
+        cleaning=cleaning,
+        random_state=raw["random_state"],
+        preprocessing=preprocessing,
+    )
 
 
 @cache

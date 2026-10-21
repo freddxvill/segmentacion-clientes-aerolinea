@@ -26,6 +26,10 @@ def test_pipeline_all_writes_lrfmc_and_profile(tmp_config, flight_csv, capsys):
     assert list(lrfmc.columns) == ["MEMBER_NO", "L", "R", "F", "M", "C"]
     assert len(lrfmc) == len(profile) == 200
     assert "features: 200 socios" in capsys.readouterr().out
+    scaled = pd.read_parquet(tmp_config.scaled_file)
+    assert scaled[["L", "R", "F", "M", "C"]].mean().abs().max() < 1e-9
+    assert tmp_config.preprocessor_file.exists()
+    assert len(pd.read_csv(tmp_config.transform_comparison_file)) == 6
 
 
 def test_features_step_requires_clean_file(tmp_config, capsys):

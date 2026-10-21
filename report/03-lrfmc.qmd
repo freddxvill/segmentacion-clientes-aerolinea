@@ -1,9 +1,193 @@
 ---
 title: "Features LRFMC"
+description: "Construcción de las métricas LRFMC, tratamiento de la asimetría y escalado."
 ---
 
-Construcción de las métricas LRFMC, tratamiento de asimetría y escalado.
+```{python}
+#| include: false
+import pandas as pd
+
+from segmentacion.config import get_config
+from segmentacion.features.lrfmc import LRFMC_COLUMNS
+from segmentacion.preprocessing.transform import skewness
+from segmentacion.viz import model_charts as mc
+from segmentacion.viz.eda_charts import LRFMC_LABELS
+from segmentacion.viz.fmt import num, pct
+from segmentacion.viz.theme import enable_theme
+
+enable_theme()
+config = get_config()
+lrfmc = pd.read_parquet(config.lrfmc_file)
+profile = pd.read_parquet(config.profile_file)
+scaled = pd.read_parquet(config.scaled_file)
+comparison = pd.read_csv(config.transform_comparison_file)
+options = comparison.set_index(["transform", "scaler"])
+pre = config.preprocessing
+chosen = options.loc[(pre.transform, pre.scaler)]
+raw_std = options.loc[("none", "standard")]
+log_robust = options.loc[("log1p", "robust")]
+ks = pre.compare_ks
+features = lrfmc[list(LRFMC_COLUMNS)]
+```
+
+## Las cinco métricas
+
+Cada socio se resume en cinco números calculados con `src/segmentacion/features/lrfmc.py`:
+
+| Métrica | Fórmula | Pregunta de negocio |
+|---|---|---|
+| **L** · *Length* | días entre `FFP_DATE` y `LOAD_TIME` / 30,44 | ¿Hace cuánto que es socio? |
+| **R** · *Recency* | `LAST_TO_END` / 30 | ¿Hace cuántos meses que no vuela? |
+| **F** · *Frequency* | `FLIGHT_COUNT` | ¿Cuántas veces voló en la ventana? |
+| **M** · *Monetary* | `SEG_KM_SUM` | ¿Cuántos km voló? |
+| **C** · *Coefficient* | `avg_discount` | ¿Paga tarifa completa (1,0) o compra en oferta? |
 
 ::: {.callout-note}
-En construcción (Fases 4–5).
+## ¿Por qué M son kilómetros y no dinero?
+En aviación el precio del billete depende de la distancia y de la clase. Los km volados,
+combinados con el descuento (C), representan mejor el valor del cliente que el gasto bruto. El
+ingreso se reserva para **perfilar y validar** los segmentos, sin entrar en el modelo.
+:::
+
+```{python}
+#| label: tbl-lrfmc
+#| tbl-cap: "Estadísticos de las métricas LRFMC (62.044 socios)."
+table = features.describe(percentiles=[0.25, 0.5, 0.75]).T.drop(columns="count")
+table["asimetría"] = features.skew()
+table.index = [LRFMC_LABELS[c] for c in table.index]
+table.columns = ["Media", "Desv.", "Mín.", "P25", "Mediana", "P75", "Máx.", "Asimetría"]
+table.style.format(lambda v: num(v, 2))
+```
+
+Las métricas no tienen nulos ni infinitos y respetan la ventana de observación: L va de
+`{python} num(features["L"].min(), 1)` a `{python} num(features["L"].max(), 1)` meses (todos los
+socios llevan al menos un año en el programa) y R no supera los
+`{python} num(features["R"].max(), 1)` meses de la ventana de dos años.
+
+### Variables de perfilado
+
+No entran al clustering; sirven para describir y nombrar los segmentos en las fases siguientes.
+
+| Variable | Definición | Para qué |
+|---|---|---|
+| `revenue_total` | `SUM_YR_1 + SUM_YR_2` | Valor económico real del segmento |
+| `revenue_trend` | `(Y2 − Y1) / (Y1 + Y2)` ∈ [−1, 1] | Riesgo de abandono (−1 = sin ingresos en el año reciente) |
+| `km_per_flight` | `SEG_KM_SUM / FLIGHT_COUNT` | Rutas cortas vs largas |
+| `points_ratio` | `Point_NotFlight / Points_Sum` ∈ [0, 1] | Peso de los puntos no originados en vuelos |
+
+`revenue_trend` se acota en [−1, 1] porque la versión `(Y2 − Y1) / (Y1 + 1)` se dispara cuando el
+socio no tuvo ingresos el primer año (`{python} pct((profile["SUM_YR_1"] == 0).mean())` de los
+casos).
+
+## Tratamiento de la asimetría
+
+K-Means agrupa por distancia euclídea. Con colas largas como las de F y M, unos pocos viajeros
+intensivos dominarían los centroides, así que se compararon dos transformaciones (ver también el
+gráfico interactivo del [EDA](02-eda.qmd#efecto-de-las-transformaciones)).
+
+```{python}
+#| label: fig-asimetria-transformacion
+#| fig-cap: "Asimetría de cada feature sin transformar, con log1p y con Yeo-Johnson."
+mc.skew_comparison_chart(comparison)
+```
+
+::: {.insight}
+`log1p` corrige M y R, pero deja F en `{python} num(options.loc[("log1p", "standard"), "skew_F"], 2)`
+y C en `{python} num(options.loc[("log1p", "standard"), "skew_C"], 2)`. **Yeo-Johnson** deja las
+cinco métricas con |asimetría| ≤ `{python} num(chosen["max_abs_skew"], 2)`. Ambas cumplen el
+criterio del proyecto (|asimetría| < 1 en la mayoría de features), así que el desempate se hizo
+con el clustering.
+:::
+
+## Elección del preprocesamiento
+
+Cada combinación de transformación (ninguna, `log1p`, Yeo-Johnson) y escalado (`StandardScaler`,
+`RobustScaler`) se evaluó con K-Means para *k* = `{python} ", ".join(map(str, ks))`, midiendo el
+silhouette sobre una muestra de `{python} num(pre.silhouette_sample_size)` socios.
+
+```{python}
+#| label: fig-comparacion-preprocesamiento
+#| fig-cap: "Silhouette de K-Means para cada combinación de transformación y escalado."
+mc.transform_comparison_chart(comparison, chosen=(pre.transform, pre.scaler))
+```
+
+```{python}
+#| label: tbl-comparacion
+#| tbl-cap: "Comparación de alternativas. El tamaño mínimo es el del clúster más pequeño con cada k."
+view = comparison.assign(
+    Opción=[mc.option_label(t, s) for t, s in zip(comparison["transform"], comparison["scaler"])]
+).set_index("Opción").rename_axis(None)
+view = view[
+    ["max_abs_skew", "std_ratio", *[f"min_cluster_pct_k{k}" for k in ks], "silhouette_mean"]
+]
+view.columns = [
+    "|Asimetría| máx.",
+    "Desequilibrio de pesos",
+    *[f"Clúster mín. (k={k})" for k in ks],
+    "Silhouette medio",
+]
+view.style.format(
+    {
+        "|Asimetría| máx.": lambda v: num(v, 2),
+        "Desequilibrio de pesos": lambda v: num(v, 2) + "×",
+        "Silhouette medio": lambda v: num(v, 3),
+        **{f"Clúster mín. (k={k})": lambda v: pct(v) for k in ks},
+    }
+)
+```
+
+::: {.insight}
+**El silhouette más alto no es la mejor opción.**
+
+- **Sin transformar** obtiene el mayor silhouette (`{python} num(raw_std["silhouette_mean"], 3)`),
+  pero mantiene F y M con asimetría > 3: el resultado lo guían los valores extremos y con *k* = 6
+  aparece un clúster de solo el `{python} pct(raw_std["min_cluster_pct_k6"])` de los socios.
+- **`log1p` + RobustScaler** gana entre las opciones transformadas
+  (`{python} num(log_robust["silhouette_mean"], 3)`), pero el escalado robusto deja a las features
+  con dispersiones distintas: la más dispersa pesa `{python} num(log_robust["std_ratio"], 2)` veces
+  más que la menos dispersa. Ese peso extra de C aísla un clúster de
+  ~`{python} pct(log_robust["min_cluster_pct_k4"])` con los socios que pagan más que la tarifa
+  completa (C > 1): sube el silhouette, pero por cómo se ponderaron las variables, no por la
+  estructura de los clientes.
+- **Yeo-Johnson + StandardScaler** (elegida) tiene un silhouette equivalente al de las demás
+  opciones transformadas (`{python} num(chosen["silhouette_mean"], 3)`), la menor asimetría y
+  **el mismo peso para las cinco métricas**, con clústeres equilibrados (el más pequeño tiene el
+  `{python} pct(chosen["min_cluster_pct_k6"])` de los socios con *k* = 6).
+
+Un silhouette de ~0,2 indica clústeres que se tocan, algo habitual en datos de clientes, donde el
+comportamiento es un continuo. La elección final de *k* y su validación se hacen en la página de
+[Clustering](04-clustering.qmd).
+:::
+
+## Resultado
+
+El preprocesamiento elegido se guarda como un `Pipeline` de scikit-learn
+(`models/preprocessor.joblib`) para aplicar exactamente la misma transformación al entrenar y al
+asignar nuevos socios a un segmento.
+
+```{python}
+#| label: fig-escaladas
+#| fig-cap: "Distribución de las features tras Yeo-Johnson + StandardScaler."
+mc.scaled_distribution_chart(scaled)
+```
+
+```{python}
+#| label: tbl-escaladas
+#| tbl-cap: "Media, desviación y asimetría antes y después del preprocesamiento."
+after = scaled[list(LRFMC_COLUMNS)]
+summary = pd.DataFrame(
+    {
+        "Asimetría original": skewness(features),
+        "Asimetría final": skewness(after),
+        "Media final": after.mean(),
+        "Desviación final": after.std(ddof=0),
+    }
+)
+summary.index = [LRFMC_LABELS[c] for c in summary.index]
+summary.style.format(lambda v: num(v, 2))
+```
+
+::: {.insight}
+Las cinco features quedan centradas en 0, con desviación 1 y asimetría prácticamente nula. Están
+listas para la selección del número de segmentos.
 :::

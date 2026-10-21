@@ -7,10 +7,18 @@ import argparse
 import sys
 from collections.abc import Callable, Sequence
 
+import pandas as pd
+
 from segmentacion.config import Config, get_config
 from segmentacion.data.clean import clean, lineage_report, load_clean, null_summary, save_clean
 from segmentacion.data.load import load_raw
-from segmentacion.features.lrfmc import build_lrfmc, build_profile_features
+from segmentacion.features.lrfmc import LRFMC_COLUMNS, build_lrfmc, build_profile_features
+from segmentacion.preprocessing.transform import (
+    compare_preprocessors,
+    make_preprocessor,
+    save_preprocessor,
+    skewness,
+)
 
 
 def run_clean(config: Config) -> dict:
@@ -50,7 +58,39 @@ def run_features(config: Config) -> dict:
     return {"rows": len(lrfmc)}
 
 
-STEPS: dict[str, Callable[[Config], object]] = {"clean": run_clean, "features": run_features}
+def run_transform(config: Config) -> dict:
+    """Fase 5: compara transformaciones, ajusta la elegida y guarda el preprocesador."""
+    if not config.lrfmc_file.exists():
+        raise FileNotFoundError(f"No existe {config.lrfmc_file}. Ejecuta `uv run poe features`.")
+    lrfmc = pd.read_parquet(config.lrfmc_file)
+    features = lrfmc[list(LRFMC_COLUMNS)]
+    params = config.preprocessing
+    comparison = compare_preprocessors(
+        features, params.compare_ks, params.silhouette_sample_size, config.random_state
+    )
+    comparison.to_csv(config.transform_comparison_file, index=False)
+
+    preprocessor = make_preprocessor(params.transform, params.scaler)
+    scaled = preprocessor.fit_transform(features)
+    save_preprocessor(preprocessor, config.preprocessor_file)
+    scaled.insert(0, "MEMBER_NO", lrfmc["MEMBER_NO"].to_numpy())
+    scaled.to_parquet(config.scaled_file, index=False)
+
+    before, after = skewness(features), skewness(scaled[list(LRFMC_COLUMNS)])
+    for column in LRFMC_COLUMNS:
+        print(f"  · skew {column}: {before[column]:+.2f} → {after[column]:+.2f}")
+    print(
+        f"transform: {params.transform} + {params.scaler} → {config.scaled_file.name}, "
+        f"{config.preprocessor_file.name} (comparación en {config.transform_comparison_file.name})"
+    )
+    return {"rows": len(scaled)}
+
+
+STEPS: dict[str, Callable[[Config], object]] = {
+    "clean": run_clean,
+    "features": run_features,
+    "transform": run_transform,
+}
 
 
 def main(argv: Sequence[str] | None = None, config: Config | None = None) -> int:

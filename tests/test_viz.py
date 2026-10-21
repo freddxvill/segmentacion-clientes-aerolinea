@@ -116,6 +116,7 @@ def test_spanish_number_format():
     assert num(62044) == "62.044"
     assert num(1234.567, 2) == "1.234,57"
     assert pct(0.3171) == "31,7 %"
+    assert num(-1e-17, 2) == "0,00"
 
 
 @pytest.fixture
@@ -135,3 +136,42 @@ def test_notebook_renderer_embeds_static_png_fallback(cleaned, notebook_renderer
     html = bundle["text/html"]
     assert "data:image/png;base64," in html  # visible en GitHub (sin JavaScript)
     assert "vegaEmbed" in html  # interactivo en JupyterLab / VS Code / nbviewer
+
+
+@pytest.fixture
+def comparison(skewed_lrfmc):
+    from segmentacion.preprocessing.transform import compare_preprocessors
+
+    return compare_preprocessors(skewed_lrfmc, ks=(2, 3), sample_size=150)
+
+
+@pytest.fixture
+def skewed_lrfmc(cleaned):
+    from segmentacion.features.lrfmc import build_lrfmc
+
+    df, _ = cleaned
+    return build_lrfmc(df)[["L", "R", "F", "M", "C"]]
+
+
+def test_model_charts_are_valid_vegalite(comparison, skewed_lrfmc):
+    from segmentacion.preprocessing.transform import make_preprocessor
+    from segmentacion.viz import model_charts as mc
+
+    scaled = make_preprocessor().fit_transform(skewed_lrfmc)
+    charts = [
+        mc.transform_comparison_chart(comparison, chosen=("yeo-johnson", "standard")),
+        mc.skew_comparison_chart(comparison),
+        mc.scaled_distribution_chart(scaled),
+    ]
+    for chart in charts:
+        spec = json.dumps(chart.to_dict(validate=True))
+        assert "title" in spec and "tooltip" in spec
+
+
+def test_transform_comparison_highlights_chosen_option(comparison):
+    from segmentacion.viz import model_charts as mc
+
+    chart = mc.transform_comparison_chart(comparison, chosen=("log1p", "robust"))
+    rows = chart.to_dict()["datasets"]
+    chosen = [r for rows_ in rows.values() for r in rows_ if r.get("elegida")]
+    assert [r["opcion"] for r in chosen] == ["log1p + RobustScaler"]

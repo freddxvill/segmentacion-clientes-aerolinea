@@ -16,3 +16,11 @@ def test_data_params_match_spec():
     assert config.raw_file.name == "flight.csv"
     assert config.data.max_raw_size_mb == 20
     assert config.data.kaggle_competition == "sa-customer-segmentation"
+
+
+def test_preprocessing_params_loaded_from_yaml():
+    preprocessing = get_config().preprocessing
+    assert preprocessing.transform in {"none", "log1p", "yeo-johnson"}
+    assert preprocessing.scaler in {"standard", "robust"}
+    assert preprocessing.compare_ks == (4, 5, 6)
+    assert get_config().preprocessor_file.parent == get_config().paths.models_dir
