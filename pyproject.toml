@@ -50,6 +50,8 @@ env = { PYTHONUTF8 = "1" }
 [tool.poe.tasks]
 download = { cmd = "python -m segmentacion.data.download", help = "Descarga el dataset desde Kaggle y lo verifica" }
 verify-data = { cmd = "python -m segmentacion.data.download --verify-only", help = "Verifica un flight.csv ya presente en data/raw" }
+pipeline = { cmd = "python -m segmentacion.pipeline --step all", help = "Ejecuta todo el pipeline" }
+clean = { cmd = "python -m segmentacion.pipeline --step clean", help = "Fase 2: limpieza" }
 test = { cmd = "pytest", help = "Tests sin datos reales" }
 test-data = { cmd = "pytest -m data", help = "Tests sobre el dataset real" }
 cov = { cmd = "pytest --cov=segmentacion --cov-report=term-missing", help = "Tests con cobertura" }

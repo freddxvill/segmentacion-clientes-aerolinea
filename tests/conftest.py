@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from segmentacion.config import Config, DataParams, Paths
+from segmentacion.config import CleaningParams, Config, DataParams, Paths
 from segmentacion.data.load import EXPECTED_COLUMNS
 
 LOAD_TIME = pd.Timestamp("2014-03-31")
@@ -21,7 +21,7 @@ def make_flight_df(n: int = 200, seed: int = 0) -> pd.DataFrame:
     last_flight = LOAD_TIME - pd.to_timedelta(last_to_end, unit="D")
     flight_count = rng.integers(2, 120, n)
     seg_km = flight_count * rng.integers(500, 2500, n)
-    fmt = "%Y/%m/%d"
+    fmt = "%m/%d/%Y"  # mismo formato que flight.csv
     df = pd.DataFrame(
         {
             "MEMBER_NO": np.arange(1, n + 1),
@@ -74,8 +74,10 @@ def tmp_config(tmp_path: Path) -> Config:
         source_files=("flight_train.csv", "flight_test.csv"),
         raw_filename="flight.csv",
         max_raw_size_mb=20,
+        clean_filename="flight_clean.parquet",
+        lineage_filename="cleaning_lineage.json",
     )
-    return Config(paths=paths, data=data, random_state=42)
+    return Config(paths=paths, data=data, cleaning=CleaningParams(), random_state=42)
 
 
 @pytest.fixture

@@ -14,5 +14,14 @@ data:
   source_files: [flight_train.csv, flight_test.csv]
   raw_filename: flight.csv
   max_raw_size_mb: 20
+  clean_filename: flight_clean.parquet
+  lineage_filename: cleaning_lineage.json
+
+cleaning:
+  date_format: "%m/%d/%Y"
+  age_min: 18
+  age_max: 100
+  # Valores de texto que significan "sin dato" (tras strip) en columnas de ubicación/género.
+  text_placeholders: [".", "-", "。", "0", "`", "nan"]
 
 random_state: 42

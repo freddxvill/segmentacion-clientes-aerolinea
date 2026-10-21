@@ -4,8 +4,10 @@ import pandas as pd
 import pytest
 
 from segmentacion.config import get_config
+from segmentacion.data.clean import clean
 from segmentacion.data.download import count_rows, file_size_mb
-from segmentacion.data.load import EXPECTED_COLUMNS, read_header
+from segmentacion.data.load import EXPECTED_COLUMNS, load_raw, read_header
+from segmentacion.data.schema import clean_schema
 
 CONFIG = get_config()
 
@@ -37,3 +39,27 @@ def test_raw_is_full_population_of_sources():
 def test_member_no_is_unique():
     member_no = pd.read_csv(CONFIG.raw_file, usecols=["MEMBER_NO"])["MEMBER_NO"]
     assert member_no.is_unique
+
+
+@pytest.fixture(scope="module")
+def cleaned():
+    raw = load_raw(CONFIG.raw_file)
+    df, lineage = clean(raw, CONFIG.cleaning)
+    return raw, df, lineage
+
+
+def test_clean_retains_majority_of_rows(cleaned):
+    raw, df, _ = cleaned
+    assert len(df) / len(raw) >= 0.90
+
+
+def test_clean_output_passes_clean_schema(cleaned):
+    _, df, _ = cleaned
+    clean_schema(CONFIG.cleaning).validate(df)
+
+
+def test_invalid_feb_29_dates_are_kept_as_null(cleaned):
+    # 421 socios tienen LAST_FLIGHT_DATE = "2014/2/29" (fecha inexistente) y LAST_TO_END válido.
+    _, _, lineage = cleaned
+    step = next(s for s in lineage if s.rule == "fecha_invalida_LAST_FLIGHT_DATE")
+    assert step.action == "set_null" and step.rows == 421

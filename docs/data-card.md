@@ -95,3 +95,13 @@
 - [ ] Rango válido de `AGE` y valores de `GENDER`.
 - [x] Formato de las fechas (`M/D/YYYY`).
 - [ ] Licencia de la competición (¿permite redistribuir?).
+
+## Limpieza (Fase 2)
+
+`uv run poe clean` genera `data/interim/flight_clean.parquet` y `cleaning_lineage.json`.
+
+- **62.988 → 62.044 socios** (944 eliminados, 98,5% retenido):
+  689 con ingreso nulo y 255 con ingreso 0 que sí volaron (canjes).
+- Anulados sin eliminar la fila: 421 `LAST_FLIGHT_DATE` = `2014/2/29` (inexistente; `LAST_TO_END`
+  sigue siendo válido), placeholders de ubicación y 49 edades fuera de [18, 100].
+- Detalle de reglas: `docs/plan-data.md` §3.3.
