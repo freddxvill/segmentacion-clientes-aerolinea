@@ -377,3 +377,44 @@ def test_segment_profile_uses_segment_color(segment_profiles):
     colors = segment_colors(list(segment_profiles["segment"]))
     bar = next(layer for layer in spec["layer"] if layer["mark"]["type"] == "bar")
     assert bar["mark"]["color"] == colors["En riesgo de abandono"]
+
+
+def _diverging_scales(spec):
+    """Escalas de color con la paleta divergente en cualquier parte del spec."""
+    from segmentacion.viz.theme import DIVERGING
+
+    if isinstance(spec, dict):
+        if spec.get("range") == list(DIVERGING):
+            yield spec
+        for value in spec.values():
+            yield from _diverging_scales(value)
+    elif isinstance(spec, list):
+        for value in spec:
+            yield from _diverging_scales(value)
+
+
+def test_diverging_scales_interpolate_in_lab(segment_profiles, projections):
+    # Con la interpolación por defecto (hcl), azul → gris → rojo pasa por turquesa y naranja.
+    from segmentacion.viz import projection_charts as pc
+    from segmentacion.viz import segment_charts as sc
+
+    pca, _, _ = projections
+    for chart in [sc.centroid_heatmap(segment_profiles), pc.pca_loadings_chart(pca.loadings)]:
+        scales = list(_diverging_scales(chart.to_dict()))
+        assert scales and all(s.get("interpolate") == "lab" for s in scales)
+
+
+def test_readme_figure_is_exported_as_png(segment_profiles, tmp_path):
+    from types import SimpleNamespace
+
+    from segmentacion.viz import readme
+
+    profiles_file = tmp_path / "segment_profiles.csv"
+    segment_profiles.to_csv(profiles_file, index=False)
+    config = SimpleNamespace(segment_profiles_file=profiles_file)
+
+    out = readme.export_readme_figure(config, tmp_path / "img" / "segmentos.png")
+
+    assert out.read_bytes()[:8] == b"\x89PNG\r\n\x1a\n"
+    spec = readme.readme_figure(segment_profiles).to_dict()
+    assert len(spec["vconcat"]) == 2 and spec["config"]["background"] == "white"

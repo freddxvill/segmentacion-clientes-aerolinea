@@ -93,7 +93,6 @@ def pca_loadings_chart(loadings: pd.DataFrame) -> alt.LayerChart:
     data = loadings.rename_axis("component").reset_index()
     data = data.melt(id_vars="component", var_name="feature", value_name="loading")
     data["feature"] = data["feature"].map(LRFMC_LABELS)
-    data["abs"] = data["loading"].abs()
     base = alt.Chart(data).encode(
         x=alt.X(
             "feature:N",
@@ -112,12 +111,12 @@ def pca_loadings_chart(loadings: pd.DataFrame) -> alt.LayerChart:
         color=alt.Color(
             "loading:Q",
             title="Loading",
-            scale=alt.Scale(domain=[-1, 0, 1], range=list(DIVERGING)),
+            scale=alt.Scale(domain=[-1, 0, 1], range=list(DIVERGING), interpolate="lab"),
         )
     )
     text = base.mark_text(fontSize=12, fontWeight=600).encode(
         text=alt.Text("loading:Q", format="+.2f"),
-        color=alt.condition("datum.abs > 0.6", alt.value("white"), alt.value("#1f1f1d")),
+        color=alt.condition("datum.loading < -0.75", alt.value("white"), alt.value("#1f1f1d")),
     )
     return (cells + text).properties(
         width="container",

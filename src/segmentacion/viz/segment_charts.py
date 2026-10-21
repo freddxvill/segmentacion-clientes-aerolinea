@@ -39,7 +39,6 @@ def _long_centroids(
 def centroid_heatmap(profiles: pd.DataFrame) -> alt.LayerChart:
     """Centroide de cada segmento en z-score (0 = socio medio)."""
     data = _long_centroids(profiles, SHORT_LABELS)
-    data["abs"] = data["z"].abs()
     base = alt.Chart(data).encode(
         x=alt.X(
             "feature:N",
@@ -60,12 +59,17 @@ def centroid_heatmap(profiles: pd.DataFrame) -> alt.LayerChart:
         color=alt.Color(
             "z:Q",
             title="z-score",
-            scale=alt.Scale(domain=[-Z_DOMAIN, 0, Z_DOMAIN], range=list(DIVERGING), clamp=True),
+            scale=alt.Scale(
+                domain=[-Z_DOMAIN, 0, Z_DOMAIN],
+                range=list(DIVERGING),
+                interpolate="lab",
+                clamp=True,
+            ),
         )
     )
     text = base.mark_text(fontSize=12, fontWeight=600).encode(
         text=alt.Text("z:Q", format="+.2f"),
-        color=alt.condition("datum.abs > 0.9", alt.value("white"), alt.value("#1f1f1d")),
+        color=alt.condition("datum.z < -1.15", alt.value("white"), alt.value("#1f1f1d")),
     )
     return (cells + text).properties(
         width="container",
