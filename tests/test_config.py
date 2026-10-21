@@ -24,3 +24,10 @@ def test_preprocessing_params_loaded_from_yaml():
     assert preprocessing.scaler in {"standard", "robust"}
     assert preprocessing.compare_ks == (4, 5, 6)
     assert get_config().preprocessor_file.parent == get_config().paths.models_dir
+
+
+def test_k_selection_params_loaded_from_yaml():
+    params = get_config().k_selection
+    assert list(params.ks) == list(range(2, 11))
+    assert params.chosen_k in params.ks
+    assert set(params.silhouette_plot_ks) <= set(params.ks)

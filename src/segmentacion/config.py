@@ -33,6 +33,9 @@ class DataParams:
     scaled_filename: str = "lrfmc_scaled.parquet"
     transform_comparison_filename: str = "transform_comparison.csv"
     preprocessor_filename: str = "preprocessor.joblib"
+    k_selection_filename: str = "k_selection.csv"
+    silhouette_curves_filename: str = "silhouette_curves.parquet"
+    k_preview_filename: str = "k_preview.csv"
 
 
 @dataclass(frozen=True)
@@ -52,12 +55,26 @@ class PreprocessingParams:
 
 
 @dataclass(frozen=True)
+class KSelectionParams:
+    k_min: int = 2
+    k_max: int = 10
+    silhouette_sample_size: int = 10_000
+    silhouette_plot_ks: tuple[int, ...] = (3, 4, 5, 6, 7)
+    chosen_k: int = 5
+
+    @property
+    def ks(self) -> range:
+        return range(self.k_min, self.k_max + 1)
+
+
+@dataclass(frozen=True)
 class Config:
     paths: Paths
     data: DataParams
     cleaning: CleaningParams
     random_state: int
     preprocessing: PreprocessingParams = field(default_factory=PreprocessingParams)
+    k_selection: KSelectionParams = field(default_factory=KSelectionParams)
 
     @property
     def raw_file(self) -> Path:
@@ -95,6 +112,18 @@ class Config:
     def preprocessor_file(self) -> Path:
         return self.paths.models_dir / self.data.preprocessor_filename
 
+    @property
+    def k_selection_file(self) -> Path:
+        return self.paths.processed_dir / self.data.k_selection_filename
+
+    @property
+    def silhouette_curves_file(self) -> Path:
+        return self.paths.processed_dir / self.data.silhouette_curves_filename
+
+    @property
+    def k_preview_file(self) -> Path:
+        return self.paths.processed_dir / self.data.k_preview_filename
+
 
 def load_config(params_file: Path = DEFAULT_PARAMS_FILE, root: Path = PROJECT_ROOT) -> Config:
     """Lee el YAML de parámetros y devuelve un `Config` con rutas absolutas."""
@@ -109,12 +138,20 @@ def load_config(params_file: Path = DEFAULT_PARAMS_FILE, root: Path = PROJECT_RO
     preprocessing = PreprocessingParams(
         **{**pre_raw, "compare_ks": tuple(pre_raw.get("compare_ks", (4, 5, 6)))}
     )
+    ks_raw = raw.get("k_selection", {})
+    k_selection = KSelectionParams(
+        **{
+            **ks_raw,
+            "silhouette_plot_ks": tuple(ks_raw.get("silhouette_plot_ks", (3, 4, 5, 6, 7))),
+        }
+    )
     return Config(
         paths=paths,
         data=data,
         cleaning=cleaning,
         random_state=raw["random_state"],
         preprocessing=preprocessing,
+        k_selection=k_selection,
     )
 
 

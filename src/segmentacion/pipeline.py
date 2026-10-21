@@ -13,6 +13,14 @@ from segmentacion.config import Config, get_config
 from segmentacion.data.clean import clean, lineage_report, load_clean, null_summary, save_clean
 from segmentacion.data.load import load_raw
 from segmentacion.features.lrfmc import LRFMC_COLUMNS, build_lrfmc, build_profile_features
+from segmentacion.models.k_selection import (
+    cluster_medians,
+    evaluate_k_range,
+    find_elbow,
+    fit_kmeans,
+    silhouette_curve,
+    silhouette_profile,
+)
 from segmentacion.preprocessing.transform import (
     compare_preprocessors,
     make_preprocessor,
@@ -86,10 +94,45 @@ def run_transform(config: Config) -> dict:
     return {"rows": len(scaled)}
 
 
+def run_k_selection(config: Config) -> dict:
+    """Fase 6: métricas de K-Means para cada k + silhouette plots de los k candidatos."""
+    if not config.scaled_file.exists():
+        raise FileNotFoundError(f"No existe {config.scaled_file}. Ejecuta `uv run poe transform`.")
+    features = pd.read_parquet(config.scaled_file)[list(LRFMC_COLUMNS)]
+    original = pd.read_parquet(config.lrfmc_file)[list(LRFMC_COLUMNS)]
+    params = config.k_selection
+    ks = [k for k in params.ks if k < len(features)]
+    table = evaluate_k_range(features, ks, params.silhouette_sample_size, config.random_state)
+    elbow = find_elbow(table["k"], table["inertia"])
+    table["elbow"] = table["k"] == elbow
+    table.to_csv(config.k_selection_file, index=False)
+
+    curves = []
+    for k in [k for k in params.silhouette_plot_ks if k in ks]:
+        labels = fit_kmeans(features, k, config.random_state).labels_
+        profile = silhouette_profile(
+            features, labels, params.silhouette_sample_size, config.random_state
+        )
+        curves.append(silhouette_curve(profile).assign(k=k))
+        if k == params.chosen_k:
+            cluster_medians(original, labels).to_csv(config.k_preview_file, index=False)
+    pd.concat(curves, ignore_index=True).to_parquet(config.silhouette_curves_file, index=False)
+
+    chosen = table.set_index("k").loc[params.chosen_k]
+    print(f"  · codo de la inercia: k = {elbow}")
+    print(
+        f"  · k elegido = {params.chosen_k}: silhouette {chosen['silhouette']:.3f}, "
+        f"Davies-Bouldin {chosen['db']:.3f}, clúster mínimo {chosen['min_cluster_pct']:.1%}"
+    )
+    print(f"k_selection: k = {ks[0]}…{ks[-1]} → {config.k_selection_file.name}")
+    return {"elbow": elbow}
+
+
 STEPS: dict[str, Callable[[Config], object]] = {
     "clean": run_clean,
     "features": run_features,
     "transform": run_transform,
+    "k_selection": run_k_selection,
 }
 
 

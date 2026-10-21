@@ -30,6 +30,11 @@ def test_pipeline_all_writes_lrfmc_and_profile(tmp_config, flight_csv, capsys):
     assert scaled[["L", "R", "F", "M", "C"]].mean().abs().max() < 1e-9
     assert tmp_config.preprocessor_file.exists()
     assert len(pd.read_csv(tmp_config.transform_comparison_file)) == 6
+    k_table = pd.read_csv(tmp_config.k_selection_file)
+    assert k_table["k"].tolist() == list(range(2, 11))
+    assert k_table["elbow"].sum() == 1
+    assert set(pd.read_parquet(tmp_config.silhouette_curves_file)["k"]) == {3, 4, 5, 6, 7}
+    assert len(pd.read_csv(tmp_config.k_preview_file)) == tmp_config.k_selection.chosen_k
 
 
 def test_features_step_requires_clean_file(tmp_config, capsys):

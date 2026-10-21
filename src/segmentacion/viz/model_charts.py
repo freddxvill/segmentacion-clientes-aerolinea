@@ -9,7 +9,7 @@ import pandas as pd
 
 from segmentacion.features.lrfmc import LRFMC_COLUMNS
 from segmentacion.viz.eda_charts import LRFMC_LABELS
-from segmentacion.viz.theme import INK, MAIN, NEUTRAL, SEQUENTIAL
+from segmentacion.viz.theme import CATEGORICAL, INK, MAIN, NEUTRAL, SEQUENTIAL
 
 TRANSFORM_LABELS = {"none": "Sin transformar", "log1p": "log1p", "yeo-johnson": "Yeo-Johnson"}
 SCALER_LABELS = {"standard": "StandardScaler", "robust": "RobustScaler"}
@@ -168,4 +168,131 @@ def scaled_distribution_chart(scaled: pd.DataFrame) -> alt.LayerChart:
             "Features listas para K-Means",
             subtitle="Caja = cuartiles · línea blanca = mediana · bigotes = P1–P99",
         ),
+    )
+
+
+K_METRICS = {
+    "inertia": "Inercia (WCSS) · buscar el codo",
+    "silhouette": "Silhouette · ↑ mejor",
+    "ch": "Calinski-Harabasz · ↑ mejor",
+    "db": "Davies-Bouldin · ↓ mejor",
+}
+
+
+def k_metrics_chart(table: pd.DataFrame, chosen_k: int) -> alt.FacetChart:
+    """Inercia, silhouette, CH y DB por *k*, con hover enlazado y el *k* elegido marcado."""
+    data = table.melt(
+        id_vars=["k", "min_cluster_pct", "negative_pct", "elbow"],
+        value_vars=list(K_METRICS),
+        var_name="metrica",
+        value_name="valor",
+    )
+    data["panel"] = data["metrica"].map(K_METRICS)
+    data["elegido"] = data["k"] == chosen_k
+    hover = alt.selection_point(
+        name="k_hover", fields=["k"], on="pointerover", nearest=True, empty=False
+    )
+    x = alt.X("k:Q", title="Número de segmentos (k)", axis=alt.Axis(tickMinStep=1, format="d"))
+    tooltip = [
+        alt.Tooltip("k:Q", title="k"),
+        alt.Tooltip("panel:N", title="Métrica"),
+        alt.Tooltip("valor:Q", title="Valor", format=",.3f"),
+        alt.Tooltip("min_cluster_pct:Q", title="Clúster más pequeño", format=".1%"),
+        alt.Tooltip("negative_pct:Q", title="Socios con silhouette < 0", format=".1%"),
+    ]
+    base = alt.Chart().encode(x=x)
+    chosen = (
+        alt.Chart()
+        .mark_rule(color=MAIN, strokeDash=[4, 3], strokeWidth=1.5)
+        .encode(x="k:Q")
+        .transform_filter("datum.elegido")
+    )
+    line = base.mark_line(color=NEUTRAL, strokeWidth=2).encode(
+        y=alt.Y("valor:Q", title=None, scale=alt.Scale(zero=False), axis=alt.Axis(format=",.3~r"))
+    )
+    points = (
+        base.mark_point(filled=True, opacity=1)
+        .encode(
+            y="valor:Q",
+            color=alt.condition("datum.elegido", alt.value(MAIN), alt.value(NEUTRAL)),
+            size=alt.condition(hover, alt.value(160), alt.value(60)),
+            tooltip=tooltip,
+        )
+        .add_params(hover)
+    )
+    return (
+        alt.layer(chosen, line, points, data=data)
+        .properties(width=250, height=160)
+        .facet(
+            facet=alt.Facet("panel:N", title=None, sort=list(K_METRICS.values())),
+            columns=2,
+            title=alt.Title(
+                "Métricas de K-Means según el número de segmentos",
+                subtitle=f"Línea discontinua = k elegido ({chosen_k}) · pasa el cursor para "
+                "comparar un mismo k en los cuatro paneles",
+            ),
+        )
+        .resolve_scale(y="independent")
+    )
+
+
+def silhouette_plot_chart(curves: pd.DataFrame, chosen_k: int) -> alt.LayerChart:
+    """Silhouette plot (una franja por clúster, ordenada) con selector de *k*."""
+    frames = []
+    for _, group in curves.groupby("k"):
+        sizes = group.groupby("cluster")["socios"].first()
+        share = sizes / sizes.sum()
+        offset = share.cumsum() - share
+        part = group.copy()
+        part["y"] = (
+            offset.loc[part["cluster"]].to_numpy()
+            + part["posicion"] * share.loc[part["cluster"]].to_numpy() * 0.96
+        )  # 4 % de hueco entre franjas
+        part["pct"] = share.loc[part["cluster"]].to_numpy()
+        part["media_k"] = (group.groupby("cluster")["media"].first() * share).sum()
+        frames.append(part)
+    data = pd.concat(frames, ignore_index=True)
+    data["segmento"] = "Clúster " + (data["cluster"] + 1).astype(str)
+    ks = sorted(data["k"].unique())
+    k_param = alt.param(
+        name="k_sil",
+        value=chosen_k,
+        bind=alt.binding_radio(options=ks, name="Número de segmentos (k): "),
+    )
+    base = alt.Chart(data).transform_filter("datum.k == k_sil")
+    areas = base.mark_area(orient="horizontal", opacity=0.9).encode(
+        x=alt.X(
+            "silhouette:Q", title="Silhouette de cada socio", scale=alt.Scale(domain=[-0.3, 0.7])
+        ),
+        y=alt.Y("y:Q", title=None, axis=None, scale=alt.Scale(domain=[0, 1], reverse=True)),
+        color=alt.Color(
+            "segmento:N",
+            title="Clúster",
+            scale=alt.Scale(range=list(CATEGORICAL)),
+            sort=[f"Clúster {i}" for i in range(1, max(ks) + 1)],
+        ),
+        detail="segmento:N",
+        tooltip=[
+            alt.Tooltip("segmento:N", title="Clúster"),
+            alt.Tooltip("pct:Q", title="% de socios", format=".1%"),
+            alt.Tooltip("media:Q", title="Silhouette medio del clúster", format=".3f"),
+        ],
+    )
+    mean_rule = base.mark_rule(color=INK, strokeDash=[4, 3]).encode(
+        x="mean(media_k):Q",
+        tooltip=[alt.Tooltip("mean(media_k):Q", title="Silhouette medio", format=".3f")],
+    )
+    zero = alt.Chart(pd.DataFrame({"x": [0]})).mark_rule(color=NEUTRAL).encode(x="x:Q")
+    return (
+        (zero + areas + mean_rule)
+        .add_params(k_param)
+        .properties(
+            width="container",
+            height=320,
+            title=alt.Title(
+                "Silhouette plot",
+                subtitle="Cada franja es un clúster (alto ∝ nº de socios) · línea discontinua = "
+                "silhouette medio · valores < 0 = socios más cerca de otro clúster",
+            ),
+        )
     )

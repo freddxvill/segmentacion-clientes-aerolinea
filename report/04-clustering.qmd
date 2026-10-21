@@ -1,9 +1,163 @@
 ---
 title: "Clustering"
+description: "Selección del número de segmentos, K-Means, comparación de modelos y reducción de dimensionalidad."
 ---
 
-Selección de k, K-Means, comparación de modelos y reducción de dimensionalidad.
+```{python}
+#| include: false
+import pandas as pd
+
+from segmentacion.config import get_config
+from segmentacion.viz import model_charts as mc
+from segmentacion.viz.eda_charts import LRFMC_LABELS
+from segmentacion.viz.fmt import num, pct
+from segmentacion.viz.theme import enable_theme
+
+enable_theme()
+config = get_config()
+params = config.k_selection
+table = pd.read_csv(config.k_selection_file)
+curves = pd.read_parquet(config.silhouette_curves_file)
+preview = pd.read_csv(config.k_preview_file)
+by_k = table.set_index("k")
+k = params.chosen_k
+chosen = by_k.loc[k]
+elbow = int(table.loc[table["elbow"], "k"].iloc[0])
+best_sil_k = int(table.loc[table["silhouette"].idxmax(), "k"])
+middle = by_k.loc[3:8]
+```
+
+## Selección del número de segmentos
+
+K-Means necesita que se le indique cuántos grupos buscar. Se entrenó un modelo para cada
+*k* = `{python} params.k_min`…`{python} params.k_max` sobre los
+`{python} num(62044)` socios con las features ya transformadas (ver [LRFMC](03-lrfmc.qmd)) y se
+midieron cuatro criterios:
+
+- **Inercia** (suma de distancias al centroide): siempre baja al aumentar *k*; se busca el
+  **codo**, donde añadir un segmento deja de aportar mucho. Se detecta automáticamente como el
+  punto más alejado de la recta que une los extremos de la curva.
+- **Silhouette** (−1 a 1): cuánto más cerca está cada socio de su clúster que del vecino. Se
+  calcula sobre una muestra estratificada de `{python} num(params.silhouette_sample_size)` socios.
+- **Calinski-Harabasz** (↑) y **Davies-Bouldin** (↓): separación entre clústeres frente a su
+  dispersión interna.
+
+```{python}
+#| label: fig-metricas-k
+#| fig-cap: "Las cuatro métricas para cada número de segmentos. Pasa el cursor para comparar un mismo k."
+mc.k_metrics_chart(table, chosen_k=k)
+```
+
+```{python}
+#| label: tbl-metricas-k
+#| tbl-cap: "Métricas de K-Means por número de segmentos."
+view = table.set_index("k")[
+    ["inertia", "silhouette", "negative_pct", "ch", "db", "min_cluster_pct"]
+]
+view.columns = [
+    "Inercia",
+    "Silhouette",
+    "Silhouette < 0",
+    "Calinski-Harabasz",
+    "Davies-Bouldin",
+    "Clúster mín.",
+]
+view.index.name = "k"
+(
+    view.style.format(
+        {
+            "Inercia": lambda v: num(v),
+            "Silhouette": lambda v: num(v, 3),
+            "Silhouette < 0": lambda v: pct(v),
+            "Calinski-Harabasz": lambda v: num(v),
+            "Davies-Bouldin": lambda v: num(v, 3),
+            "Clúster mín.": lambda v: pct(v),
+        }
+    ).highlight_between(subset=pd.IndexSlice[k, :], color="#2a78d633")
+)
+```
+
+::: {.insight}
+**k = `{python} k`.** Tres criterios coinciden:
+
+1. **Codo de la inercia** en *k* = `{python} elbow`.
+2. **Máximo local del silhouette** (`{python} num(chosen["silhouette"], 3)`) entre los *k* de
+   3 a 8. Repetir el cálculo con cinco muestras distintas da una desviación de ±0,001, menor que
+   la diferencia con *k* = 4 (`{python} num(by_k.loc[4, "silhouette"], 3)`) y *k* = 6
+   (`{python} num(by_k.loc[6, "silhouette"], 3)`).
+3. **Mínimo local de Davies-Bouldin** (`{python} num(chosen["db"], 3)`, frente a
+   `{python} num(by_k.loc[4, "db"], 3)` con *k* = 4 y `{python} num(by_k.loc[6, "db"], 3)` con
+   *k* = 6).
+
+El silhouette máximo absoluto está en *k* = `{python} best_sil_k`
+(`{python} num(by_k.loc[best_sil_k, "silhouette"], 3)`), pero dos grupos («activos» vs
+«inactivos») no sirven para diseñar acciones de marketing. Calinski-Harabasz decrece con *k*,
+algo habitual cuando los grupos no son esféricos, así que no ayuda a decidir. Con *k* =
+`{python} k` el clúster más pequeño reúne al `{python} pct(chosen["min_cluster_pct"])` de los
+socios, muy por encima del mínimo del 3 % exigido a un segmento accionable.
+:::
+
+### Silhouette plot
+
+```{python}
+#| label: fig-silhouette-plot
+#| fig-cap: "Silhouette de cada socio, agrupado por clúster. Cambia k para comparar."
+mc.silhouette_plot_chart(curves, chosen_k=k)
+```
+
+::: {.insight}
+Un silhouette negativo indica un socio asignado a un clúster aunque está algo más cerca de otro.
+Con *k* = `{python} k` solo le ocurre al `{python} pct(chosen["negative_pct"])` de los socios: la
+proporción más baja entre los *k* con 4 o más segmentos
+(`{python} pct(by_k.loc[4, "negative_pct"])` con *k* = 4,
+`{python} pct(by_k.loc[6, "negative_pct"])` con *k* = 6 y
+`{python} pct(by_k.loc[7, "negative_pct"])` con *k* = 7). Más segmentos no mejoran la
+separación: solo reparten a los socios en grupos más pequeños (el mínimo baja al
+`{python} pct(by_k.loc[7, "min_cluster_pct"])` con *k* = 7).
+:::
+
+### ¿Los cinco grupos tienen sentido de negocio?
+
+Vista previa de los clústeres con *k* = `{python} k` (mediana de cada métrica en sus unidades
+originales). El perfilado completo, con nombres y recomendaciones, está en
+[Segmentos](05-segmentos.qmd).
+
+```{python}
+#| label: tbl-preview
+#| tbl-cap: "Mediana de las métricas LRFMC por clúster (k = 5)."
+show = preview.assign(cluster=lambda d: "Clúster " + (d["cluster"] + 1).astype(str))
+show = show.set_index("cluster").rename_axis(None)
+show.columns = [*(LRFMC_LABELS[c] for c in "LRFMC"), "% socios"]
+show.style.format(
+    {
+        **{LRFMC_LABELS[c]: (lambda v: num(v)) for c in "FM"},
+        **{LRFMC_LABELS[c]: (lambda v: num(v, 1)) for c in "LR"},
+        LRFMC_LABELS["C"]: lambda v: num(v, 2),
+        "% socios": lambda v: pct(v),
+    }
+)
+```
+
+::: {.insight}
+Cada clúster cuenta una historia distinta: socios **recientes y activos**; **veteranos muy
+frecuentes** (el doble de vuelos que cualquier otro grupo); **veteranos ocasionales**; y dos
+grupos **inactivos** (más de 8 meses sin volar) que se diferencian por el precio: uno compra con
+mucho descuento (C ≈ 0,50) y el otro paga tarifas casi completas (C ≈ 0,82). Esa diferencia de
+sensibilidad al precio, que un ranking por gasto no captura, justifica el quinto segmento.
+:::
+
+::: {.callout-warning}
+## Sobre el umbral de silhouette
+El plan del proyecto fijaba un silhouette ≥ 0,25 como criterio de éxito. Con datos reales de
+clientes, cuyo comportamiento es un continuo y no grupos aislados, el mejor valor con un número
+de segmentos útil es `{python} num(middle["silhouette"].max(), 3)`. Se prioriza un *k*
+interpretable y estable; la estabilidad del modelo final (ARI entre semillas) y la comparación
+con otros algoritmos se evalúan en las siguientes secciones.
+:::
+
+## Modelo K-Means y comparación
 
 ::: {.callout-note}
-En construcción (Fases 6–8).
+En construcción (Fases 7–8): K-Means final, estabilidad, benchmark (GMM, Agglomerative, DBSCAN,
+quintiles) y proyecciones PCA / t-SNE.
 :::

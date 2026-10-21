@@ -21,6 +21,9 @@ data:
   scaled_filename: lrfmc_scaled.parquet
   transform_comparison_filename: transform_comparison.csv
   preprocessor_filename: preprocessor.joblib
+  k_selection_filename: k_selection.csv
+  silhouette_curves_filename: silhouette_curves.parquet
+  k_preview_filename: k_preview.csv
 
 cleaning:
   date_format: "%m/%d/%Y"
@@ -37,5 +40,16 @@ preprocessing:
   # Comparación de alternativas: silhouette de K-Means con estos k fijos, sobre una muestra.
   compare_ks: [4, 5, 6]
   silhouette_sample_size: 10000
+
+k_selection:
+  k_min: 2
+  k_max: 10
+  # El silhouette es O(n²): se calcula sobre una muestra estratificada por clúster.
+  silhouette_sample_size: 10000
+  # k para los que se guarda el silhouette plot (el sitio permite compararlos).
+  silhouette_plot_ks: [3, 4, 5, 6, 7]
+  # Elección de la Fase 6 (ver 04-clustering.qmd): codo + máximo local de silhouette +
+  # mínimo local de Davies-Bouldin, y segmentos interpretables.
+  chosen_k: 5
 
 random_state: 42

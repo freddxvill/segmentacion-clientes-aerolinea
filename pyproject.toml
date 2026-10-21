@@ -54,6 +54,7 @@ pipeline = { cmd = "python -m segmentacion.pipeline --step all", help = "Ejecuta
 clean = { cmd = "python -m segmentacion.pipeline --step clean", help = "Fase 2: limpieza" }
 features = { cmd = "python -m segmentacion.pipeline --step features", help = "Fase 4: features LRFMC y de perfilado" }
 transform = { cmd = "python -m segmentacion.pipeline --step transform", help = "Fase 5: transformación y escalado" }
+select-k = { cmd = "python -m segmentacion.pipeline --step k_selection", help = "Fase 6: selección de k" }
 test = { cmd = "pytest", help = "Tests sin datos reales" }
 test-data = { cmd = "pytest -m data", help = "Tests sobre el dataset real" }
 cov = { cmd = "pytest --cov=segmentacion --cov-report=term-missing", help = "Tests con cobertura" }
