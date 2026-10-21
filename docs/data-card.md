@@ -28,8 +28,10 @@
   aerolínea. **La procedencia original (aerolínea, país, período) no está documentada por quien
   los publicó.** El dataset circula desde hace años en cursos y publicaciones académicas sobre el
   modelo LRFMC (p. ej., Wang & Huang, 2021).
-- **Licencia:** _pendiente de confirmar_ en las reglas de la competición. Mientras no se
-  confirme que permite redistribuir los datos, el CSV **no se versiona** en el repositorio.
+- **Licencia:** no documentada por el publicador. **Decisión (2026-10-20):** mostrar muestras y
+  agregados del dataset (notebooks, sitio y `report/_freeze/`) es aceptable, porque el mismo
+  dataset ya se publica abiertamente en muchos repositorios de GitHub. El CSV crudo sigue sin
+  versionarse: se obtiene con `uv run poe download`.
 
 ## Diccionario de datos
 
@@ -98,7 +100,7 @@
 - [x] `SUM_YR_2` es el año reciente: el 93% de los socios con `SUM_YR_2 = 0` lleva más de un año
   sin volar.
 - [x] Formato de las fechas (`M/D/YYYY`).
-- [ ] Licencia de la competición (¿permite redistribuir?).
+- [x] Licencia: no documentada; se muestran muestras y agregados (ver *Procedencia y licencia*).
 
 ## Limpieza (Fase 2)
 
