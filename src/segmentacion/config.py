@@ -68,6 +68,13 @@ class KSelectionParams:
 
 
 @dataclass(frozen=True)
+class QualityParams:
+    min_stability_ari: float = 0.90
+    min_silhouette: float = 0.20
+    min_segment_pct: float = 0.03
+
+
+@dataclass(frozen=True)
 class Config:
     paths: Paths
     data: DataParams
@@ -75,6 +82,7 @@ class Config:
     random_state: int
     preprocessing: PreprocessingParams = field(default_factory=PreprocessingParams)
     k_selection: KSelectionParams = field(default_factory=KSelectionParams)
+    quality: QualityParams = field(default_factory=QualityParams)
 
     @property
     def raw_file(self) -> Path:
@@ -152,6 +160,7 @@ def load_config(params_file: Path = DEFAULT_PARAMS_FILE, root: Path = PROJECT_RO
         random_state=raw["random_state"],
         preprocessing=preprocessing,
         k_selection=k_selection,
+        quality=QualityParams(**raw.get("quality", {})),
     )
 
 

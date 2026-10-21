@@ -10,6 +10,8 @@ from segmentacion.data.download import count_rows, file_size_mb
 from segmentacion.data.load import EXPECTED_COLUMNS, load_raw, read_header
 from segmentacion.data.schema import clean_schema
 from segmentacion.features.lrfmc import LRFMC_COLUMNS, build_lrfmc
+from segmentacion.models.k_selection import evaluate_k_range
+from segmentacion.preprocessing.transform import make_preprocessor
 
 CONFIG = get_config()
 
@@ -75,3 +77,16 @@ def test_lrfmc_real_is_finite_and_non_negative(cleaned):
     assert (lrfmc >= 0).all().all()
     # Todos los socios se dieron de alta al menos 12 meses antes del corte (ver data card).
     assert lrfmc["L"].min() >= 11.9
+
+
+def test_final_silhouette_above_threshold(cleaned):
+    # Cadena completa desde el CSV crudo: features → preprocesador → K-Means con el k elegido.
+    _, df, _ = cleaned
+    pre = CONFIG.preprocessing
+    features = make_preprocessor(pre.transform, pre.scaler).fit_transform(
+        build_lrfmc(df)[list(LRFMC_COLUMNS)]
+    )
+    k = CONFIG.k_selection.chosen_k
+    metrics = evaluate_k_range(features, [k], CONFIG.k_selection.silhouette_sample_size).iloc[0]
+    assert metrics["silhouette"] >= CONFIG.quality.min_silhouette
+    assert metrics["min_cluster_pct"] >= CONFIG.quality.min_segment_pct

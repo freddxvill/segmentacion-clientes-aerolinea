@@ -16,6 +16,7 @@ from segmentacion.viz.theme import enable_theme
 enable_theme()
 config = get_config()
 params = config.k_selection
+quality = config.quality
 table = pd.read_csv(config.k_selection_file)
 curves = pd.read_parquet(config.silhouette_curves_file)
 preview = pd.read_csv(config.k_preview_file)
@@ -146,13 +147,19 @@ mucho descuento (C ≈ 0,50) y el otro paga tarifas casi completas (C ≈ 0,82).
 sensibilidad al precio, que un ranking por gasto no captura, justifica el quinto segmento.
 :::
 
-::: {.callout-warning}
-## Sobre el umbral de silhouette
-El plan del proyecto fijaba un silhouette ≥ 0,25 como criterio de éxito. Con datos reales de
-clientes, cuyo comportamiento es un continuo y no grupos aislados, el mejor valor con un número
-de segmentos útil es `{python} num(middle["silhouette"].max(), 3)`. Se prioriza un *k*
-interpretable y estable; la estabilidad del modelo final (ARI entre semillas) y la comparación
-con otros algoritmos se evalúan en las siguientes secciones.
+::: {.callout-note}
+## Criterios de calidad del modelo
+Con datos reales de clientes, cuyo comportamiento es un continuo y no grupos aislados, el
+silhouette rara vez supera 0,25: el mejor valor con un número de segmentos útil es
+`{python} num(middle["silhouette"].max(), 3)`. Por eso el proyecto usa:
+
+- **Criterio principal: estabilidad.** K-Means entrenado con distintas semillas debe producir
+  los mismos segmentos (ARI medio ≥ `{python} num(quality.min_stability_ari, 2)`). Se evalúa en
+  la siguiente sección.
+- **Criterios secundarios:** silhouette ≥ `{python} num(quality.min_silhouette, 2)` (*k* =
+  `{python} k` obtiene `{python} num(chosen["silhouette"], 3)` ✅) y ningún segmento por debajo
+  del `{python} pct(quality.min_segment_pct, 0)` de los socios (el más pequeño tiene el
+  `{python} pct(chosen["min_cluster_pct"])` ✅).
 :::
 
 ## Modelo K-Means y comparación

@@ -52,4 +52,13 @@ k_selection:
   # mínimo local de Davies-Bouldin, y segmentos interpretables.
   chosen_k: 5
 
+quality:
+  # Criterio principal: estabilidad. K-Means con distintas semillas debe dar los mismos
+  # segmentos (ARI medio entre ejecuciones).
+  min_stability_ari: 0.90
+  # Criterio secundario: con clientes reales el comportamiento es un continuo y el silhouette
+  # rara vez supera 0,25; se exige al menos 0,20 (k = 5 obtiene 0,21).
+  min_silhouette: 0.20
+  min_segment_pct: 0.03
+
 random_state: 42

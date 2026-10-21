@@ -31,3 +31,10 @@ def test_k_selection_params_loaded_from_yaml():
     assert list(params.ks) == list(range(2, 11))
     assert params.chosen_k in params.ks
     assert set(params.silhouette_plot_ks) <= set(params.ks)
+
+
+def test_quality_thresholds_prioritize_stability():
+    quality = get_config().quality
+    assert quality.min_stability_ari == 0.90
+    assert quality.min_silhouette == 0.20
+    assert quality.min_segment_pct == 0.03
