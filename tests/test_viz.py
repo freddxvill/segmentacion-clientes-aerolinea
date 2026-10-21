@@ -122,3 +122,22 @@ def test_spanish_number_format():
     assert num(62044) == "62.044"
     assert num(1234.567, 2) == "1.234,57"
     assert pct(0.3171) == "31,7 %"
+
+
+@pytest.fixture
+def notebook_renderer():
+    from segmentacion.viz.notebook import enable_notebook_renderer
+
+    previous = alt.renderers.active
+    enable_notebook_renderer()
+    yield
+    alt.renderers.enable(previous)
+
+
+def test_notebook_renderer_embeds_static_png_fallback(cleaned, notebook_renderer):
+    df, _ = cleaned
+    bundle = ec.enrollment_chart(df)._repr_mimebundle_()
+    bundle = bundle[0] if isinstance(bundle, tuple) else bundle
+    html = bundle["text/html"]
+    assert "data:image/png;base64," in html  # visible en GitHub (sin JavaScript)
+    assert "vegaEmbed" in html  # interactivo en JupyterLab / VS Code / nbviewer

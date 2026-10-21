@@ -57,6 +57,7 @@ test-data = { cmd = "pytest -m data", help = "Tests sobre el dataset real" }
 cov = { cmd = "pytest --cov=segmentacion --cov-report=term-missing", help = "Tests con cobertura" }
 format = { shell = "ruff format . && ruff check --fix .", help = "Formatea el código" }
 lint = { shell = "ruff check . && ruff format --check .", help = "Lint + chequeo de formato" }
+notebooks = { cmd = "jupyter nbconvert --to notebook --execute --inplace notebooks/*.ipynb", help = "Re-ejecuta los notebooks y guarda sus salidas" }
 report = { cmd = "quarto render report", help = "Renderiza el sitio Quarto" }
 preview = { cmd = "quarto preview report", help = "Previsualiza el sitio Quarto" }
 publish = { cmd = "quarto publish gh-pages report", help = "Publica el sitio en GitHub Pages" }

@@ -20,8 +20,18 @@ uv sync                  # instala dependencias
 uv run poe download      # descarga data/raw/flight.csv y actualiza docs/data-card.md
 uv run poe test          # tests unitarios
 uv run poe test-data     # tests sobre el dataset real
+uv run poe notebooks     # re-ejecuta los notebooks de notebooks/
 uv run poe preview       # previsualiza el sitio Quarto
 ```
+
+## Notebooks
+
+| Notebook | Contenido |
+|---|---|
+| [`01_datos_y_limpieza.ipynb`](notebooks/01_datos_y_limpieza.ipynb) | Carga, diagnóstico de calidad y limpieza (62.988 → 62.044 socios) |
+| [`02_eda.ipynb`](notebooks/02_eda.ipynb) | Análisis exploratorio de las métricas LRFMC y del perfil de los socios |
+
+Los gráficos son interactivos en JupyterLab, VS Code o nbviewer; en GitHub se ven como imagen.
 
 Si descargas el archivo manualmente, cópialo en `data/raw/flight.csv` y ejecuta
 `uv run poe verify-data`.
