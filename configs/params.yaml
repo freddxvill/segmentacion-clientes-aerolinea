@@ -24,6 +24,13 @@ data:
   k_selection_filename: k_selection.csv
   silhouette_curves_filename: silhouette_curves.parquet
   k_preview_filename: k_preview.csv
+  segments_filename: segments.parquet
+  metrics_filename: metrics.json
+  stability_filename: stability.csv
+  benchmark_filename: benchmark.csv
+  k_distance_filename: k_distance.csv
+  kmeans_filename: kmeans.joblib
+  gmm_filename: gmm.joblib
 
 cleaning:
   date_format: "%m/%d/%Y"
@@ -51,6 +58,20 @@ k_selection:
   # Elección de la Fase 6 (ver 04-clustering.qmd): codo + máximo local de silhouette +
   # mínimo local de Davies-Bouldin, y segmentos interpretables.
   chosen_k: 5
+
+modeling:
+  # Estabilidad: ARI entre los modelos entrenados con cada par de semillas (10 → 45 pares) y
+  # entre el modelo completo y modelos entrenados con submuestras del 80 % de los socios.
+  stability_seeds: 10
+  subsample_runs: 10
+  subsample_fraction: 0.8
+  # Benchmark. GMM: covarianza elegida por BIC. Ward es O(n²) en memoria → muestra.
+  # DBSCAN: min_samples = 2 · nº de features; eps = codo del gráfico k-distance.
+  gmm_covariance_types: [full, diag]
+  gmm_n_init: 3
+  agglomerative_sample_size: 10000
+  dbscan_min_samples: 10
+  silhouette_sample_size: 10000
 
 quality:
   # Criterio principal: estabilidad. K-Means con distintas semillas debe dar los mismos

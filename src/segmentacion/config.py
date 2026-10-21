@@ -36,6 +36,13 @@ class DataParams:
     k_selection_filename: str = "k_selection.csv"
     silhouette_curves_filename: str = "silhouette_curves.parquet"
     k_preview_filename: str = "k_preview.csv"
+    segments_filename: str = "segments.parquet"
+    metrics_filename: str = "metrics.json"
+    stability_filename: str = "stability.csv"
+    benchmark_filename: str = "benchmark.csv"
+    k_distance_filename: str = "k_distance.csv"
+    kmeans_filename: str = "kmeans.joblib"
+    gmm_filename: str = "gmm.joblib"
 
 
 @dataclass(frozen=True)
@@ -68,6 +75,18 @@ class KSelectionParams:
 
 
 @dataclass(frozen=True)
+class ModelingParams:
+    stability_seeds: int = 10
+    subsample_runs: int = 10
+    subsample_fraction: float = 0.8
+    gmm_covariance_types: tuple[str, ...] = ("full", "diag")
+    gmm_n_init: int = 3
+    agglomerative_sample_size: int = 10_000
+    dbscan_min_samples: int = 10
+    silhouette_sample_size: int = 10_000
+
+
+@dataclass(frozen=True)
 class QualityParams:
     min_stability_ari: float = 0.90
     min_silhouette: float = 0.20
@@ -82,6 +101,7 @@ class Config:
     random_state: int
     preprocessing: PreprocessingParams = field(default_factory=PreprocessingParams)
     k_selection: KSelectionParams = field(default_factory=KSelectionParams)
+    modeling: ModelingParams = field(default_factory=ModelingParams)
     quality: QualityParams = field(default_factory=QualityParams)
 
     @property
@@ -132,6 +152,34 @@ class Config:
     def k_preview_file(self) -> Path:
         return self.paths.processed_dir / self.data.k_preview_filename
 
+    @property
+    def segments_file(self) -> Path:
+        return self.paths.processed_dir / self.data.segments_filename
+
+    @property
+    def metrics_file(self) -> Path:
+        return self.paths.processed_dir / self.data.metrics_filename
+
+    @property
+    def stability_file(self) -> Path:
+        return self.paths.processed_dir / self.data.stability_filename
+
+    @property
+    def benchmark_file(self) -> Path:
+        return self.paths.processed_dir / self.data.benchmark_filename
+
+    @property
+    def k_distance_file(self) -> Path:
+        return self.paths.processed_dir / self.data.k_distance_filename
+
+    @property
+    def kmeans_file(self) -> Path:
+        return self.paths.models_dir / self.data.kmeans_filename
+
+    @property
+    def gmm_file(self) -> Path:
+        return self.paths.models_dir / self.data.gmm_filename
+
 
 def load_config(params_file: Path = DEFAULT_PARAMS_FILE, root: Path = PROJECT_ROOT) -> Config:
     """Lee el YAML de parámetros y devuelve un `Config` con rutas absolutas."""
@@ -153,6 +201,15 @@ def load_config(params_file: Path = DEFAULT_PARAMS_FILE, root: Path = PROJECT_RO
             "silhouette_plot_ks": tuple(ks_raw.get("silhouette_plot_ks", (3, 4, 5, 6, 7))),
         }
     )
+    modeling_raw = raw.get("modeling", {})
+    modeling = ModelingParams(
+        **{
+            **modeling_raw,
+            "gmm_covariance_types": tuple(
+                modeling_raw.get("gmm_covariance_types", ("full", "diag"))
+            ),
+        }
+    )
     return Config(
         paths=paths,
         data=data,
@@ -160,6 +217,7 @@ def load_config(params_file: Path = DEFAULT_PARAMS_FILE, root: Path = PROJECT_RO
         random_state=raw["random_state"],
         preprocessing=preprocessing,
         k_selection=k_selection,
+        modeling=modeling,
         quality=QualityParams(**raw.get("quality", {})),
     )
 

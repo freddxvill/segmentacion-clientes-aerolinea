@@ -9,16 +9,13 @@ from collections.abc import Sequence
 
 import numpy as np
 import pandas as pd
-from sklearn.cluster import KMeans
 from sklearn.metrics import (
     calinski_harabasz_score,
     davies_bouldin_score,
     silhouette_samples,
 )
 
-
-def fit_kmeans(features: pd.DataFrame, k: int, random_state: int = 42) -> KMeans:
-    return KMeans(n_clusters=k, n_init=10, random_state=random_state).fit(features)
+from segmentacion.models.kmeans import fit_kmeans
 
 
 def stratified_sample(labels: np.ndarray, size: int, random_state: int = 42) -> np.ndarray:

@@ -38,3 +38,15 @@ def test_quality_thresholds_prioritize_stability():
     assert quality.min_stability_ari == 0.90
     assert quality.min_silhouette == 0.20
     assert quality.min_segment_pct == 0.03
+
+
+def test_modeling_params_loaded_from_yaml():
+    config = get_config()
+    modeling = config.modeling
+    assert modeling.stability_seeds >= 5
+    assert 0 < modeling.subsample_fraction < 1
+    assert modeling.gmm_covariance_types == ("full", "diag")
+    # min_samples de DBSCAN = 2 · nº de features LRFMC.
+    assert modeling.dbscan_min_samples == 2 * 5
+    assert config.kmeans_file.parent == config.paths.models_dir
+    assert config.segments_file.parent == config.paths.processed_dir

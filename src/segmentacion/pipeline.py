@@ -4,22 +4,33 @@ Cada fase agrega su paso a `STEPS`; `all` los ejecuta en orden.
 """
 
 import argparse
+import json
 import sys
+import time
 from collections.abc import Callable, Sequence
 
+import numpy as np
 import pandas as pd
+from sklearn.metrics import calinski_harabasz_score
 
 from segmentacion.config import Config, get_config
 from segmentacion.data.clean import clean, lineage_report, load_clean, null_summary, save_clean
 from segmentacion.data.load import load_raw
 from segmentacion.features.lrfmc import LRFMC_COLUMNS, build_lrfmc, build_profile_features
+from segmentacion.models.baseline import baseline_segments, quintile_scores
+from segmentacion.models.benchmark import run_benchmark
 from segmentacion.models.k_selection import (
     cluster_medians,
     evaluate_k_range,
     find_elbow,
-    fit_kmeans,
     silhouette_curve,
     silhouette_profile,
+)
+from segmentacion.models.kmeans import (
+    fit_kmeans,
+    save_model,
+    stability_ari,
+    subsample_stability,
 )
 from segmentacion.preprocessing.transform import (
     compare_preprocessors,
@@ -128,11 +139,139 @@ def run_k_selection(config: Config) -> dict:
     return {"elbow": elbow}
 
 
+def run_clustering(config: Config) -> dict:
+    """Fase 7: K-Means final + estabilidad + baseline por quintiles + benchmark."""
+    if not config.scaled_file.exists():
+        raise FileNotFoundError(f"No existe {config.scaled_file}. Ejecuta `uv run poe transform`.")
+    scaled = pd.read_parquet(config.scaled_file)
+    lrfmc = pd.read_parquet(config.lrfmc_file)
+    features = scaled[list(LRFMC_COLUMNS)]
+    k, params, quality = config.k_selection.chosen_k, config.modeling, config.quality
+
+    start = time.perf_counter()
+    kmeans = fit_kmeans(features, k, config.random_state)
+    kmeans_seconds = time.perf_counter() - start
+    seeds = stability_ari(features, k, list(range(params.stability_seeds)))
+    subsamples = subsample_stability(
+        features, k, params.subsample_runs, params.subsample_fraction, config.random_state
+    )
+    stability = pd.concat(
+        [
+            pd.DataFrame(
+                {
+                    "method": "semillas",
+                    "run": seeds["seed_a"].astype(str) + "–" + seeds["seed_b"].astype(str),
+                    "ari": seeds["ari"],
+                }
+            ),
+            subsamples.assign(method="submuestras", run=subsamples["run"].astype(str)),
+        ],
+        ignore_index=True,
+    )[["method", "run", "ari"]]
+
+    scores = quintile_scores(lrfmc[list(LRFMC_COLUMNS)])
+    baseline = baseline_segments(scores)
+    bench = run_benchmark(
+        features,
+        kmeans.labels_,
+        baseline.to_numpy(),
+        k,
+        kmeans_seconds=kmeans_seconds,
+        covariance_types=params.gmm_covariance_types,
+        gmm_n_init=params.gmm_n_init,
+        agglomerative_sample_size=params.agglomerative_sample_size,
+        dbscan_min_samples=params.dbscan_min_samples,
+        silhouette_sample_size=params.silhouette_sample_size,
+        random_state=config.random_state,
+    )
+
+    segments = pd.DataFrame(
+        {
+            "MEMBER_NO": lrfmc["MEMBER_NO"].to_numpy(),
+            "cluster": kmeans.labels_,
+            "baseline_segment": baseline.to_numpy(),
+            "gmm_cluster": bench.labels["GMM"],
+            "gmm_proba": bench.gmm.predict_proba(features).max(axis=1),
+            "agglomerative_cluster": bench.labels["Agglomerative (Ward)"],
+            "dbscan_outlier": bench.labels["DBSCAN"] == -1,
+            **{f"score_{c}": scores[c].to_numpy() for c in LRFMC_COLUMNS},
+        }
+    )
+    config.paths.processed_dir.mkdir(parents=True, exist_ok=True)
+    segments.to_parquet(config.segments_file, index=False)
+    stability.to_csv(config.stability_file, index=False)
+    bench.table.to_csv(config.benchmark_file, index=False)
+    bench.k_distance.to_csv(config.k_distance_file, index=False)
+    save_model(kmeans, config.kmeans_file)
+    save_model(bench.gmm, config.gmm_file)
+
+    kmeans_row = bench.table.set_index("model").loc["K-Means"]
+    sizes = np.bincount(kmeans.labels_, minlength=k) / len(features)
+    ari_mean = stability.groupby("method")["ari"].mean()
+    ari_min = stability.groupby("method")["ari"].min()
+    metrics = {
+        "k": k,
+        "members": len(features),
+        "kmeans": {
+            "inertia": float(kmeans.inertia_),
+            "silhouette": float(kmeans_row["silhouette"]),
+            "ch": float(calinski_harabasz_score(features, kmeans.labels_)),
+            "db": float(kmeans_row["db"]),
+            "cluster_pct": sizes.round(6).tolist(),
+        },
+        "stability": {
+            "seeds": params.stability_seeds,
+            "seed_ari_mean": float(ari_mean["semillas"]),
+            "seed_ari_min": float(ari_min["semillas"]),
+            "subsample_fraction": params.subsample_fraction,
+            "subsample_ari_mean": float(ari_mean["submuestras"]),
+            "subsample_ari_min": float(ari_min["submuestras"]),
+        },
+        "benchmark": {
+            "gmm_covariance_type": bench.gmm.covariance_type,
+            "gmm_bic": dict(
+                zip(bench.gmm_bic["covariance_type"], bench.gmm_bic["bic"], strict=True)
+            ),
+            "dbscan_eps": bench.eps,
+            "dbscan_min_samples": params.dbscan_min_samples,
+        },
+    }
+    metrics["quality"] = {
+        "stability_ok": metrics["stability"]["seed_ari_mean"] >= quality.min_stability_ari,
+        "silhouette_ok": metrics["kmeans"]["silhouette"] >= quality.min_silhouette,
+        "segment_size_ok": float(sizes.min()) >= quality.min_segment_pct,
+    }
+    config.metrics_file.write_text(json.dumps(metrics, indent=2, ensure_ascii=False), "utf-8")
+
+    stab, km = metrics["stability"], metrics["kmeans"]
+    print(
+        f"  · estabilidad: ARI entre semillas {stab['seed_ari_mean']:.3f} "
+        f"(mín. {stab['seed_ari_min']:.3f}) · submuestras {stab['subsample_ari_mean']:.3f}"
+    )
+    print(
+        f"  · K-Means k = {k}: silhouette {km['silhouette']:.3f}, clúster mínimo {sizes.min():.1%}"
+    )
+    for row in bench.table.itertuples():
+        print(
+            f"  · {row.model}: {row.n_clusters} grupos, ruido {row.noise_pct:.1%}, "
+            f"silhouette {row.silhouette:.3f}, ARI vs K-Means {row.ari_kmeans:.3f}"
+        )
+    failed = [name for name, ok in metrics["quality"].items() if not ok]
+    if failed:
+        print(f"  ! criterios de calidad no cumplidos: {', '.join(failed)}")
+    print(
+        f"clustering: k = {k} → {config.segments_file.name}, {config.metrics_file.name}, "
+        f"{config.benchmark_file.name}, {config.kmeans_file.name}"
+    )
+    return metrics
+
+
 STEPS: dict[str, Callable[[Config], object]] = {
     "clean": run_clean,
     "features": run_features,
     "transform": run_transform,
     "k_selection": run_k_selection,
+    "clustering": run_clustering,
 }
 
 

@@ -26,6 +26,19 @@ chosen = by_k.loc[k]
 elbow = int(table.loc[table["elbow"], "k"].iloc[0])
 best_sil_k = int(table.loc[table["silhouette"].idxmax(), "k"])
 middle = by_k.loc[3:8]
+
+# Fase 7: K-Means final, estabilidad y benchmark.
+import json
+
+metrics = json.loads(config.metrics_file.read_text(encoding="utf-8"))
+stability = pd.read_csv(config.stability_file)
+bench = pd.read_csv(config.benchmark_file).set_index("model")
+k_dist = pd.read_csv(config.k_distance_file)
+segments = pd.read_parquet(config.segments_file)
+stab = metrics["stability"]
+lrfmc = pd.read_parquet(config.lrfmc_file)
+outliers = lrfmc[segments["dbscan_outlier"].to_numpy()]
+gmm_cov = {"full": "completa", "diag": "diagonal"}
 ```
 
 ## Selección del número de segmentos
@@ -162,9 +175,206 @@ silhouette rara vez supera 0,25: el mejor valor con un número de segmentos úti
   `{python} pct(chosen["min_cluster_pct"])` ✅).
 :::
 
-## Modelo K-Means y comparación
+## Modelo K-Means final
+
+El modelo final es K-Means con *k* = `{python} k`, entrenado sobre los
+`{python} num(metrics["members"])` socios (10 inicializaciones, semilla fija). Se guarda en
+`models/kmeans.joblib`: junto con `models/preprocessor.joblib` permite asignar segmentos a
+socios nuevos con exactamente las mismas transformaciones.
+
+### Estabilidad: el criterio principal
+
+Un segmento solo sirve para decidir acciones si no depende del azar. Se mide con el **ARI**
+(*Adjusted Rand Index*: 1 = misma partición, 0 = coincidencia al azar) de dos formas:
+
+- **Semillas:** `{python} stab["seeds"]` modelos con semillas distintas, comparados por pares
+  (`{python} int((stability["method"] == "semillas").sum())` comparaciones).
+- **Submuestras:** modelos entrenados con el `{python} pct(stab["subsample_fraction"], 0)` de
+  los socios, elegido al azar, que luego asignan a **todos** los socios; se comparan con el
+  modelo completo. Mide si los segmentos dependen de qué clientes se usaron para entrenar.
+
+```{python}
+#| label: fig-estabilidad
+#| fig-cap: "ARI de cada comparación. Todas superan con holgura el umbral del proyecto."
+mc.stability_chart(stability, quality.min_stability_ari)
+```
+
+::: {.insight}
+**Los segmentos son estables.** El ARI medio entre semillas es
+`{python} num(stab["seed_ari_mean"], 3)` (mínimo `{python} num(stab["seed_ari_min"], 3)`) y el
+de las submuestras `{python} num(stab["subsample_ari_mean"], 3)` (mínimo
+`{python} num(stab["subsample_ari_min"], 3)`), frente al umbral de
+`{python} num(quality.min_stability_ari, 2)`. Aunque el silhouette es moderado, los cinco
+grupos no son un artefacto de la inicialización ni de la muestra: cada ejecución reparte a los
+socios casi igual.
+:::
+
+| Criterio | Umbral | K-Means (*k* = `{python} k`) | |
+|---|---|---|---|
+| Estabilidad (ARI medio entre semillas) — **principal** | ≥ `{python} num(quality.min_stability_ari, 2)` | `{python} num(stab["seed_ari_mean"], 3)` | `{python} "✅" if metrics["quality"]["stability_ok"] else "❌"` |
+| Silhouette | ≥ `{python} num(quality.min_silhouette, 2)` | `{python} num(metrics["kmeans"]["silhouette"], 3)` | `{python} "✅" if metrics["quality"]["silhouette_ok"] else "❌"` |
+| Segmento más pequeño | ≥ `{python} pct(quality.min_segment_pct, 0)` | `{python} pct(min(metrics["kmeans"]["cluster_pct"]))` | `{python} "✅" if metrics["quality"]["segment_size_ok"] else "❌"` |
+
+: Criterios de calidad del modelo final. {#tbl-calidad}
+
+## Comparación con otros modelos
+
+¿Aporta K-Means algo que no den alternativas más simples o más flexibles? Se compara con cuatro
+enfoques sobre las mismas features escaladas:
+
+- **Baseline por quintiles («sin ML»):** cada métrica se puntúa de 1 a 5 según su quintil y los
+  socios se reparten con reglas RFM clásicas (Campeones, Leales, En riesgo, Hibernando y
+  Potenciales). Es lo que haría un equipo de marketing con una hoja de cálculo.
+- **GMM** (mezcla de gaussianas) con `{python} k` componentes: grupos elípticos y probabilidad
+  de pertenencia. La covarianza `{python} gmm_cov[metrics["benchmark"]["gmm_covariance_type"]]`
+  tiene el menor BIC.
+- **Agglomerative (Ward):** jerárquico. Su memoria crece con el cuadrado de los socios, así que
+  se entrena con una muestra de `{python} num(config.modeling.agglomerative_sample_size)` y el
+  resto se asigna al grupo con el centroide más cercano.
+- **DBSCAN:** grupos por densidad. `min_samples` = `{python} metrics["benchmark"]["dbscan_min_samples"]`
+  (2 × nº de features) y `eps` en el codo del gráfico *k-distance*.
+
+```{python}
+#| label: tbl-benchmark
+#| tbl-cap: "Comparación de modelos. Silhouette sobre la misma muestra de 10.000 socios para todos; el ruido de DBSCAN no cuenta en el silhouette ni en Davies-Bouldin."
+view = bench[
+    [
+        "n_clusters",
+        "noise_pct",
+        "silhouette",
+        "db",
+        "min_cluster_pct",
+        "max_cluster_pct",
+        "ari_kmeans",
+        "seconds",
+    ]
+].rename_axis(None)
+view.columns = [
+    "Grupos",
+    "Ruido",
+    "Silhouette ↑",
+    "Davies-Bouldin ↓",
+    "Grupo mín.",
+    "Grupo máx.",
+    "ARI vs K-Means",
+    "Tiempo (s)",
+]
+
+
+def fmt(formatter):
+    return lambda v: "—" if pd.isna(v) else formatter(v)
+
+
+(
+    view.style.format(
+        {
+            "Ruido": fmt(pct),
+            "Silhouette ↑": fmt(lambda v: num(v, 3)),
+            "Davies-Bouldin ↓": fmt(lambda v: num(v, 2)),
+            "Grupo mín.": fmt(pct),
+            "Grupo máx.": fmt(pct),
+            "ARI vs K-Means": fmt(lambda v: num(v, 2)),
+            "Tiempo (s)": fmt(lambda v: num(v, 1)),
+        }
+    ).highlight_between(subset=pd.IndexSlice["K-Means", :], color="#2a78d633")
+)
+```
+
+```{python}
+#| label: fig-tamanos
+#| fig-cap: "Reparto de los socios en los grupos de cada modelo. Las etiquetas de grupo no se corresponden entre modelos."
+mc.model_sizes_chart(segments)
+```
+
+::: {.insight}
+**K-Means separa mejor que todas las alternativas**: el silhouette más alto
+(`{python} num(bench.loc["K-Means", "silhouette"], 3)` frente a
+`{python} num(bench.loc["Agglomerative (Ward)", "silhouette"], 3)` del siguiente) y el menor
+Davies-Bouldin, con grupos equilibrados (del `{python} pct(bench.loc["K-Means", "min_cluster_pct"])`
+al `{python} pct(bench.loc["K-Means", "max_cluster_pct"])`). Hay que leerlo con cautela: ambas
+métricas premian grupos compactos en distancia euclídea, justo lo que optimiza K-Means. Por eso
+cuentan también la estabilidad y la lectura de negocio de cada alternativa:
+
+- **Ward** es el más parecido (ARI `{python} num(bench.loc["Agglomerative (Ward)", "ari_kmeans"], 2)`):
+  encuentra casi los mismos núcleos, pero con un silhouette menor y dependiendo de la muestra
+  con la que se entrena.
+- **GMM** solapa más los grupos (Davies-Bouldin
+  `{python} num(bench.loc["GMM", "db"], 2)`): el `{python} pct((segments["gmm_proba"] < 0.9).mean(), 0)`
+  de los socios tiene menos de un 90 % de probabilidad de pertenecer a su grupo, otra señal de que
+  el comportamiento de los clientes es un continuo.
+- **DBSCAN** no encuentra grupos: el `{python} pct(1 - bench.loc["DBSCAN", "noise_pct"])` de los
+  socios forma una sola zona densa. No sirve para segmentar, pero sí para marcar atípicos.
+:::
+
+### Quintiles: lo que no ve una segmentación por reglas
+
+```{python}
+#| label: fig-kmeans-quintiles
+#| fig-cap: "Dónde cae cada clúster de K-Means en la segmentación por quintiles."
+mc.crosstab_chart(segments, "baseline_segment", "K-Means frente a la segmentación por quintiles")
+```
+
+::: {.insight}
+Las reglas por quintiles solo usan **recencia, frecuencia y kilómetros**: el descuento típico
+es el mismo en sus cinco segmentos (C ≈ `{python} num(lrfmc["C"].median(), 2)`). K-Means, en
+cambio, separa a los inactivos en dos grupos con sensibilidades al precio opuestas (los
+clústeres 3 y 5 de la vista previa, que el baseline mete juntos en «Hibernando») y reconoce a
+los veteranos ocasionales (clúster 4), que las reglas reparten entre Potenciales, Leales y En
+riesgo. El baseline coincide poco con K-Means (ARI
+`{python} num(bench.loc["Quintiles LRFMC", "ari_kmeans"], 2)`) y sus grupos están peor separados
+en el espacio LRFMC (silhouette `{python} num(bench.loc["Quintiles LRFMC", "silhouette"], 3)`).
+:::
+
+### GMM: probabilidades de pertenencia
+
+```{python}
+#| label: fig-kmeans-gmm
+#| fig-cap: "Dónde cae cada clúster de K-Means en los grupos de GMM."
+mc.crosstab_chart(segments, "gmm_cluster", "K-Means frente a GMM")
+```
+
+::: {.insight}
+GMM conserva el núcleo de **veteranos muy frecuentes** (clúster 2), pero reparte de otra forma a
+los dos grupos inactivos: los mezcla en dos componentes que no se distinguen por el precio. Con
+covarianza `{python} gmm_cov[metrics["benchmark"]["gmm_covariance_type"]]`, cada componente puede
+estirarse a lo largo de una feature y absorber socios de perfiles distintos. La probabilidad de
+pertenencia de GMM sí es útil como señal complementaria: los socios con probabilidad baja están
+en la frontera entre dos segmentos.
+:::
+
+### DBSCAN: socios atípicos
+
+```{python}
+#| label: fig-k-distance
+#| fig-cap: "Distancia de cada socio a su 10.º vecino más cercano, ordenada."
+mc.k_distance_chart(
+    k_dist, metrics["benchmark"]["dbscan_eps"], metrics["benchmark"]["dbscan_min_samples"]
+)
+```
+
+::: {.insight}
+La curva sube de forma continua y solo se dispara al final: no hay zonas densas separadas por
+huecos, sino un único continuo de clientes. Con `eps` = `{python} num(metrics["benchmark"]["dbscan_eps"], 2)`
+DBSCAN marca como **ruido** al `{python} pct(bench.loc["DBSCAN", "noise_pct"])` de los socios
+(`{python} num(len(outliers))`). Son perfiles poco comunes: con menos vuelos (mediana
+`{python} num(outliers["F"].median())` frente a `{python} num(lrfmc["F"].median())`) acumulan casi
+el doble de kilómetros (`{python} num(outliers["M"].median())` frente a
+`{python} num(lrfmc["M"].median())`) y el `{python} pct((outliers["C"] > 1).mean(), 0)` paga más que la tarifa completa (cabinas
+premium), frente al `{python} pct((lrfmc["C"] > 1).mean())` del total. No forman un segmento
+propio, pero conviene revisarlos a mano antes de lanzar campañas masivas. Quedan marcados en
+`segments.parquet` (`dbscan_outlier`).
+:::
+
+::: {.callout-tip}
+## Decisión
+Se mantiene **K-Means con *k* = `{python} k`**: es estable (criterio principal), separa mejor
+que las alternativas, produce segmentos equilibrados y distingue la sensibilidad al precio que
+las reglas por quintiles ignoran. De los otros modelos se conservan dos señales para el
+perfilado: la probabilidad de pertenencia de GMM y la marca de atípico de DBSCAN.
+:::
+
+## Reducción de dimensionalidad
 
 ::: {.callout-note}
-En construcción (Fases 7–8): K-Means final, estabilidad, benchmark (GMM, Agglomerative, DBSCAN,
-quintiles) y proyecciones PCA / t-SNE.
+En construcción (Fase 8): proyecciones PCA 2D/3D y t-SNE de los segmentos.
 :::

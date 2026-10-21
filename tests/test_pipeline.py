@@ -1,6 +1,7 @@
 import json
 
 import pandas as pd
+import pytest
 
 from segmentacion.pipeline import main
 
@@ -35,6 +36,31 @@ def test_pipeline_all_writes_lrfmc_and_profile(tmp_config, flight_csv, capsys):
     assert k_table["elbow"].sum() == 1
     assert set(pd.read_parquet(tmp_config.silhouette_curves_file)["k"]) == {3, 4, 5, 6, 7}
     assert len(pd.read_csv(tmp_config.k_preview_file)) == tmp_config.k_selection.chosen_k
+
+
+def test_pipeline_end_to_end_on_fixture(tmp_config, flight_csv, capsys):
+    assert main(["--step", "all"], config=tmp_config) == 0
+    k = tmp_config.k_selection.chosen_k
+    segments = pd.read_parquet(tmp_config.segments_file)
+    assert len(segments) == 200
+    assert segments["MEMBER_NO"].is_unique
+    assert set(segments["cluster"]) == set(range(k))
+    assert segments["gmm_proba"].between(0, 1).all()
+    assert segments.filter(like="score_").isin(range(1, 6)).all().all()
+
+    metrics = json.loads(tmp_config.metrics_file.read_text(encoding="utf-8"))
+    assert metrics["k"] == k and metrics["members"] == 200
+    assert sum(metrics["kmeans"]["cluster_pct"]) == pytest.approx(1)
+    assert set(metrics["quality"]) == {"stability_ok", "silhouette_ok", "segment_size_ok"}
+    assert -1 <= metrics["stability"]["seed_ari_min"] <= metrics["stability"]["seed_ari_mean"] <= 1
+
+    stability = pd.read_csv(tmp_config.stability_file)
+    seeds = tmp_config.modeling.stability_seeds
+    assert (stability["method"] == "semillas").sum() == seeds * (seeds - 1) // 2
+    benchmark = pd.read_csv(tmp_config.benchmark_file)
+    assert len(benchmark) == 5
+    assert tmp_config.kmeans_file.exists() and tmp_config.gmm_file.exists()
+    assert "clustering: k = 5" in capsys.readouterr().out
 
 
 def test_features_step_requires_clean_file(tmp_config, capsys):

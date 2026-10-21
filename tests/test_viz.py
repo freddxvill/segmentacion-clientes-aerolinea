@@ -175,3 +175,67 @@ def test_transform_comparison_highlights_chosen_option(comparison):
     rows = chart.to_dict()["datasets"]
     chosen = [r for rows_ in rows.values() for r in rows_ if r.get("elegida")]
     assert [r["opcion"] for r in chosen] == ["log1p + RobustScaler"]
+
+
+@pytest.fixture
+def segments():
+    import numpy as np
+    import pandas as pd
+
+    rng = np.random.default_rng(0)
+    n = 300
+    return pd.DataFrame(
+        {
+            "cluster": rng.integers(0, 4, n),
+            "baseline_segment": rng.choice(["Campeones", "Leales", "Hibernando"], n),
+            "gmm_cluster": rng.integers(0, 4, n),
+            "agglomerative_cluster": rng.integers(0, 4, n),
+            "dbscan_outlier": rng.random(n) < 0.05,
+        }
+    )
+
+
+def test_clustering_charts_are_valid_vegalite(segments):
+    import numpy as np
+    import pandas as pd
+
+    from segmentacion.viz import model_charts as mc
+
+    stability = pd.DataFrame(
+        {"method": ["semillas"] * 3 + ["submuestras"] * 2, "run": list("01201"), "ari": 0.95}
+    )
+    curve = pd.DataFrame(
+        {"cuantil": np.linspace(0, 1, 21), "distancia": np.linspace(0, 1, 21) ** 4}
+    )
+    charts = [
+        mc.stability_chart(stability, threshold=0.9),
+        mc.model_sizes_chart(segments),
+        mc.k_distance_chart(curve, eps=0.4, min_samples=10),
+        mc.crosstab_chart(segments, "baseline_segment", "K-Means vs quintiles"),
+        mc.crosstab_chart(segments, "gmm_cluster", "K-Means vs GMM"),
+    ]
+    for chart in charts:
+        spec = json.dumps(chart.to_dict(validate=True), ensure_ascii=False)
+        assert "title" in spec and "tooltip" in spec
+
+
+def test_crosstab_rows_sum_to_one_and_follow_rule_order(segments):
+    from segmentacion.viz import model_charts as mc
+
+    spec = mc.crosstab_chart(segments, "baseline_segment", "t").to_dict()
+    rows = next(iter(spec["datasets"].values()))
+    totals = {}
+    for row in rows:
+        totals[row["cluster"]] = totals.get(row["cluster"], 0) + row["pct"]
+    assert all(abs(t - 1) < 1e-9 for t in totals.values())
+    assert spec["layer"][0]["encoding"]["x"]["sort"] == ["Campeones", "Leales", "Hibernando"]
+
+
+def test_model_sizes_chart_shows_dbscan_noise(segments):
+    from segmentacion.viz import model_charts as mc
+
+    rows = next(iter(mc.model_sizes_chart(segments).to_dict()["datasets"].values()))
+    noise = [r for r in rows if r["grupo"] == "Ruido (atípicos)"]
+    assert len(noise) == 1 and noise[0]["pct"] == segments["dbscan_outlier"].mean()
+    for model in mc.SEGMENT_COLUMNS:
+        assert abs(sum(r["pct"] for r in rows if r["modelo"] == model) - 1) < 1e-9

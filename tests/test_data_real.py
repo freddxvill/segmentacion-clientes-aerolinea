@@ -11,6 +11,7 @@ from segmentacion.data.load import EXPECTED_COLUMNS, load_raw, read_header
 from segmentacion.data.schema import clean_schema
 from segmentacion.features.lrfmc import LRFMC_COLUMNS, build_lrfmc
 from segmentacion.models.k_selection import evaluate_k_range
+from segmentacion.models.kmeans import stability_ari
 from segmentacion.preprocessing.transform import make_preprocessor
 
 CONFIG = get_config()
@@ -79,14 +80,26 @@ def test_lrfmc_real_is_finite_and_non_negative(cleaned):
     assert lrfmc["L"].min() >= 11.9
 
 
-def test_final_silhouette_above_threshold(cleaned):
-    # Cadena completa desde el CSV crudo: features → preprocesador → K-Means con el k elegido.
+@pytest.fixture(scope="module")
+def scaled_features(cleaned):
+    # Cadena completa desde el CSV crudo: features → preprocesador elegido.
     _, df, _ = cleaned
     pre = CONFIG.preprocessing
-    features = make_preprocessor(pre.transform, pre.scaler).fit_transform(
+    return make_preprocessor(pre.transform, pre.scaler).fit_transform(
         build_lrfmc(df)[list(LRFMC_COLUMNS)]
     )
+
+
+def test_final_silhouette_above_threshold(scaled_features):
+    features = scaled_features
     k = CONFIG.k_selection.chosen_k
     metrics = evaluate_k_range(features, [k], CONFIG.k_selection.silhouette_sample_size).iloc[0]
     assert metrics["silhouette"] >= CONFIG.quality.min_silhouette
     assert metrics["min_cluster_pct"] >= CONFIG.quality.min_segment_pct
+
+
+def test_kmeans_stability_meets_main_criterion(scaled_features):
+    # Criterio principal del proyecto: los segmentos no dependen de la semilla.
+    seeds = range(CONFIG.modeling.stability_seeds)
+    pairs = stability_ari(scaled_features, CONFIG.k_selection.chosen_k, seeds)
+    assert pairs["ari"].mean() >= CONFIG.quality.min_stability_ari

@@ -5,11 +5,16 @@ features escaladas) y devuelve un gráfico con datos pre-agregados.
 """
 
 import altair as alt
+import numpy as np
 import pandas as pd
 
 from segmentacion.features.lrfmc import LRFMC_COLUMNS
+from segmentacion.models.baseline import BASELINE_SEGMENTS
 from segmentacion.viz.eda_charts import LRFMC_LABELS
+from segmentacion.viz.fmt import num
 from segmentacion.viz.theme import CATEGORICAL, INK, MAIN, NEUTRAL, SEQUENTIAL
+
+ALERT = CATEGORICAL[7]  # rojo: umbrales y socios atípicos
 
 TRANSFORM_LABELS = {"none": "Sin transformar", "log1p": "log1p", "yeo-johnson": "Yeo-Johnson"}
 SCALER_LABELS = {"standard": "StandardScaler", "robust": "RobustScaler"}
@@ -295,4 +300,236 @@ def silhouette_plot_chart(curves: pd.DataFrame, chosen_k: int) -> alt.LayerChart
                 "silhouette medio · valores < 0 = socios más cerca de otro clúster",
             ),
         )
+    )
+
+
+STABILITY_LABELS = {
+    "semillas": "Semillas distintas (cada par)",
+    "submuestras": "Submuestras del 80 % (vs modelo completo)",
+}
+
+
+def stability_chart(stability: pd.DataFrame, threshold: float) -> alt.LayerChart:
+    """ARI de cada comparación de estabilidad, con la media y el umbral exigido."""
+    data = stability.assign(metodo=stability["method"].map(STABILITY_LABELS))
+    y = alt.Y(
+        "metodo:N",
+        title=None,
+        sort=list(STABILITY_LABELS.values()),
+        axis=alt.Axis(labelLimit=280),
+    )
+    # Todas las capas comparten la escala: sin esto, la media (agregada) incluiría el 0.
+    lower = min(0.85, float(data["ari"].min()) - 0.01, threshold - 0.05)
+    scale = alt.Scale(domain=[lower, 1], zero=False)
+    x = alt.X("ari:Q", title="ARI (1 = mismos segmentos)", scale=scale)
+    ticks = (
+        alt.Chart(data)
+        .mark_tick(thickness=2, size=22, opacity=0.6, color=MAIN)
+        .encode(
+            x=x,
+            y=y,
+            tooltip=[
+                alt.Tooltip("metodo:N", title="Comparación"),
+                alt.Tooltip("run:N", title="Semillas / ejecución"),
+                alt.Tooltip("ari:Q", title="ARI", format=".3f"),
+            ],
+        )
+    )
+    mean = (
+        alt.Chart(data)
+        .mark_point(shape="diamond", filled=True, size=140, color=INK, opacity=1)
+        .encode(
+            x=alt.X("mean(ari):Q", scale=scale),
+            y=y,
+            tooltip=[
+                alt.Tooltip("metodo:N", title="Comparación"),
+                alt.Tooltip("mean(ari):Q", title="ARI medio", format=".3f"),
+                alt.Tooltip("min(ari):Q", title="ARI mínimo", format=".3f"),
+                alt.Tooltip("count():Q", title="Comparaciones"),
+            ],
+        )
+    )
+    rule = (
+        alt.Chart(pd.DataFrame({"x": [threshold]}))
+        .mark_rule(color=ALERT, strokeDash=[4, 3], strokeWidth=1.5)
+        .encode(x="x:Q")
+    )
+    return (rule + ticks + mean).properties(
+        width="container",
+        height=alt.Step(56),
+        title=alt.Title(
+            "Estabilidad de K-Means",
+            subtitle="Cada marca es una comparación · rombo = media · línea roja = umbral "
+            f"(ARI ≥ {num(threshold, 2)})",
+        ),
+    )
+
+
+MODEL_ORDER = ("K-Means", "Quintiles LRFMC", "GMM", "Agglomerative (Ward)", "DBSCAN")
+# Columna de `segments.parquet` con las etiquetas de cada modelo (DBSCAN: `dbscan_outlier`).
+SEGMENT_COLUMNS = {
+    "K-Means": "cluster",
+    "Quintiles LRFMC": "baseline_segment",
+    "GMM": "gmm_cluster",
+    "Agglomerative (Ward)": "agglomerative_cluster",
+}
+
+
+def _group_names(values: pd.Series) -> pd.Series:
+    """Etiquetas legibles: los grupos numéricos pasan a «Grupo 1…»; los nombres se mantienen."""
+    if pd.api.types.is_numeric_dtype(values):
+        return "Grupo " + (values + 1).astype(str)
+    return values.astype(str)
+
+
+def model_sizes_chart(segments: pd.DataFrame) -> alt.Chart:
+    """Reparto de los socios entre los grupos de cada modelo (ruido de DBSCAN en rojo)."""
+    frames = []
+    for model, column in SEGMENT_COLUMNS.items():
+        shares = _group_names(segments[column]).value_counts(normalize=True)
+        frames.append(
+            pd.DataFrame(
+                {
+                    "modelo": model,
+                    "grupo": shares.index,
+                    "pct": shares.to_numpy(),
+                    "orden": range(len(shares)),
+                }
+            )
+        )
+    noise = float(segments["dbscan_outlier"].mean())
+    frames.append(
+        pd.DataFrame(
+            {
+                "modelo": "DBSCAN",
+                "grupo": ["Zona densa", "Ruido (atípicos)"],
+                "pct": [1 - noise, noise],
+                "orden": [0, 1],
+            }
+        )
+    )
+    data = pd.concat(frames, ignore_index=True)
+    # Tramos alternados azul / gris para distinguir grupos sin sugerir que el «Grupo 1» de un
+    # modelo equivale al de otro (las etiquetas no se corresponden entre modelos).
+    data["color"] = np.where(
+        data["grupo"] == "Ruido (atípicos)",
+        ALERT,
+        np.where(data["orden"] % 2 == 0, MAIN, NEUTRAL),
+    )
+    return (
+        alt.Chart(data)
+        .mark_bar(height=22, stroke="white", strokeWidth=1.5, cornerRadiusEnd=0)
+        .encode(
+            x=alt.X(
+                "pct:Q",
+                title="% de socios",
+                stack="zero",
+                axis=alt.Axis(format="%", values=[i / 10 for i in range(11)]),
+            ),
+            y=alt.Y("modelo:N", title=None, sort=list(MODEL_ORDER), axis=alt.Axis(labelLimit=200)),
+            order=alt.Order("orden:Q"),
+            color=alt.Color("color:N", scale=None),
+            tooltip=[
+                alt.Tooltip("modelo:N", title="Modelo"),
+                alt.Tooltip("grupo:N", title="Grupo"),
+                alt.Tooltip("pct:Q", title="% de socios", format=".1%"),
+            ],
+        )
+        .properties(
+            width="container",
+            height=alt.Step(36),
+            title=alt.Title(
+                "Tamaño de los grupos de cada modelo",
+                subtitle="Cada tramo es un grupo, de mayor a menor · rojo = ruido de DBSCAN",
+            ),
+        )
+    )
+
+
+def k_distance_chart(curve: pd.DataFrame, eps: float, min_samples: int) -> alt.LayerChart:
+    """Curva k-distance (ordenada) con el `eps` elegido en su codo."""
+    line = (
+        alt.Chart(curve)
+        .mark_line(color=MAIN, strokeWidth=2)
+        .encode(
+            x=alt.X(
+                "cuantil:Q",
+                title="Socios ordenados por distancia",
+                axis=alt.Axis(format="%", values=[i / 10 for i in range(11)]),
+            ),
+            y=alt.Y("distancia:Q", title=f"Distancia al {min_samples}.º vecino"),
+            tooltip=[
+                alt.Tooltip("cuantil:Q", title="Percentil", format=".1%"),
+                alt.Tooltip("distancia:Q", title="Distancia", format=".3f"),
+            ],
+        )
+    )
+    knee = curve.loc[[(curve["distancia"] - eps).abs().idxmin()]].assign(eps=eps)
+    rule = alt.Chart(knee).mark_rule(color=ALERT, strokeDash=[4, 3]).encode(y="eps:Q")
+    point = (
+        alt.Chart(knee)
+        .mark_point(filled=True, size=90, color=ALERT, opacity=1)
+        .encode(
+            x="cuantil:Q",
+            y="distancia:Q",
+            tooltip=[
+                alt.Tooltip("eps:Q", title="eps elegido", format=".3f"),
+                alt.Tooltip("cuantil:Q", title="Socios por debajo", format=".1%"),
+            ],
+        )
+    )
+    return (line + rule + point).properties(
+        width="container",
+        height=280,
+        title=alt.Title(
+            "Gráfico k-distance para elegir eps de DBSCAN",
+            subtitle=f"Codo de la curva = eps ({num(eps, 2)}): por encima, la distancia se "
+            "dispara y los socios quedan como ruido",
+        ),
+    )
+
+
+def crosstab_chart(segments: pd.DataFrame, column: str, title: str) -> alt.LayerChart:
+    """% de cada clúster de K-Means que cae en cada grupo de otra segmentación."""
+    table = pd.crosstab(
+        "Clúster " + (segments["cluster"] + 1).astype(str),
+        _group_names(segments[column]),
+        normalize="index",
+    )
+    # Segmentos del baseline en el orden de sus reglas; grupos numéricos en orden natural.
+    order = [c for c in BASELINE_SEGMENTS if c in table.columns] or list(table.columns)
+    data = table.stack().rename("pct").reset_index()
+    data.columns = ["cluster", "grupo", "pct"]
+    base = alt.Chart(data).encode(
+        x=alt.X(
+            "grupo:N",
+            title=None,
+            sort=order,
+            axis=alt.Axis(labelAngle=0, orient="top", labelLimit=120),
+        ),
+        y=alt.Y("cluster:N", title="K-Means"),
+        tooltip=[
+            alt.Tooltip("cluster:N", title="K-Means"),
+            alt.Tooltip("grupo:N", title="Grupo"),
+            alt.Tooltip("pct:Q", title="% del clúster", format=".1%"),
+        ],
+    )
+    cells = base.mark_rect(cornerRadius=3).encode(
+        color=alt.Color(
+            "pct:Q",
+            title="% del clúster",
+            scale=alt.Scale(range=list(SEQUENTIAL), domain=[0, 1]),
+            legend=alt.Legend(format="%"),
+        )
+    )
+    text = base.mark_text(fontSize=12, fontWeight=600).encode(
+        text=alt.Text("pct:Q", format=".0%"),
+        color=alt.condition("datum.pct > 0.5", alt.value("white"), alt.value("#1f1f1d")),
+    )
+    return (cells + text).properties(
+        width="container",
+        height=alt.Step(40),
+        title=alt.Title(
+            title, subtitle="Cada fila suma 100 %: a qué grupo va cada clúster de K-Means"
+        ),
     )
