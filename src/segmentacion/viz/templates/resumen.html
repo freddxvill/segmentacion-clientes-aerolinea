@@ -1,0 +1,874 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cinco tipos de viajero frecuente · Resumen del proyecto</title>
+<meta name="description" content="Resumen interactivo de la segmentación de [[members]] socios de un programa de viajero frecuente con el modelo LRFMC y K-Means: cinco segmentos, su fiabilidad y qué hacer con cada uno.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='4' fill='%2314161b'/%3E%3Ccircle cx='5' cy='6' r='2' fill='%234f93e6'/%3E%3Ccircle cx='11' cy='5' r='2' fill='%23f07c4a'/%3E%3Ccircle cx='8' cy='11' r='2' fill='%23f2b12a'/%3E%3C/svg%3E">
+<script>document.documentElement.classList.add('js');</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300..700;1,8..60,400&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<!--
+  Plantilla de `src/segmentacion/viz/summary_page.py` (no editar report/resumen.html a mano).
+  Cada marcador entre dobles corchetes se sustituye por una cifra del pipeline; los datos de los gráficos llegan como
+  JSON en <script id="data">. Estilo: skill «scrollytelling-explainer».
+-->
+<style>
+:root {
+  --serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --sans: "Source Sans 3", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --head: 64px;
+  color-scheme: dark;
+}
+/* Temas por sección. --c*: marcas de cada segmento; --t*: texto de cada segmento (contraste AA). */
+.night {
+  --bg: #14161b; --ink: #f1efe9; --muted: #a3a6ad; --faint: #262a31; --soft: #4a505b;
+  --line: #333843; --card: rgba(20, 22, 27, .92); --panel: #1b1e25; --accent: #f0b85a;
+  --neutral: #5d636f;
+  --c0: #4f93e6; --c1: #f07c4a; --c2: #2fc28c; --c3: #f2b12a; --c4: #ee8fb3;
+  --t0: #82b4f0; --t1: #f59a72; --t2: #62d4aa; --t3: #f5c55e; --t4: #f3a9c6;
+}
+.paper {
+  --bg: #f5f2ea; --ink: #17191e; --muted: #5c6068; --faint: #e6e1d5; --soft: #b9b2a2;
+  --line: #d9d2c3; --card: rgba(245, 242, 234, .94); --panel: #fbf9f3; --accent: #a0570f;
+  --neutral: #c2bbab;
+  --c0: #2a78d6; --c1: #eb6834; --c2: #1baf7a; --c3: #eda100; --c4: #e87ba4;
+  --t0: #1d5fb0; --t1: #b84a1a; --t2: #0d7d55; --t3: #8a5f00; --t4: #b03e6c;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: #14161b; color: #f1efe9; font: 400 17px/1.5 var(--sans); overflow-x: hidden; }
+a { color: inherit; }
+main { display: block; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+:focus-visible { outline: 2px solid #f0b85a; outline-offset: 3px; border-radius: 4px; }
+
+/* Cabecera, barra de progreso y navegación ----------------------------------------------------- */
+.bar { position: fixed; top: 0; left: 0; right: 0; height: 3px; background: #fff; mix-blend-mode: difference; transform-origin: left center; transform: scaleX(0); z-index: 41; }
+.top { position: fixed; inset: 0 0 auto 0; height: var(--head); z-index: 40; display: flex; align-items: center; gap: 18px; padding: 0 22px; color: #f1efe9; pointer-events: none; transition: color .3s; }
+.top > * { pointer-events: auto; }
+body.lit .top, body.lit .nav { color: #17191e; }
+.mark { font: 600 14px/1 var(--mono); letter-spacing: .02em; text-decoration: none; white-space: nowrap; }
+.mark span { opacity: .55; font-weight: 400; }
+.crumb { margin: 0; padding-left: 18px; border-left: 1px solid color-mix(in srgb, currentColor 28%, transparent); display: grid; row-gap: 2px; max-width: 46vw; font: 600 13.5px/1.3 var(--sans); opacity: 0; transform: translateY(-4px); transition: opacity .35s, transform .35s; }
+body.inch .crumb { opacity: 1; transform: none; }
+.crumb .ct, .crumb .cc { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.crumb .cc { font-weight: 400; opacity: .75; transition: opacity .22s; }
+.crumb .cc.off { opacity: 0; }
+.crumb .cc i { font: 500 12px var(--mono); font-style: normal; margin-right: .8em; }
+.acts { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+.pill { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 999px; border: 1px solid color-mix(in srgb, currentColor 35%, transparent); font: 600 14px/1 var(--sans); text-decoration: none; white-space: nowrap; background: transparent; color: inherit; transition: background .15s, border-color .15s; }
+.pill:hover { background: color-mix(in srgb, currentColor 10%, transparent); }
+.pill.cta { background: #f0b85a; border-color: #f0b85a; color: #17191e; }
+.pill.cta:hover { background: #f5c97a; }
+.gh { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 50%; border: 1px solid color-mix(in srgb, currentColor 35%, transparent); }
+.gh svg { width: 18px; height: 18px; fill: currentColor; }
+.nav { position: fixed; left: 22px; bottom: 18px; z-index: 40; display: flex; gap: 8px; align-items: center; color: #f1efe9; transition: color .3s; }
+.nav button { width: 40px; height: 40px; border-radius: 50%; border: 1px solid color-mix(in srgb, currentColor 35%, transparent); background: color-mix(in srgb, currentColor 4%, transparent); color: inherit; font: 22px/1 var(--sans); cursor: pointer; transition: background .15s; }
+.nav button:hover { background: color-mix(in srgb, currentColor 14%, transparent); }
+.nav .hint { font: 12px var(--mono); opacity: .6; margin-left: 4px; }
+
+/* Capítulos: escenario fijo + pasos ------------------------------------------------------------ */
+.ch { position: relative; background: var(--bg); color: var(--ink); }
+.stage { position: sticky; top: 0; height: 100svh; overflow: hidden; }
+.steps { position: relative; margin-top: -100svh; pointer-events: none; }
+.step { height: 100svh; }
+.viz { position: absolute; inset: 11vh 4% 9vh 42%; margin: 0; }
+.viz > svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.says { position: absolute; left: 6vw; width: 32vw; top: 50%; transform: translateY(-50%); margin: 0; padding: 0; list-style: none; counter-reset: s; z-index: 2; }
+.says li { position: relative; padding-left: 1.55em; counter-increment: s; font: 400 clamp(17px, 1.25vw, 20px)/1.45 var(--serif); }
+.says li::before { content: counter(s); position: absolute; left: 0; top: 0; font-weight: 600; color: var(--accent); }
+.says li + li { margin-top: .8em; }
+.says b { font-weight: 650; }
+.k { font-style: normal; font-weight: 650; }
+.t0 { color: var(--t0); } .t1 { color: var(--t1); } .t2 { color: var(--t2); } .t3 { color: var(--t3); } .t4 { color: var(--t4); }
+.js .says li::before { content: attr(data-n); }  /* con pasos ocultos, counter() no los cuenta */
+.js .says li.next { display: none; }
+.js .says li.past { font-size: clamp(14.5px, 1.02vw, 16.5px); line-height: 1.42; color: var(--muted); margin-top: .5em; }
+.js .says li.past .k, .js .says li.past b { color: inherit; font-weight: 600; }
+.js .says li.now { font-size: clamp(23px, 2.2vw, 37px); line-height: 1.22; letter-spacing: -.01em; animation: rise .55s cubic-bezier(.2, .7, .2, 1) both; }
+.js .says li.past + li.now { margin-top: .85em; padding-top: .85em; border-top: 1px solid var(--line); }
+.js .says li.past + li.now::before { top: .85em; }
+
+/* «Ver los datos» */
+.data { position: relative; z-index: 3; background: var(--bg); color: var(--ink); border-top: 1px solid var(--line); padding: 0 6vw; }
+.data summary { cursor: pointer; padding: 18px 0; font: 500 13px var(--mono); letter-spacing: .03em; color: var(--muted); list-style: none; width: max-content; }
+.data summary::-webkit-details-marker { display: none; }
+.data summary::before { content: "▸ "; }
+.data[open] summary::before { content: "▾ "; }
+.data summary:hover { color: var(--ink); }
+.data .note { margin: 0 0 14px; max-width: 72ch; font-size: 15px; color: var(--muted); }
+.tw { overflow-x: auto; margin-bottom: 28px; }
+.data table { border-collapse: collapse; font: 14.5px/1.4 var(--sans); min-width: min(100%, 560px); }
+.data th, .data td { text-align: left; vertical-align: top; padding: 7px 18px 7px 0; border-bottom: 1px solid var(--line); }
+.data th { font-weight: 600; color: var(--muted); }
+.data .n { text-align: right; font: 13px var(--mono); white-space: nowrap; }
+
+/* Gráficos SVG */
+.viz text { font-family: var(--sans); font-size: 14px; fill: var(--ink); }
+.viz .cap { font: 500 12.5px var(--mono); letter-spacing: .02em; fill: var(--muted); }
+.viz .lab { font-size: 13px; fill: var(--muted); }
+.viz .num { font-family: var(--mono); font-size: 12.5px; }
+.viz .ann { font-weight: 650; font-size: 15px; }
+.viz .rowlab, .viz .leg-name { font-weight: 650; font-size: 15px; }
+.viz .letter { font: 500 38px var(--mono); fill: var(--soft); transition: fill .4s; }
+.viz .vlab { font-weight: 650; font-size: 13px; }
+.viz .maplab { font-weight: 700; font-size: 15px; transition: opacity .45s; }
+.viz text.t0 { fill: var(--t0); } .viz text.t1 { fill: var(--t1); } .viz text.t2 { fill: var(--t2); } .viz text.t3 { fill: var(--t3); } .viz text.t4 { fill: var(--t4); }
+.halo { paint-order: stroke; stroke: var(--bg); stroke-width: 5px; stroke-linejoin: round; }
+.f0 { fill: var(--c0); } .f1 { fill: var(--c1); } .f2 { fill: var(--c2); } .f3 { fill: var(--c3); } .f4 { fill: var(--c4); } .fn { fill: var(--neutral); }
+.cell { transition: fill .35s, opacity .35s; }
+.axis { stroke: var(--soft); stroke-width: 1.5; }
+.grid { stroke: var(--line); stroke-width: 1; }
+.medline { stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 3 4; }
+.thr { stroke: #e8655a; stroke-width: 1.5; stroke-dasharray: 5 5; }
+.dot { stroke: var(--bg); stroke-width: 2; transition: opacity .3s; }
+.mrow { transition: opacity .45s; }
+.mrow.next { opacity: .2; } .mrow.past { opacity: .62; }
+.mrow.now .letter { fill: var(--accent); }
+.hbar { fill: var(--soft); transition: fill .3s, opacity .3s; }
+.hbar.hot { fill: var(--accent); }
+.bracket { fill: none; stroke: var(--accent); stroke-width: 1.5; }
+.sil { fill: none; stroke: var(--ink); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+.pt { fill: var(--bg); stroke: var(--ink); stroke-width: 2; transition: opacity .3s, fill .3s, stroke .3s; }
+.pt.hot { fill: var(--accent); stroke: var(--accent); }
+.band { fill: var(--accent); fill-opacity: .14; }
+.adot { fill: var(--c0); fill-opacity: .8; transition: opacity .3s; }
+.mean { fill: var(--ink); }
+.bmain { fill: var(--accent); } .bother { fill: var(--soft); }
+.pts circle { fill: var(--neutral); transition: fill .6s, opacity .45s; }
+.pts circle.off { opacity: 0 !important; }
+.pts.colored .s0 { fill: var(--c0); } .pts.colored .s1 { fill: var(--c1); } .pts.colored .s2 { fill: var(--c2); } .pts.colored .s3 { fill: var(--c3); } .pts.colored .s4 { fill: var(--c4); }
+.pts.hl circle { opacity: .1; }
+.pts.hl-0 .s0, .pts.hl-1 .s1, .pts.hl-2 .s2, .pts.hl-3 .s3, .pts.hl-4 .s4 { opacity: 1; }
+
+/* Fichas de segmento */
+.cards { inset: 11vh 5% 9vh 44%; }
+.seg { position: relative; display: flex; flex-direction: column; gap: 14px; margin-bottom: 16px; padding: 22px 26px; overflow: hidden; background: var(--panel); border: 1px solid var(--line); border-top: 4px solid var(--c); border-radius: 14px; }
+.js .seg { position: absolute; inset: 0; margin: 0; opacity: 0; transform: translateY(14px); transition: opacity .45s, transform .45s; }
+.js .seg.on { opacity: 1; transform: none; }
+.seg header p { margin: 0; }
+.seg-n { font: 500 12px var(--mono); color: var(--muted); }
+.seg h3 { margin: 4px 0 2px; font: 600 clamp(26px, 2.3vw, 40px)/1.05 var(--serif); letter-spacing: -.015em; color: var(--tc); }
+.seg-size { font-size: 14px; color: var(--muted); }
+.seg-kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.seg-kpis b { display: block; font: 500 clamp(28px, 2.7vw, 46px)/1 var(--mono); letter-spacing: -.03em; }
+.seg-kpis span { font-size: 14px; color: var(--muted); }
+.seg-kpis i { display: block; height: 6px; margin-top: 8px; border-radius: 3px; background: linear-gradient(90deg, var(--c) var(--w), var(--faint) var(--w)); }
+.seg-why { margin: 0; font: 400 16px/1.45 var(--serif); }
+.lab2 { display: block; margin-bottom: 3px; font: 500 11px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.seg-prof { width: 100%; max-width: 400px; height: auto; flex-shrink: 0; }
+.seg-prof text { font: 12px var(--sans); fill: var(--muted); }
+.seg-prof .b { fill: var(--c); }
+.seg-prof .mid { stroke: var(--soft); stroke-width: 1; }
+.seg-prof .ax { font-size: 11px; }
+.seg-act p { margin: 0; font-size: 15px; line-height: 1.45; }
+.seg-act .kpi { margin-top: 4px; font-size: 14px; color: var(--muted); }
+
+/* Portada ---------------------------------------------------------------------------------------- */
+.cover { position: relative; min-height: 100svh; display: flex; align-items: center; padding: calc(var(--head) + 4vh) 7vw 10vh; background: var(--bg); color: var(--ink); overflow: hidden; }
+.sky { position: absolute; inset: -4% -2% -4% 34%; opacity: .85; will-change: transform; }
+.sky svg { width: 100%; height: 100%; display: block; }
+.sky circle { fill-opacity: .75; }
+.cover::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(90deg, var(--bg) 30%, color-mix(in srgb, var(--bg) 60%, transparent) 56%, color-mix(in srgb, var(--bg) 8%, transparent) 88%), linear-gradient(0deg, var(--bg) 0%, transparent 22%); }
+.cover-in { position: relative; z-index: 1; max-width: min(92vw, 1100px); }
+.kick { margin: 0 0 3vh; font: 500 clamp(12px, .95vw, 15px)/1.3 var(--mono); letter-spacing: .04em; color: var(--muted); }
+.cover h1 { margin: 0; max-width: 12ch; font: 500 clamp(46px, 6.4vw, 128px)/.97 var(--serif); letter-spacing: -.035em; }
+.dek { margin: 3.4vh 0 0; max-width: 33em; font: 400 clamp(18px, 1.5vw, 25px)/1.4 var(--serif); color: var(--muted); }
+.toc { display: flex; flex-wrap: wrap; gap: 8px 10px; margin: 5vh 0 0; padding: 0; list-style: none; max-width: 780px; }
+.toc a { display: inline-flex; align-items: center; gap: 8px; padding: 8px 13px 8px 11px; border-radius: 999px; border: 1px solid var(--line); background: color-mix(in srgb, var(--bg) 70%, transparent); font: 600 14px/1 var(--sans); text-decoration: none; transition: transform .15s, border-color .15s; }
+.toc a:hover { transform: translateY(-2px); border-color: var(--muted); }
+.toc a i { width: 8px; height: 8px; border-radius: 50%; background: var(--d); }
+.toc a small { font: 500 11px var(--mono); color: var(--muted); }
+.cue { position: absolute; left: 50%; bottom: 3vh; z-index: 1; width: 1.5px; height: 8vh; background: linear-gradient(var(--ink), transparent); transform-origin: center top; opacity: 0; }
+.js .cover h1 .w { display: inline-block; opacity: 0; transform: translateY(.28em); }
+.js .cover .kick, .js .cover .dek, .js .cover .toc { opacity: 0; }
+.cover.go h1 .w { animation: rise .9s cubic-bezier(.2, .7, .2, 1) forwards; animation-delay: calc(var(--i) * 75ms); }
+.cover.go .kick { animation: fade .8s ease .1s forwards; }
+.cover.go .dek { animation: fade 1s ease 1s forwards; }
+.cover.go .toc { animation: fade 1s ease 1.3s forwards; }
+.cover.go .cue { animation: cue 2.4s ease-in-out 2.4s infinite; }
+
+/* Cierre: preguntas, límites y la historia en texto ------------------------------------------- */
+.quiz, .limits, .story { background: var(--bg); color: var(--ink); padding: 14vh 7vw 12vh; }
+.quiz h2, .limits h2, .story h2 { margin: 0 0 5vh; font: 500 clamp(32px, 3.6vw, 60px)/1.05 var(--serif); letter-spacing: -.02em; }
+.qs { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 5vh 4vw; }
+.qn { margin: 0; font: 500 12px var(--mono); color: var(--accent); }
+.q h3 { margin: 10px 0 18px; font: 400 clamp(19px, 1.45vw, 23px)/1.3 var(--serif); }
+.opts { display: grid; gap: 10px; }
+.opts button { position: relative; text-align: left; padding: 13px 40px 13px 16px; border-radius: 10px; border: 1px solid var(--line); background: transparent; color: var(--ink); font: 600 15.5px var(--sans); cursor: pointer; transition: background .12s, border-color .12s, opacity .2s; }
+.opts button:hover:not(:disabled) { border-color: var(--muted); background: color-mix(in srgb, var(--ink) 6%, transparent); }
+.opts button:disabled { cursor: default; }
+.opts button:disabled:not(.right):not(.wrong) { opacity: .45; }
+.opts button.right { border-color: #2fc28c; background: color-mix(in srgb, #2fc28c 16%, transparent); }
+.opts button.wrong { border-color: #e8655a; background: color-mix(in srgb, #e8655a 14%, transparent); }
+.opts button.right::after, .opts button.wrong::after { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-weight: 700; }
+.opts button.right::after { content: "✓"; color: #2fc28c; }
+.opts button.wrong::after { content: "✗"; color: #e8655a; }
+.why { margin: 14px 0 0; font-size: 15.5px; line-height: 1.5; color: var(--muted); }
+.js .why { display: none; }
+.q.done .why { display: block; animation: fade .4s ease both; }
+.score { min-height: 1.5em; margin: 6vh 0 0; font: 500 14px var(--mono); color: var(--muted); }
+.limits ul { list-style: none; margin: 0; padding: 0; max-width: 1000px; }
+.limits li { padding: 3.2vh 0; border-top: 1px solid var(--line); font: 400 clamp(19px, 1.65vw, 27px)/1.38 var(--serif); }
+.limits li b { font-weight: 600; }
+.story p { max-width: 66ch; margin: 0 0 1.15em; font: 400 clamp(18px, 1.3vw, 21px)/1.6 var(--serif); }
+.story .kick { opacity: 1; }
+.links { display: flex; flex-wrap: wrap; gap: 10px; margin: 5vh 0 6vh; }
+.credits { max-width: 82ch; padding-top: 3vh; border-top: 1px solid var(--line); font: 14px/1.6 var(--sans); color: var(--muted); }
+.credits code { font: 13px var(--mono); }
+
+@keyframes rise { from { opacity: 0; transform: translateY(.28em); } to { opacity: 1; transform: none; } }
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes cue { 0% { transform: scaleY(0); opacity: .9; } 55% { transform: scaleY(1); opacity: .9; } 100% { transform: scaleY(1); opacity: 0; } }
+
+/* Tableta y pantallas verticales: visual arriba, paso actual abajo en una tarjeta. */
+@media (max-width: 1099px), (max-aspect-ratio: 4/3) {
+  .viz, .cards { inset: calc(var(--head) + 6px) 4% calc(37svh + 52px) 4%; }
+  .says { left: 4vw; right: 4vw; width: auto; top: auto; bottom: calc(2svh + 56px); transform: none; max-height: 32svh; overflow: hidden; padding: 16px 20px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+  .js .says li.past { display: none; }
+  .js .says li.now { font-size: clamp(19px, 3vw, 27px); }
+  .js .says li.now, .js .says li.past + li.now { margin-top: 0; padding-top: 0; border-top: 0; }
+  .js .says li.past + li.now::before { top: 0; }
+  .crumb { max-width: 40vw; }
+  .seg { padding: 16px 20px; gap: 10px; }
+  .seg-why { font-size: 15px; }
+  .sky { inset: 30% -10% -10% 0; opacity: .5; }
+  .cover::after { background: linear-gradient(180deg, var(--bg) 25%, color-mix(in srgb, var(--bg) 55%, transparent) 60%, var(--bg) 100%); }
+}
+@media (hover: none) { .nav .hint { display: none; } }
+@media (max-width: 760px) {
+  :root { --head: 56px; }
+  .top { padding: 0 14px; gap: 10px; }
+  .crumb, .acts .pill:not(.cta), .nav .hint { display: none; }
+  .pill.cta { padding: 8px 12px; font-size: 13px; }
+  .nav button { width: 36px; height: 36px; font-size: 18px; }
+  .seg-prof { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+  .js .cover h1 .w, .js .cover .kick, .js .cover .dek, .js .cover .toc { opacity: 1; transform: none; }
+  .cue { display: none; }
+}
+</style>
+</head>
+<body>
+<div class="bar" aria-hidden="true"></div>
+<header class="top">
+  <a class="mark" href="#portada">LRFMC <span>· resumen</span></a>
+  <p class="crumb" aria-hidden="true"><span class="ct">Cinco tipos de viajero frecuente</span><span class="cc"><i></i><span></span></span></p>
+  <nav class="acts" aria-label="Enlaces del proyecto">
+    <a class="pill" href="https://freddxvill.github.io/segmentacion-clientes-aerolinea/glosario.html">Glosario</a>
+    <a class="pill cta" href="https://freddxvill.github.io/segmentacion-clientes-aerolinea/">Análisis completo →</a>
+    <a class="gh" href="https://github.com/freddxvill/segmentacion-clientes-aerolinea" aria-label="Código en GitHub"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8a8 8 0 0 0 5.47 7.59c.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.92-.89-1.17-.89-1.17-.73-.5.06-.49.06-.49.8.06 1.23.83 1.23.83.71 1.22 1.87.87 2.33.66.07-.52.28-.87.5-1.07-1.78-.2-3.65-.89-3.65-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg></a>
+  </nav>
+</header>
+<nav class="nav" aria-label="Pasos">
+  <button type="button" id="prev" aria-label="Paso anterior">‹</button>
+  <button type="button" id="next" aria-label="Paso siguiente">›</button>
+  <span class="hint" aria-hidden="true">← →</span>
+</nav>
+
+<main>
+<!-- 1 · Apertura en frío -->
+<section class="ch night" id="valor" data-chart="valor" data-title="Dónde está el valor">
+  <div class="stage">
+    <h2 class="sr-only">Dónde está el valor</h2>
+    <ol class="says">
+      <li>Una aerolínea tiene <b>[[members]] socios</b> en su programa de viajero frecuente. Hasta ahora, los trata a todos igual: mismos correos, mismas promociones.</li>
+      <li>Pero no viajan igual. Por su forma de volar, se reparten en <b>cinco segmentos</b> de tamaño parecido: del [[seg_pct_min]] al [[seg_pct_max]] de los socios.</li>
+      <li>Los <em class="k t0">VIP</em> son uno de cada cinco socios: el [[vip_pct]].</li>
+      <li>Y generan el <b>[[vip_rev]] del ingreso</b>. Los dos segmentos que llevan meses sin volar suman el [[inactive_pct]] de los socios y solo el [[inactive_rev]] del ingreso.</li>
+    </ol>
+    <figure class="viz" role="img" aria-label="Cuadrícula de 100 cuadrados por segmento: los VIP son el [[vip_pct]] de los socios y aportan el [[vip_rev]] del ingreso."><svg></svg></figure>
+  </div>
+  <div class="steps" aria-hidden="true"><div class="step"></div><div class="step"></div><div class="step"></div><div class="step"></div></div>
+  <details class="data"><summary>Ver los datos</summary>[[table_valor]]</details>
+</section>
+
+<!-- Portada -->
+<section class="cover night" id="portada">
+  <div class="sky" aria-hidden="true"><svg viewBox="0 0 600 520" preserveAspectRatio="xMidYMid slice"></svg></div>
+  <div class="cover-in">
+    <p class="kick">Resumen del proyecto · Segmentación de clientes con LRFMC</p>
+    <h1>Cinco tipos de viajero frecuente</h1>
+    <p class="dek">Cómo se agrupó a [[members]] socios de un programa de fidelización por su forma de viajar, qué tan fiable es el resultado y qué hacer con cada grupo.</p>
+    <ol class="toc" aria-label="Capítulos">
+      <li><a href="#valor" style="--d:#4f93e6"><i></i>Dónde está el valor</a></li>
+      <li><a href="#metricas" style="--d:#f07c4a"><i></i>Cinco números por socio</a></li>
+      <li><a href="#cola" style="--d:#2fc28c"><i></i>Pocos vuelan muchísimo</a></li>
+      <li><a href="#cuantos" style="--d:#f2b12a"><i></i>¿Cuántos grupos?</a></li>
+      <li><a href="#mapa" style="--d:#ee8fb3"><i></i>El mapa de los socios</a></li>
+      <li><a href="#fiable" style="--d:#4f93e6"><i></i>¿Es fiable?</a></li>
+      <li><a href="#segmentos" style="--d:#f07c4a"><i></i>Cinco segmentos, cinco estrategias</a></li>
+      <li><a href="#preguntas" style="--d:#a3a6ad"><i></i>Tres preguntas</a></li>
+    </ol>
+  </div>
+  <div class="cue" aria-hidden="true"></div>
+</section>
+
+<!-- 2 · LRFMC -->
+<section class="ch paper" id="metricas" data-chart="metricas" data-title="Cinco números por socio">
+  <div class="stage">
+    <h2 class="sr-only">Cinco números por socio</h2>
+    <ol class="says">
+      <li>Para agruparlos, cada socio se resume en cinco números, el modelo <b>LRFMC</b>. <b>L · Antigüedad</b>: meses en el programa. El socio típico lleva [[med_L]].</li>
+      <li><b>R · Recencia</b>: meses desde su último vuelo. Aquí, más es peor: el socio típico voló hace [[med_R]]; los <em class="k t3">En riesgo de abandono</em>, hace [[risk_R]].</li>
+      <li><b>F · Frecuencia</b>: vuelos en dos años. El socio típico hizo [[med_F]]; un <em class="k t0">VIP</em>, [[vip_F]].</li>
+      <li><b>M · Kilómetros</b>: lo que vuela. En aviación miden el valor mejor que el gasto, porque el precio depende de la distancia. El socio típico: [[med_M]].</li>
+      <li><b>C · Descuento</b>: lo que paga frente a la tarifa completa. Los <em class="k t4">Cazadores de ofertas</em> pagan el [[deals_C]]; los <em class="k t3">En riesgo de abandono</em>, el [[risk_C]].</li>
+    </ol>
+    <figure class="viz" role="img" aria-label="Mediana de cada métrica LRFMC por segmento frente al socio típico."><svg></svg></figure>
+  </div>
+  <div class="steps" aria-hidden="true"><div class="step"></div><div class="step"></div><div class="step"></div><div class="step"></div><div class="step"></div></div>
+  <details class="data"><summary>Ver los datos</summary><p class="note">Medianas de cada métrica: el valor del medio, que no se deja arrastrar por unos pocos casos extremos.</p>[[table_metricas]]</details>
+</section>
+
+<!-- 3 · Asimetría -->
+<section class="ch paper" id="cola" data-chart="cola" data-title="Pocos vuelan muchísimo">
+  <div class="stage">
+    <h2 class="sr-only">Pocos vuelan muchísimo</h2>
+    <ol class="says">
+      <li>La mayoría vuela poco: la mitad de los socios hizo <b>[[med_F]] vuelos o menos</b> en dos años.</li>
+      <li>Pero unos pocos vuelan muchísimo, hasta <b>[[max_F]] vuelos</b>. Esa «cola larga» dominaría la agrupación: los grupos se formarían alrededor de unos pocos extremos.</li>
+      <li>Por eso, antes de agrupar, cada métrica se <b>comprime</b> y se pone en una escala común. Ningún socio pesa más por ser extremo, y las cinco métricas cuentan lo mismo.</li>
+    </ol>
+    <figure class="viz" role="img" aria-label="Histograma del número de vuelos, con una cola larga hacia la derecha, que tras la transformación queda equilibrado."><svg></svg></figure>
+  </div>
+  <div class="steps" aria-hidden="true"><div class="step"></div><div class="step"></div><div class="step"></div></div>
+  <details class="data"><summary>Ver los datos</summary><p class="note">La transformación usada es Yeo-Johnson seguida de un escalado estándar (media 0, desviación 1).</p>[[table_cola]]</details>
+</section>
+
+<!-- 4 · Número de grupos -->
+<section class="ch night" id="cuantos" data-chart="cuantos" data-title="¿Cuántos grupos?">
+  <div class="stage">
+    <h2 class="sr-only">¿Cuántos grupos?</h2>
+    <ol class="says">
+      <li>¿En cuántos grupos dividir a los socios? Se probaron de <b>[[k_min]] a [[k_max]]</b>, midiendo qué tan separados quedan unos de otros.</li>
+      <li>Con <b>2 grupos</b> la separación es máxima, pero solo distingue a quien vuela de quien no. No sirve para diseñar acciones.</li>
+      <li>Con <b>[[k]]</b>, tres criterios técnicos coinciden y cada grupo cuenta una historia de negocio distinta. Es el número elegido.</li>
+    </ol>
+    <figure class="viz" role="img" aria-label="Separación entre grupos (silhouette) para cada número de grupos; se elige [[k]]."><svg></svg></figure>
+  </div>
+  <div class="steps" aria-hidden="true"><div class="step"></div><div class="step"></div><div class="step"></div></div>
+  <details class="data"><summary>Ver los datos</summary><p class="note">Además de la separación (silhouette), se miraron el «codo» de la inercia y el índice de Davies-Bouldin: los tres señalan [[k]] grupos.</p>[[table_cuantos]]</details>
+</section>
+
+<!-- 5 · Mapa -->
+<section class="ch night" id="mapa" data-chart="mapa" data-title="El mapa de los socios">
+  <div class="stage">
+    <h2 class="sr-only">El mapa de los socios</h2>
+    <ol class="says">
+      <li>Cada punto es un socio. El mapa coloca juntos a los que se parecen en las cinco métricas.</li>
+      <li>Coloreados por segmento, cada grupo ocupa su propia zona. Las fronteras se tocan: el comportamiento de los clientes es un continuo, no islas.</li>
+      <li>Los <em class="k t0">VIP</em> forman un bloque compacto: vuelan mucho, lejos y hace poco.</li>
+      <li>Dos grupos llevan meses sin volar, pero no se parecen: los <em class="k t3">En riesgo de abandono</em> pagaban el [[risk_C]] de la tarifa completa; los <em class="k t4">Cazadores de ofertas</em>, el [[deals_C]].</li>
+    </ol>
+    <figure class="viz" role="img" aria-label="Mapa de [[map_n]] socios coloreados por segmento: cada segmento ocupa su propia zona."><svg></svg></figure>
+  </div>
+  <div class="steps" aria-hidden="true"><div class="step"></div><div class="step"></div><div class="step"></div><div class="step"></div></div>
+  <details class="data"><summary>Ver los datos</summary><p class="note">Muestra estratificada de [[map_n]] socios, proyectada con t-SNE (perplexity 30). La fidelidad del mapa (trustworthiness) es de [[map_trust]] sobre 1: casi todos los vecinos cercanos en las cinco métricas siguen siéndolo en el plano. Las distancias entre zonas no se interpretan.</p></details>
+</section>
+
+<!-- 6 · Fiabilidad -->
+<section class="ch paper" id="fiable" data-chart="fiable" data-title="¿Es fiable?">
+  <div class="stage">
+    <h2 class="sr-only">¿Es fiable?</h2>
+    <ol class="says">
+      <li>¿Y si se repite el análisis? Se repitió desde <b>[[seeds]] puntos de partida</b> distintos: los segmentos coinciden en <b>[[ari_seed]]</b> sobre 1 (el mínimo exigido era [[ari_min]]).</li>
+      <li>Entrenando solo con el [[subsample_pct]] de los socios, elegidos al azar, la coincidencia sigue en <b>[[ari_sub]]</b>. Los segmentos no dependen del azar ni de la muestra.</li>
+      <li>Frente a otras técnicas, incluida una segmentación por reglas de hoja de cálculo, <b>K-Means</b> es la que mejor separa a los socios: [[kmeans_sil]] frente a [[best_other_sil]] de la mejor alternativa.</li>
+    </ol>
+    <figure class="viz" role="img" aria-label="Coincidencia entre repeticiones del análisis, cerca de 1, y separación de cada técnica: K-Means es la mayor."><svg></svg></figure>
+  </div>
+  <div class="steps" aria-hidden="true"><div class="step"></div><div class="step"></div><div class="step"></div></div>
+  <details class="data"><summary>Ver los datos</summary><p class="note">La coincidencia se mide con el ARI (1 = mismos grupos, 0 = coincidencia al azar) y la separación, con el silhouette.</p>[[table_fiable]]</details>
+</section>
+
+<!-- 7 · Segmentos -->
+<section class="ch paper" id="segmentos" data-chart="segmentos" data-title="Cinco segmentos, cinco estrategias">
+  <div class="stage">
+    <h2 class="sr-only">Cinco segmentos, cinco estrategias</h2>
+    <ol class="says">
+[[segment_steps]]
+    </ol>
+    <div class="viz cards">
+[[segment_cards]]
+    </div>
+  </div>
+  <div class="steps" aria-hidden="true"><div class="step"></div><div class="step"></div><div class="step"></div><div class="step"></div><div class="step"></div></div>
+  <details class="data"><summary>Ver los datos</summary><p class="note">Todas las acciones recomendadas son hipótesis: cada una debería probarse con un grupo de control y medirse con su indicador.</p>[[table_segmentos]]</details>
+</section>
+
+<!-- Cierre -->
+<section class="quiz night" id="preguntas">
+  <h2>Tres preguntas</h2>
+  <div class="qs">
+    <div class="q" data-answer="2">
+      <p class="qn">1 de 3</p>
+      <h3>Los VIP son uno de cada cinco socios. ¿Qué parte del ingreso aportan?</h3>
+      <div class="opts"><button type="button">[[vip_pct]]</button><button type="button">35 %</button><button type="button">[[vip_rev]]</button></div>
+      <p class="why" aria-live="polite">Aportan el [[vip_rev]] del ingreso siendo el [[vip_pct]] de los socios: el valor está muy concentrado, y protegerlos es la prioridad.</p>
+    </div>
+    <div class="q" data-answer="1">
+      <p class="qn">2 de 3</p>
+      <h3>«En riesgo de abandono» y «Cazadores de ofertas» llevan meses sin volar. ¿Qué los distingue?</h3>
+      <div class="opts"><button type="button">La edad</button><button type="button">El precio que pagan</button><button type="button">La ciudad donde trabajan</button></div>
+      <p class="why" aria-live="polite">Los primeros pagaban el [[risk_C]] de la tarifa completa; los segundos, el [[deals_C]]. Un mismo descuento sería un error para uno de los dos.</p>
+    </div>
+    <div class="q" data-answer="0">
+      <p class="qn">3 de 3</p>
+      <h3>Si se repite el análisis desde otro punto de partida, ¿qué pasa con los segmentos?</h3>
+      <div class="opts"><button type="button">Salen prácticamente los mismos</button><button type="button">Salen grupos distintos</button><button type="button">Depende de qué socios se usen</button></div>
+      <p class="why" aria-live="polite">Coinciden en [[ari_seed]] sobre 1 entre [[seeds]] puntos de partida, y en [[ari_sub]] entrenando solo con el [[subsample_pct]] de los socios.</p>
+    </div>
+  </div>
+  <p class="score" aria-live="polite"></p>
+</section>
+
+<section class="limits night" id="limites">
+  <h2>Lo que estos datos no responden</h2>
+  <ul>
+    <li><b>De quién son los datos.</b> Están anonimizados y su procedencia original no está documentada: ilustran el método, no describen a una aerolínea concreta.</li>
+    <li><b>Si los segmentos valen hoy.</b> Cubren 2012–2014; los hábitos de viaje cambiaron mucho después. El tamaño de cada segmento no es extrapolable; el método, sí.</li>
+    <li><b>Cómo se mueven los socios.</b> Es una sola foto: no se ve si un VIP pasa a «En riesgo», ni si «En riesgo» abandona de verdad.</li>
+    <li><b>Cuánto se gana con cada socio.</b> El ingreso no tiene moneda ni descuenta costes: sirve para comparar segmentos, no para medir rentabilidad.</li>
+    <li><b>Si las acciones funcionan.</b> Son hipótesis: hay que probarlas con un grupo de control antes de extenderlas.</li>
+  </ul>
+</section>
+
+<section class="story night" id="texto">
+  <p class="kick">La historia, en texto</p>
+  <h2>Cinco tipos de viajero frecuente</h2>
+  <p>Una aerolínea tiene [[members]] socios en su programa de viajero frecuente y los trataba a todos igual. Para decidir a quién retener, a quién hacer crecer y a quién reactivar, cada socio se describió con cinco métricas de comportamiento, el modelo LRFMC: antigüedad, meses sin volar, número de vuelos, kilómetros y descuento medio de sus tarifas.</p>
+  <p>Como unos pocos socios vuelan muchísimo (hasta [[max_F]] vuelos en dos años, frente a una mediana de [[med_F]]), las métricas se comprimieron y se pusieron en una escala común antes de agruparlas. Se probaron de [[k_min]] a [[k_max]] grupos y se eligieron [[k]]: es donde coinciden tres criterios técnicos y donde cada grupo cuenta una historia distinta.</p>
+  <p>El algoritmo K-Means formó los segmentos. Son estables: repetirlo desde [[seeds]] puntos de partida da una coincidencia de [[ari_seed]] sobre 1, y separa mejor a los socios que las alternativas probadas ([[kmeans_sil]] frente a [[best_other_sil]]).</p>
+  <p>Los VIP son el [[vip_pct]] de los socios y aportan el [[vip_rev]] del ingreso. Saber el segmento de un socio explica el [[rev_effect]] de las diferencias de ingreso, aunque el ingreso no se usó para formar los grupos. Los Nuevos con potencial son el semillero de futuros VIP; los Veteranos ocasionales, fieles pero poco frecuentes; y dos grupos llevan meses sin volar pero necesitan acciones opuestas: los En riesgo de abandono pagaban el [[risk_C]] de la tarifa completa, y los Cazadores de ofertas, el [[deals_C]].</p>
+  <div class="links">
+    <a class="pill cta" href="https://freddxvill.github.io/segmentacion-clientes-aerolinea/">Ver el análisis completo →</a>
+    <a class="pill" href="https://freddxvill.github.io/segmentacion-clientes-aerolinea/glosario.html">Glosario de términos</a>
+    <a class="pill" href="https://github.com/freddxvill/segmentacion-clientes-aerolinea">Código en GitHub</a>
+  </div>
+  <p class="credits">Proyecto de portafolio · Segmentación avanzada de clientes. Datos: competición de Kaggle <i>sa-customer-segmentation</i>, anonimizados y de procedencia original no documentada. Hecho con Python (pandas, scikit-learn), Quarto y SVG. Esta página se genera desde el pipeline del proyecto con <code>uv run poe resumen</code>.</p>
+</section>
+</main>
+
+<script type="application/json" id="data">/*DATOS*/null</script>
+<script>
+(() => {
+  'use strict';
+  const D = JSON.parse(document.getElementById('data').textContent);
+  const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+  const lerp = (a, b, p) => a + (b - a) * p;
+  const ease = p => (p < .5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2);
+  const NS = 'http://www.w3.org/2000/svg';
+  const el = (tag, attrs, parent) => {
+    const node = document.createElementNS(NS, tag);
+    for (const key in attrs) node.setAttribute(key, attrs[key]);
+    if (parent) parent.appendChild(node);
+    return node;
+  };
+  const txt = (parent, x, y, str, cls, attrs) => {
+    const node = el('text', Object.assign({ x, y }, cls ? { class: cls } : {}, attrs || {}), parent);
+    node.textContent = str;
+    return node;
+  };
+  // Mismo formato que segmentacion.viz.fmt: miles con punto, decimales con coma.
+  const num = (v, d = 0) => {
+    const [int, dec] = Math.abs(v).toFixed(d).split('.');
+    return (v < 0 ? '−' : '') + int.replace(/\B(?=(\d{3})+(?!\d))/g, '.') + (dec ? ',' + dec : '');
+  };
+  const pct = (v, d = 0) => num(v * 100, d) + ' %';
+  const W = 600, H = 520;
+  const prep = svg => {
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+    return svg;
+  };
+  const middleOf = values => [...values].sort((a, b) => a - b)[Math.floor(values.length / 2)];
+
+  // Cada gráfico es una función de t: progreso continuo del capítulo (0 = paso 1, 1 = paso 2…).
+  const CHARTS = {};
+
+  CHARTS.valor = (svg, c) => {
+    const expand = counts => counts.flatMap((n, s) => Array(n).fill(s));
+    const A = expand(D.waffle.members), B = expand(D.waffle.revenue);
+    const size = 32, gap = 5, y0 = 66;
+    const cap = txt(svg, 0, 40, 'Cada cuadrado = 1 % de los socios', 'cap');
+    const cells = Array.from({ length: 100 }, (_, i) => el('rect', {
+      x: Math.floor(i / 10) * (size + gap), y: y0 + (i % 10) * (size + gap),
+      width: size, height: size, rx: 3, class: 'cell fn',
+    }, svg));
+    const legend = D.segments.map((s, i) => {
+      const g = el('g', { transform: `translate(404,${y0 + 14 + i * 74})` }, svg);
+      el('rect', { x: 0, y: -12, width: 13, height: 13, rx: 2, class: 'f' + i }, g);
+      txt(g, 22, 0, s.name, 'leg-name');
+      txt(g, 22, 22, s.label.pct + ' de los socios', 'lab num');
+      const rev = txt(g, 22, 41, s.label.rev + ' del ingreso', 'lab num');
+      return { g, rev };
+    });
+    const born = performance.now();
+    c.busy = !REDUCED;
+    return (t, now) => {
+      const entry = REDUCED ? 1 : clamp((now - born) / 1400);
+      if (entry >= 1) c.busy = false;
+      const paint = clamp((t - .4) / .6), dim = clamp((t - 1.5) / .45), money = clamp((t - 2.4) / .6);
+      cells.forEach((cell, i) => {
+        const seg = money > (i / 100) * .97 ? B[i] : A[i];
+        const cls = 'cell ' + (paint > (i / 100) * .97 ? 'f' + seg : 'fn');
+        if (cell.getAttribute('class') !== cls) cell.setAttribute('class', cls);
+        cell.style.opacity = entry * 100 < i ? 0 : seg === 0 ? 1 : 1 - .6 * dim;
+      });
+      cap.textContent = money > .5 ? 'Cada cuadrado = 1 % del ingreso' : 'Cada cuadrado = 1 % de los socios';
+      legend.forEach((l, i) => {
+        l.g.style.opacity = clamp((t - .35) / .5) * (i === 0 ? 1 : 1 - .5 * dim);
+        l.rev.style.opacity = .3 + .7 * clamp((t - 2.4) / .4);
+      });
+    };
+  };
+
+  CHARTS.metricas = (svg, c) => {
+    const names = { L: 'Antigüedad', R: 'Meses sin volar (más es peor)', F: 'Vuelos en dos años', M: 'Kilómetros volados', C: 'Precio pagado frente a la tarifa completa' };
+    // Etiquetas ya formateadas en Python, para que coincidan con el texto (mismo redondeo).
+    const x0 = 64, x1 = 586;
+    const anchor = x => (x < x0 + 80 ? 'start' : x > x1 - 80 ? 'end' : 'middle');
+    const rows = ['L', 'R', 'F', 'M', 'C'].map((m, k) => {
+      const vals = D.segments.map(s => s.med[m]), all = vals.concat(D.overall[m]);
+      const lo = m === 'C' ? Math.min(...all) - .05 : 0, hi = m === 'C' ? Math.max(...all) + .05 : Math.max(...all) * 1.08;
+      const sx = v => x0 + (v - lo) / (hi - lo) * (x1 - x0);
+      const g = el('g', { class: 'mrow next', transform: `translate(0,${16 + k * 100})` }, svg);
+      txt(g, 0, 52, m, 'letter');
+      txt(g, x0, 8, names[m], 'lab');
+      el('line', { x1: x0, x2: x1, y1: 44, y2: 44, class: 'axis' }, g);
+      const xo = sx(D.overall[m]);
+      el('line', { x1: xo, x2: xo, y1: 32, y2: 56, class: 'medline' }, g);
+      txt(g, xo, 76, 'socio típico: ' + D.overall_label[m], 'lab num', { 'text-anchor': anchor(xo) });
+      const dots = vals.map((_, i) => el('circle', { cx: xo, cy: 44, r: 8, class: 'dot f' + i }, g));
+      const iMin = vals.indexOf(Math.min(...vals)), iMax = vals.indexOf(Math.max(...vals));
+      const labs = [iMin, iMax].map(i => txt(g, sx(vals[i]), 28, D.segments[i].short + ' · ' + D.segments[i].label.med[m], 'vlab t' + i, { 'text-anchor': anchor(sx(vals[i])) }));
+      return { g, dots, labs, vals, sx, xo };
+    });
+    c.onStep = step => rows.forEach((r, k) => r.g.setAttribute('class', 'mrow ' + (k < step ? 'past' : k === step ? 'now' : 'next')));
+    return t => rows.forEach((r, k) => {
+      const p = ease(clamp((t - (k - .6)) / .6));
+      r.dots.forEach((d, i) => { d.setAttribute('cx', lerp(r.xo, r.sx(r.vals[i]), p).toFixed(1)); d.style.opacity = p > 0 ? 1 : 0; });
+      r.labs.forEach(l => { l.style.opacity = p; });
+    });
+  };
+
+  CHARTS.cola = svg => {
+    const h = D.hist, n = h.raw.shares.length, x0 = 30, x1 = 590, base = 420, hmax = 300, bw = (x1 - x0) / n;
+    const e0 = h.raw.edges[0], eN = h.raw.edges[n];
+    const xr = v => x0 + (v - e0) / (eN - e0) * (x1 - x0);
+    const rmax = Math.max(...h.raw.shares), smax = Math.max(...h.scaled.shares);
+    txt(svg, x0, 36, 'Socios según su número de vuelos (cada barra, un tramo)', 'cap');
+    const bars = h.raw.shares.map((_, i) => el('rect', { x: x0 + i * bw + 1.5, width: bw - 3, y: base, height: 0, rx: 1.5, class: 'hbar' }, svg));
+    el('line', { x1: x0, x2: x1, y1: base, y2: base, class: 'axis' }, svg);
+    const raw = el('g', {}, svg);
+    [0, 20, 40, 60, 80, 100, 120].forEach(v => txt(raw, xr(v), base + 22, v === eN ? num(v) + '+' : num(v), 'lab num', { 'text-anchor': 'middle' }));
+    txt(raw, x1, base + 46, 'vuelos en dos años', 'lab', { 'text-anchor': 'end' });
+    const common = el('g', { opacity: 0 }, svg);
+    txt(common, x0, base + 22, '← menos vuelos', 'lab');
+    txt(common, x1, base + 22, 'más vuelos →', 'lab', { 'text-anchor': 'end' });
+    txt(common, x1, base + 46, 'tras comprimir: escala común', 'lab', { 'text-anchor': 'end' });
+    const xm = xr(h.median), median = el('g', {}, svg);
+    el('line', { x1: xm, x2: xm, y1: 80, y2: base, class: 'medline' }, median);
+    txt(median, xm + 10, 96, 'la mitad: ' + num(h.median) + ' vuelos o menos', 'ann');
+    const xt = xr(h.tail_from), yb = base - 64, tail = el('g', { opacity: 0 }, svg);
+    el('path', { d: `M${xt} ${yb + 10}V${yb}H${x1 - 2}V${yb + 10}`, class: 'bracket' }, tail);
+    txt(tail, x1, yb - 32, 'el ' + pct(h.tail_share) + ' que más vuela', 'ann', { 'text-anchor': 'end' });
+    txt(tail, x1, yb - 12, 'de ' + num(h.tail_from) + ' a ' + num(h.max) + ' vuelos', 'lab num', { 'text-anchor': 'end' });
+    return t => {
+      // Cada transición termina antes de llegar a su paso (t entero): el paso se ve completo.
+      const grow = ease(clamp((t + .5) / .8)), hot = clamp((t - .55) / .4) * (1 - clamp((t - 1.1) / .35)), morph = ease(clamp((t - 1.15) / .75));
+      bars.forEach((b, i) => {
+        const v = lerp(h.raw.shares[i] / rmax, h.scaled.shares[i] / smax, morph);
+        const hh = Math.max(v > 0 ? 2 : 0, v * hmax) * grow;
+        b.setAttribute('y', (base - hh).toFixed(1));
+        b.setAttribute('height', hh.toFixed(1));
+        const isTail = h.raw.edges[i] >= h.tail_from;
+        const cls = isTail && hot > .3 ? 'hbar hot' : 'hbar';
+        if (b.getAttribute('class') !== cls) b.setAttribute('class', cls);
+        b.style.opacity = isTail ? 1 : 1 - .6 * hot;
+      });
+      raw.style.opacity = 1 - morph;
+      common.style.opacity = morph;
+      median.style.opacity = grow * (1 - morph) * (1 - .6 * hot);
+      tail.style.opacity = hot;
+    };
+  };
+
+  CHARTS.cuantos = svg => {
+    const K = D.k, x0 = 70, x1 = 570, y0 = 96, y1 = 420, lo = .19, hi = .30;
+    const sx = k => x0 + (k - K[0].k) / (K[K.length - 1].k - K[0].k) * (x1 - x0);
+    const sy = v => y1 - (v - lo) / (hi - lo) * (y1 - y0);
+    txt(svg, 0, 36, 'Separación entre grupos (silhouette) · más alto, mejor', 'cap');
+    [.20, .22, .24, .26, .28, .30].forEach(v => {
+      el('line', { x1: x0, x2: x1, y1: sy(v), y2: sy(v), class: 'grid' }, svg);
+      txt(svg, x0 - 12, sy(v) + 4, num(v, 2), 'lab num', { 'text-anchor': 'end' });
+    });
+    K.forEach(r => txt(svg, sx(r.k), y1 + 26, String(r.k), 'lab num', { 'text-anchor': 'middle' }));
+    txt(svg, (x0 + x1) / 2, y1 + 52, 'número de grupos', 'lab', { 'text-anchor': 'middle' });
+    const ck = D.chosen_k, i5 = K.findIndex(r => r.k === ck);
+    const band = el('rect', { x: sx(ck) - 24, y: y0 - 30, width: 48, height: y1 - y0 + 30, rx: 8, class: 'band' }, svg);
+    const thr = D.quality.min_silhouette;
+    el('line', { x1: x0, x2: x1, y1: sy(thr), y2: sy(thr), class: 'thr' }, svg);
+    txt(svg, x1, sy(thr) + 18, 'mínimo exigido', 'lab', { 'text-anchor': 'end' });
+    const path = el('path', { d: K.map((r, i) => (i ? 'L' : 'M') + sx(r.k).toFixed(1) + ' ' + sy(r.sil).toFixed(1)).join(''), class: 'sil' }, svg);
+    const L = path.getTotalLength();
+    path.style.strokeDasharray = `${L} ${L}`;
+    const pts = K.map(r => el('circle', { cx: sx(r.k), cy: sy(r.sil), r: 5.5, class: 'pt' }, svg));
+    const two = el('g', { opacity: 0 }, svg);
+    txt(two, sx(K[0].k) + 16, sy(K[0].sil) + 5, 'la mayor separación…', 'ann');
+    txt(two, sx(K[0].k) + 16, sy(K[0].sil) + 25, 'pero solo «vuela» frente a «no vuela»', 'lab');
+    const chosen = el('g', { opacity: 0 }, svg);
+    txt(chosen, sx(ck), y0 - 40, 'elegido: ' + ck + ' grupos', 'ann', { 'text-anchor': 'middle' });
+    return t => {
+      const d = ease(clamp((t + .6) / 1.2));
+      path.style.strokeDashoffset = L * (1 - d);
+      pts.forEach((p, i) => { p.style.opacity = d * (K.length - 1) >= i - .05 ? 1 : 0; });
+      const s2 = clamp((t - .55) / .4) * (1 - clamp((t - 1.55) / .4)), s5 = clamp((t - 1.55) / .4);
+      two.style.opacity = s2;
+      chosen.style.opacity = s5;
+      band.style.opacity = s5;
+      pts[0].classList.toggle('hot', s2 > .5);
+      pts[i5].classList.toggle('hot', s5 > .5);
+    };
+  };
+
+  CHARTS.mapa = (svg, c) => {
+    const P = D.map, x0 = 10, x1 = 590, y0 = 16, y1 = 486;
+    const X = x => x0 + x * (x1 - x0), Y = y => y1 - y * (y1 - y0);
+    const g = el('g', { class: 'pts' }, svg);
+    const dots = P.map(p => el('circle', { cx: X(p[0]).toFixed(1), cy: Y(p[1]).toFixed(1), r: 2.7, class: 's' + p[2] + ' off' }, g));
+    const labs = D.segments.map((s, i) => {
+      const mine = P.filter(p => p[2] === i);
+      return txt(svg, X(middleOf(mine.map(p => p[0]))), Y(middleOf(mine.map(p => p[1]))), s.name, 'maplab halo t' + i, { 'text-anchor': 'middle', opacity: 0 });
+    });
+    txt(svg, x1, H - 4, 'Muestra de ' + num(P.length) + ' socios', 'lab', { 'text-anchor': 'end' });
+    const focus = [null, null, [0], [3, 4]];
+    c.onStep = step => {
+      const hl = focus[step];
+      g.setAttribute('class', 'pts' + (step >= 1 ? ' colored' : '') + (hl ? ' hl ' + hl.map(i => 'hl-' + i).join(' ') : ''));
+      labs.forEach((l, i) => { l.style.opacity = step < 1 ? 0 : hl && !hl.includes(i) ? .3 : 1; });
+    };
+    let shown = 0;
+    return t => {
+      const k = Math.round(clamp((t + .9) / 1.1) * dots.length);
+      for (let i = Math.min(k, shown); i < Math.max(k, shown); i++) dots[i].classList.toggle('off', i >= k);
+      shown = k;
+    };
+  };
+
+  CHARTS.fiable = svg => {
+    const S = D.stability, x0 = 190, x1 = 580, lo = .85, hi = 1, ya = 214;
+    const sx = v => x0 + (v - lo) / (hi - lo) * (x1 - x0);
+    txt(svg, 0, 30, 'Coincidencia al repetir el análisis (ARI · 1 = idénticos)', 'cap');
+    [.85, .90, .95, 1].forEach(v => {
+      el('line', { x1: sx(v), x2: sx(v), y1: 52, y2: ya - 14, class: 'grid' }, svg);
+      txt(svg, sx(v), ya + 4, num(v, 2), 'lab num', { 'text-anchor': 'middle' });
+    });
+    el('line', { x1: sx(S.threshold), x2: sx(S.threshold), y1: 48, y2: ya - 14, class: 'thr' }, svg);
+    txt(svg, sx(S.threshold) - 8, 60, 'mínimo exigido', 'lab', { 'text-anchor': 'end' });
+    const row = (vals, y, title, sub) => {
+      const g = el('g', {}, svg);
+      txt(g, 0, y - 2, title, 'rowlab');
+      txt(g, 0, y + 16, sub, 'lab');
+      const dots = vals.map((v, i) => el('circle', { cx: sx(v).toFixed(1), cy: y + ((i % 3) - 1) * 7, r: 4.5, class: 'adot' }, g));
+      const m = vals.reduce((a, b) => a + b, 0) / vals.length;
+      const mark = el('g', {}, g);
+      el('path', { d: `M${sx(m).toFixed(1)} ${y - 15}l7 7-7 7-7-7z`, class: 'mean' }, mark);
+      txt(mark, sx(m), y - 22, num(m, 2), 'ann num', { 'text-anchor': 'middle' });
+      return { g, dots, mark };
+    };
+    const seeds = row(S.seeds, 104, 'Otro punto de partida', S.seeds.length + ' comparaciones');
+    const subs = row(S.subsample, 168, 'Con una parte de los socios', S.subsample.length + ' comparaciones');
+    const yb = 284, bx = 190, bw = 330, bmax = .25;
+    txt(svg, 0, yb, 'Separación entre grupos según la técnica (silhouette)', 'cap');
+    const bars = D.bench.map((b, i) => {
+      const y = yb + 26 + i * 46, g = el('g', {}, svg);
+      txt(g, 0, y + 16, b.name, b.main ? 'rowlab' : 'lab');
+      const r = el('rect', { x: bx, y, width: 0, height: 22, rx: 3, class: b.main ? 'bmain' : 'bother' }, g);
+      const v = txt(g, bx + 8, y + 16, num(b.sil, 2), 'lab num');
+      return { g, r, v, w: b.sil / bmax * bw };
+    });
+    return t => {
+      const a = clamp((t + .6) / .8);
+      seeds.dots.forEach((d, i) => { d.style.opacity = a * seeds.dots.length > i ? 1 : 0; });
+      seeds.mark.style.opacity = clamp((t + .1) / .4);
+      subs.g.style.opacity = .16 + .84 * clamp((t - .55) / .45);
+      const p = ease(clamp((t - 1.4) / .5));
+      bars.forEach(b => {
+        b.r.setAttribute('width', (b.w * p).toFixed(1));
+        b.v.setAttribute('x', (bx + b.w * p + 8).toFixed(1));
+        b.g.style.opacity = .22 + .78 * clamp((t - 1.4) / .3);
+      });
+    };
+  };
+
+  CHARTS.segmentos = (box, c) => {
+    const cards = [...box.querySelectorAll('.seg')];
+    c.onStep = step => cards.forEach((card, i) => card.classList.toggle('on', i === step));
+    return () => {};
+  };
+
+  // Motor de scroll ----------------------------------------------------------------------------
+  const body = document.body;
+  const sections = [...document.querySelectorAll('main > section')];
+  const chapters = [...document.querySelectorAll('section.ch')].map((sec, i, all) => {
+    const c = { sec, i, total: all.length, title: sec.dataset.title, says: [...sec.querySelectorAll('.says > li')], t: null, step: -1, drawn: null, busy: false };
+    c.n = c.says.length;
+    c.says.forEach((li, k) => { li.dataset.n = k + 1; });
+    // El lienzo es el <svg> hijo directo de .viz; si no hay (fichas de segmento), el propio .viz.
+    const viz = sec.querySelector('.viz'), canvas = viz.querySelector(':scope > svg'), make = CHARTS[sec.dataset.chart];
+    try {
+      c.draw = make ? make(canvas ? prep(canvas) : viz, c) : () => {};
+    } catch (error) {
+      console.error('Gráfico «' + sec.id + '»:', error);
+      c.draw = () => {};
+    }
+    return c;
+  });
+
+  function setStep(c) {
+    c.says.forEach((li, k) => { li.className = k < c.step ? 'past' : k === c.step ? 'now' : 'next'; });
+    if (c.onStep) c.onStep(c.step);
+  }
+
+  let stops = [];
+  function layout() {
+    for (const s of sections) { s._top = s.getBoundingClientRect().top + scrollY; s._h = s.offsetHeight; }
+    stops = [];
+    for (const c of chapters) {
+      c.top = c.sec._top;
+      c.h = c.sec._h;
+      c.stepH = c.sec.querySelector('.step').offsetHeight || innerHeight;
+      for (let k = 0; k < c.n; k++) stops.push(Math.round(c.top + k * c.stepH));
+    }
+    for (const s of sections) if (!s.classList.contains('ch')) stops.push(Math.round(s._top));
+    stops.sort((a, b) => a - b);
+  }
+
+  // Migas: «03 / 07  Capítulo», con un fundido al cambiar de capítulo.
+  const crumbLine = document.querySelector('.crumb .cc');
+  const [crumbNum, crumbName] = crumbLine.children;
+  let current, crumbTimer;
+  function showCrumb(c) {
+    body.classList.toggle('inch', !!c);
+    if (!c) return;
+    const put = () => {
+      crumbNum.textContent = String(c.i + 1).padStart(2, '0') + ' / ' + String(c.total).padStart(2, '0');
+      crumbName.textContent = c.title;
+      crumbLine.classList.remove('off');
+    };
+    clearTimeout(crumbTimer);
+    if (REDUCED || !crumbName.textContent) { put(); return; }
+    crumbLine.classList.add('off');
+    crumbTimer = setTimeout(put, 220);
+  }
+
+  // Portada: título palabra a palabra, constelación de socios y parallax.
+  const cover = document.getElementById('portada');
+  const title = cover.querySelector('h1');
+  const words = title.textContent.trim().split(/\s+/);
+  title.textContent = '';
+  words.forEach((word, i) => {
+    const span = document.createElement('span');
+    span.className = 'w';
+    span.style.setProperty('--i', i);
+    span.textContent = word;
+    title.append(span, i < words.length - 1 ? ' ' : '');
+  });
+  const sky = cover.querySelector('.sky');
+  const skySvg = sky.querySelector('svg');
+  D.map.forEach(p => el('circle', { cx: (p[0] * 600).toFixed(1), cy: ((1 - p[1]) * 520).toFixed(1), r: 1.9, class: 'f' + p[2] }, skySvg));
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver(entries => {
+      if (entries.some(e => e.isIntersecting)) { cover.classList.add('go'); io.disconnect(); }
+    }, { threshold: .3 });
+    io.observe(cover);
+  } else {
+    cover.classList.add('go');
+  }
+
+  const bar = document.querySelector('.bar');
+  function frame(now) {
+    const y = scrollY;
+    bar.style.transform = `scaleX(${clamp(y / Math.max(1, document.documentElement.scrollHeight - innerHeight)).toFixed(4)})`;
+    let here = null;
+    for (const c of chapters) {
+      const target = (y - c.top) / c.stepH;
+      if (y >= c.top - 2 && y < c.top + c.h - c.stepH * .5) here = c;
+      if ((target < -1.3 || target > c.n + .3) && !c.busy && c.t !== null) continue;
+      c.t = c.t === null || REDUCED ? target : c.t + (target - c.t) * .14;
+      if (Math.abs(target - c.t) < 1e-3) c.t = target;
+      const step = clamp(Math.floor(target + .4), 0, c.n - 1);
+      if (step !== c.step) { c.step = step; setStep(c); }
+      if (c.busy || c.drawn === null || Math.abs(c.t - c.drawn) > 1e-4) {
+        try { c.draw(clamp(c.t, -1.5, c.n + .5), now); } catch (error) { console.error(error); c.draw = () => {}; }
+        c.drawn = c.t;
+      }
+    }
+    if (here !== current) { current = here; showCrumb(here); }
+    let lit = false;
+    for (const s of sections) {
+      if (s._top <= y + 32 && s._top + s._h > y + 32) { lit = s.classList.contains('paper'); break; }
+    }
+    body.classList.toggle('lit', lit);
+    if (!REDUCED) {
+      const past = y - cover._top;
+      if (past > -innerHeight && past < innerHeight * 1.2) sky.style.transform = `translate3d(0,${(past * .3).toFixed(1)}px,0) scale(1.05)`;
+    }
+    requestAnimationFrame(frame);
+  }
+
+  // Navegación por pasos: botones ‹ › y teclas ← →.
+  function go(direction) {
+    const y = scrollY;
+    const target = direction > 0 ? stops.find(v => v > y + 4) : [...stops].reverse().find(v => v < y - 4);
+    const top = target === undefined ? (direction > 0 ? document.documentElement.scrollHeight : 0) : target;
+    scrollTo({ top, behavior: REDUCED ? 'auto' : 'smooth' });
+  }
+  document.getElementById('prev').addEventListener('click', () => go(-1));
+  document.getElementById('next').addEventListener('click', () => go(1));
+  addEventListener('keydown', e => {
+    if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+    if (e.key === 'ArrowRight') { e.preventDefault(); go(1); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); go(-1); }
+  });
+
+  // Cuestionario.
+  const quiz = [...document.querySelectorAll('.q')];
+  const score = document.querySelector('.score');
+  quiz.forEach(q => {
+    const right = Number(q.dataset.answer), buttons = [...q.querySelectorAll('.opts button')];
+    buttons.forEach((button, j) => button.addEventListener('click', () => {
+      if (q.classList.contains('done')) return;
+      q.classList.add('done');
+      q.dataset.ok = String(j === right);
+      buttons.forEach((b, k) => { b.disabled = true; if (k === right) b.classList.add('right'); });
+      if (j !== right) button.classList.add('wrong');
+      const done = quiz.filter(x => x.classList.contains('done'));
+      if (done.length === quiz.length) {
+        const ok = quiz.filter(x => x.dataset.ok === 'true').length;
+        score.textContent = `Aciertos: ${ok} de ${quiz.length}.` + (ok === quiz.length ? ' Ya tienes los tres mensajes clave.' : ' Las explicaciones están bajo cada pregunta.');
+      }
+    }));
+  });
+
+  // Estado inicial: cada capítulo en su paso 1 y con sus elementos futuros tenues.
+  layout();
+  const start = performance.now();
+  chapters.forEach(c => { c.step = 0; setStep(c); try { c.draw(c.i === 0 ? 0 : -1.5, start); } catch (error) { console.error(error); } });
+  addEventListener('resize', layout, { passive: true });
+  addEventListener('load', layout);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(layout);
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

@@ -67,6 +67,7 @@ format = { shell = "ruff format . && ruff check --fix .", help = "Formatea el c√
 lint = { shell = "ruff check . && ruff format --check .", help = "Lint + chequeo de formato" }
 notebooks = { cmd = "jupyter nbconvert --to notebook --execute --inplace notebooks/*.ipynb", help = "Re-ejecuta los notebooks y guarda sus salidas" }
 readme-figure = { cmd = "python -m segmentacion.viz.readme", help = "Regenera docs/img/segmentos.png (figura del README)" }
+resumen = { cmd = "python -m segmentacion.viz.summary_page", help = "Regenera report/resumen.html (resumen interactivo de una p√°gina)" }
 report = { cmd = "quarto render report", help = "Renderiza el sitio Quarto" }
 report-fresh = { sequence = [
     { cmd = "python -c \"import shutil; shutil.rmtree('report/_freeze', ignore_errors=True)\"" },

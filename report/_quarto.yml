@@ -1,6 +1,9 @@
 project:
   type: website
   output-dir: _site
+  # Resumen interactivo de una página: lo genera `uv run poe resumen` (no es una página Quarto).
+  resources:
+    - resumen.html
 
 lang: es
 
@@ -35,6 +38,9 @@ website:
       - href: glosario.qmd
         text: Glosario
     right:
+      - icon: play-circle
+        href: resumen.html
+        text: Resumen interactivo
       - icon: github
         href: https://github.com/freddxvill/segmentacion-clientes-aerolinea
         aria-label: Código en GitHub

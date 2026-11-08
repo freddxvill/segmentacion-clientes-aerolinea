@@ -16,6 +16,10 @@ primero, un resumen «En pocas palabras» en cada página y un
 [glosario](https://freddxvill.github.io/segmentacion-clientes-aerolinea/glosario.html) cuyas
 definiciones aparecen al pasar el cursor sobre cada término.
 
+**▶ Resumen interactivo:** <https://freddxvill.github.io/segmentacion-clientes-aerolinea/resumen.html>:
+el proyecto contado en siete capítulos con scroll narrativo (gráficos SVG animados, sin
+librerías), generado desde los artefactos del pipeline.
+
 ## Problema
 
 La aerolínea trata casi igual a todos los socios del programa: mismos correos, mismas
@@ -137,6 +141,7 @@ El pipeline es determinista (semillas fijas en
 | `uv run poe lint` / `format` | Ruff (lint + formato) |
 | `uv run poe notebooks` | Re-ejecuta los notebooks y guarda sus salidas |
 | `uv run poe readme-figure` | Regenera `docs/img/segmentos.png` |
+| `uv run poe resumen` | Regenera `report/resumen.html`, el resumen interactivo de una página |
 | `uv run poe report` | Renderiza el sitio reutilizando las salidas congeladas (`report/_freeze`) |
 | `uv run poe report-fresh` | Borra `report/_freeze` y re-ejecuta todas las páginas |
 | `uv run poe preview` | Previsualiza el sitio con recarga en vivo |

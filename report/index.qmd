@@ -119,6 +119,9 @@ formar los segmentos.
 
 ## Cómo leer este sitio
 
+**¿Prefieres una historia?** El [resumen interactivo](resumen.html) cuenta el proyecto en siete
+capítulos que avanzan con el scroll, con gráficos animados y tres preguntas al final.
+
 **Si tienes cinco minutos**, basta con esta página, los [Segmentos](05-segmentos.qmd) (la ficha de
 cada grupo, con sus acciones) y las [Conclusiones](06-conclusiones.qmd) (plan de acción y
 limitaciones).
