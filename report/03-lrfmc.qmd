@@ -1,5 +1,5 @@
 ---
-title: "Features LRFMC"
+title: "Métricas LRFMC"
 description: "Construcción de las métricas LRFMC, tratamiento de la asimetría y escalado."
 ---
 
@@ -30,9 +30,22 @@ ks = pre.compare_ks
 features = lrfmc[list(LRFMC_COLUMNS)]
 ```
 
+::: {.en-breve}
+[En pocas palabras]{.en-breve-titulo}
+
+- Cada socio se resume en cinco números: antigüedad (L), meses sin volar (R), vuelos (F),
+  kilómetros (M) y descuento medio de sus tarifas (C).
+- Antes de agrupar, esas métricas se «comprimen» para que unos pocos socios extremos no dominen, y
+  se ponen en una escala común para que ninguna pese más que otra solo por sus unidades.
+- Se compararon seis formas de hacerlo. Se eligió la que deja las cinco métricas equilibradas y
+  con el mismo peso, aunque no fuera la de mejor puntuación: esa puntuación más alta venía de cómo
+  se ponderaban las variables, no de diferencias reales entre clientes.
+:::
+
 ## Las cinco métricas
 
-Cada socio se resume en cinco números calculados con `src/segmentacion/features/lrfmc.py`:
+Cada socio se resume en cinco números, las métricas {{< term lrfmc "LRFMC" >}}, calculados con
+`src/segmentacion/features/lrfmc.py`:
 
 | Métrica | Fórmula | Pregunta de negocio |
 |---|---|---|
@@ -59,14 +72,17 @@ table.columns = ["Media", "Desv.", "Mín.", "P25", "Mediana", "P75", "Máx.", "A
 table.style.format(lambda v: num(v, 2))
 ```
 
-Las métricas no tienen nulos ni infinitos y respetan la ventana de observación: L va de
+P25 y P75 son los {{< term percentil "percentiles" >}} 25 y 75: entre ellos está la mitad central
+de los socios. Las métricas no tienen nulos ni infinitos y respetan la ventana de observación: L
+va de
 `{python} num(features["L"].min(), 1)` a `{python} num(features["L"].max(), 1)` meses (todos los
 socios llevan al menos un año en el programa) y R no supera los
 `{python} num(features["R"].max(), 1)` meses de la ventana de dos años.
 
 ### Variables de perfilado
 
-No entran al clustering; sirven para describir y nombrar los segmentos en las fases siguientes.
+No entran al modelo ({{< term feature "variables de perfilado" >}}): sirven para describir los
+segmentos y comprobar después si tienen sentido.
 
 | Variable | Definición | Para qué |
 |---|---|---|
@@ -81,9 +97,11 @@ casos).
 
 ## Tratamiento de la asimetría
 
-K-Means agrupa por distancia euclídea. Con colas largas como las de F y M, unos pocos viajeros
-intensivos dominarían los centroides, así que se compararon dos transformaciones (ver también el
-gráfico interactivo del [EDA](02-eda.qmd#efecto-de-las-transformaciones)).
+{{< term k-means "K-Means" >}} agrupa por {{< term distancia "distancia euclídea" >}}. Con colas
+largas como las de F y M ({{< term asimetria "asimetría" >}}), unos pocos viajeros intensivos
+dominarían el {{< term centroide "centroide" >}} de cada grupo, así que se compararon dos
+{{< term transformacion "transformaciones" >}} (ver también el gráfico interactivo de la
+[exploración](02-eda.qmd#efecto-de-las-transformaciones)).
 
 ```{python}
 #| label: fig-asimetria-transformacion
@@ -95,15 +113,17 @@ mc.skew_comparison_chart(comparison)
 `log1p` corrige M y R, pero deja F en `{python} num(options.loc[("log1p", "standard"), "skew_F"], 2)`
 y C en `{python} num(options.loc[("log1p", "standard"), "skew_C"], 2)`. **Yeo-Johnson** deja las
 cinco métricas con |asimetría| ≤ `{python} num(chosen["max_abs_skew"], 2)`. Ambas cumplen el
-criterio del proyecto (|asimetría| < 1 en la mayoría de features), así que el desempate se hizo
-con el clustering.
+criterio del proyecto (|asimetría| < 1 en la mayoría de las métricas), así que el desempate se
+hizo con el resultado de la segmentación.
 :::
 
 ## Elección del preprocesamiento
 
-Cada combinación de transformación (ninguna, `log1p`, Yeo-Johnson) y escalado (`StandardScaler`,
-`RobustScaler`) se evaluó con K-Means para *k* = `{python} ", ".join(map(str, ks))`, midiendo el
-silhouette sobre una muestra de `{python} num(pre.silhouette_sample_size)` socios.
+Cada combinación de transformación (ninguna, `log1p`, Yeo-Johnson) y
+{{< term escalado "escalado" >}} (`StandardScaler`, `RobustScaler`) se evaluó con K-Means para
+*k* = `{python} ", ".join(map(str, ks))` grupos, midiendo el {{< term silhouette "silhouette" >}}
+(cuánto mejor encaja cada socio en su grupo que en el vecino) sobre una
+{{< term muestra "muestra" >}} de `{python} num(pre.silhouette_sample_size)` socios.
 
 ```{python}
 #| label: fig-comparacion-preprocesamiento
@@ -143,7 +163,7 @@ view.style.format(
   pero mantiene F y M con asimetría > 3: el resultado lo guían los valores extremos y con *k* = 6
   aparece un clúster de solo el `{python} pct(raw_std["min_cluster_pct_k6"])` de los socios.
 - **`log1p` + RobustScaler** gana entre las opciones transformadas
-  (`{python} num(log_robust["silhouette_mean"], 3)`), pero el escalado robusto deja a las features
+  (`{python} num(log_robust["silhouette_mean"], 3)`), pero el escalado robusto deja a las métricas
   con dispersiones distintas: la más dispersa pesa `{python} num(log_robust["std_ratio"], 2)` veces
   más que la menos dispersa. Ese peso extra de C aísla un clúster de
   ~`{python} pct(log_robust["min_cluster_pct_k4"])` con los socios que pagan más que la tarifa
@@ -154,14 +174,14 @@ view.style.format(
   **el mismo peso para las cinco métricas**, con clústeres equilibrados (el más pequeño tiene el
   `{python} pct(chosen["min_cluster_pct_k6"])` de los socios con *k* = 6).
 
-Un silhouette de ~0,2 indica clústeres que se tocan, algo habitual en datos de clientes, donde el
-comportamiento es un continuo. La elección final de *k* y su validación se hacen en la página de
-[Clustering](04-clustering.qmd).
+Un silhouette de ~0,2 indica grupos que se tocan, algo habitual en datos de clientes, donde el
+comportamiento es un continuo. La elección final del número de segmentos y su validación se hacen
+en la página [Modelo de segmentación](04-clustering.qmd).
 :::
 
 ## Resultado
 
-El preprocesamiento elegido se guarda como un `Pipeline` de scikit-learn
+El preprocesamiento elegido se guarda como un {{< term pipeline "pipeline" >}} de scikit-learn
 (`models/preprocessor.joblib`) para aplicar exactamente la misma transformación al entrenar y al
 asignar nuevos socios a un segmento.
 
@@ -188,6 +208,6 @@ summary.style.format(lambda v: num(v, 2))
 ```
 
 ::: {.insight}
-Las cinco features quedan centradas en 0, con desviación 1 y asimetría prácticamente nula. Están
-listas para la selección del número de segmentos.
+Las cinco métricas quedan centradas en 0, con desviación 1 (en {{< term z-score "z-score" >}}) y
+asimetría prácticamente nula. Están listas para elegir el número de segmentos.
 :::

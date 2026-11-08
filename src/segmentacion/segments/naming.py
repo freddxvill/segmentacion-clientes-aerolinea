@@ -108,6 +108,43 @@ def archetype(name: str) -> Archetype:
     return next(a for a in ARCHETYPES if a.name == name)
 
 
+# Rasgo de cada feature en palabras, según el signo de su peso: (peso > 0, peso < 0).
+TRAITS: dict[str, tuple[str, str]] = {
+    "L": ("más antigüedad", "menos antigüedad"),
+    "R": ("más tiempo sin volar", "vuelo más reciente"),
+    "F": ("más vuelos", "menos vuelos"),
+    "M": ("más kilómetros", "menos kilómetros"),
+    "C": ("tarifas más caras", "más descuento"),
+    TREND: ("ingresos en alza", "ingresos en caída"),
+}
+
+
+def _join(parts: list[str]) -> str:
+    """Enumeración en español: «a, b y c» («e» ante una palabra que empieza por i o hi)."""
+    if len(parts) == 1:
+        return parts[0]
+    last = parts[-1]
+    conjunction = "e" if last.startswith(("i", "hi")) and not last.startswith("hie") else "y"
+    return f"{', '.join(parts[:-1])} {conjunction} {last}"
+
+
+def rule_in_words(item: Archetype) -> str:
+    """La regla del arquetipo en lenguaje llano, para lectores no técnicos.
+
+    Los pesos de valor absoluto ≥ 1 son los rasgos principales; los demás, secundarios.
+    Por ejemplo, el VIP (F↑ M↑ R↓ (C↑)) se lee «Más vuelos, más kilómetros y vuelo más reciente
+    que el socio medio; en menor medida, tarifas más caras».
+    """
+    main, secondary = [], []
+    for feature, weight in item.weights.items():
+        trait = TRAITS[feature][0 if weight > 0 else 1]
+        (main if abs(weight) >= 1 else secondary).append(trait)
+    text = f"{_join(main)} que el socio medio"
+    if secondary:
+        text += f"; en menor medida, {_join(secondary)}"
+    return text[0].upper() + text[1:]
+
+
 def assignment_margin(centroids: pd.DataFrame, names: dict[int, str]) -> pd.Series:
     """Ventaja del nombre asignado sobre el mejor nombre alternativo de cada clúster.
 

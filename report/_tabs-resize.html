@@ -1,6 +1,8 @@
 <script>
-  // Los gráficos Altair con width="container" que están en una pestaña oculta se dibujan con
-  // ancho 0. vega-embed recalcula el ancho con el evento "resize" de la ventana, así que se lanza
-  // uno cada vez que se muestra una pestaña.
-  document.addEventListener("shown.bs.tab", () => window.dispatchEvent(new Event("resize")));
+  // Los gráficos Altair con width="container" que están en una pestaña oculta o en un bloque
+  // plegado se dibujan con ancho 0. vega-embed recalcula el ancho con el evento "resize" de la
+  // ventana, así que se lanza uno cada vez que se muestra una pestaña o se despliega un bloque.
+  for (const shown of ["shown.bs.tab", "shown.bs.collapse"]) {
+    document.addEventListener(shown, () => window.dispatchEvent(new Event("resize")));
+  }
 </script>

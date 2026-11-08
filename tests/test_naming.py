@@ -1,3 +1,5 @@
+from dataclasses import replace
+
 import pandas as pd
 import pytest
 
@@ -11,6 +13,7 @@ from segmentacion.segments.naming import (
     ordered_segments,
     perturbation_agreement,
     perturbed_archetypes,
+    rule_in_words,
 )
 from segmentacion.segments.recommendations import (
     RECOMMENDATIONS,
@@ -101,6 +104,27 @@ def test_recommendations_table_and_unknown_segment():
     assert len(table) == sum(len(r) for r in RECOMMENDATIONS.values())
     with pytest.raises(KeyError, match="Sin recomendaciones"):
         recommendations_for("Desconocido")
+
+
+def test_rule_in_words_separates_main_and_secondary_traits():
+    assert rule_in_words(archetype("VIP")) == (
+        "Más vuelos, más kilómetros y vuelo más reciente que el socio medio; "
+        "en menor medida, tarifas más caras"
+    )
+    # «e» en lugar de «y» ante «ingresos».
+    assert rule_in_words(archetype("En riesgo de abandono")).startswith(
+        "Más tiempo sin volar e ingresos en caída que el socio medio"
+    )
+    # Sin rasgos secundarios no hay «en menor medida».
+    assert rule_in_words(replace(archetype("VIP"), weights={"C": -1})) == (
+        "Más descuento que el socio medio"
+    )
+
+
+def test_every_archetype_rule_can_be_put_in_words():
+    for item in ARCHETYPES:
+        text = rule_in_words(item)
+        assert text[0].isupper() and "que el socio medio" in text
 
 
 def test_textbook_names_survive_perturbed_weights():

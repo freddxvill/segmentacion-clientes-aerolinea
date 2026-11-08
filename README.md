@@ -11,7 +11,10 @@ modelo **LRFMC** y **K-Means**: cinco segmentos con nombre comercial, perfil, pr
 y recomendaciones de marketing medibles.
 
 **🔗 Demo:** <https://freddxvill.github.io/segmentacion-clientes-aerolinea/>: sitio Quarto con
-gráficos interactivos (Altair y Plotly).
+gráficos interactivos (Altair y Plotly), pensado también para lectores no técnicos: resultados
+primero, un resumen «En pocas palabras» en cada página y un
+[glosario](https://freddxvill.github.io/segmentacion-clientes-aerolinea/glosario.html) cuyas
+definiciones aparecen al pasar el cursor sobre cada término.
 
 ## Problema
 
@@ -157,6 +160,8 @@ en local (`uv run poe report-fresh`) y versiona `report/_freeze`.
 │   ├── viz/                   # gráficos Altair/Plotly con tema y paleta comunes
 │   └── pipeline.py            # CLI: python -m segmentacion.pipeline --step all
 ├── report/                    # sitio Quarto (las páginas solo importan de src/)
+│   ├── glosario.qmd           # glosario: única fuente de las definiciones
+│   └── _extensions/glosario/  # shortcode {{< term id >}}: enlace + definición al pasar el cursor
 ├── notebooks/                 # un notebook de presentación por etapa
 ├── tests/                     # unitarios, de modelo, de pipeline y sobre datos reales
 └── docs/                      # ficha del dataset e imagen del README

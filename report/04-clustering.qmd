@@ -1,5 +1,5 @@
 ---
-title: "Clustering"
+title: "Modelo de segmentación"
 description: "Selección del número de segmentos, K-Means, comparación de modelos y reducción de dimensionalidad."
 ---
 
@@ -56,26 +56,46 @@ cumulative = explained.set_index("component")["cumulative"]
 variance = explained.set_index("component")["variance"]
 ```
 
-## Selección del número de segmentos
+::: {.en-breve}
+[En pocas palabras]{.en-breve-titulo}
 
-K-Means necesita que se le indique cuántos grupos buscar. Se entrenó un modelo para cada
-*k* = `{python} params.k_min`…`{python} params.k_max` sobre los
-`{python} num(62044)` socios con las features ya transformadas (ver [LRFMC](03-lrfmc.qmd)) y se
-midieron cuatro criterios:
+- Se probó a dividir a los socios en `{python} params.k_min` a `{python} params.k_max` grupos.
+  Con `{python} k` coinciden tres criterios técnicos, y cada grupo cuenta una historia de negocio
+  distinta.
+- Los segmentos son **estables**: repetir el análisis con otro punto de partida, o con solo una
+  parte de los socios, da prácticamente los mismos grupos (coincidencia de
+  `{python} num(stab["seed_ari_mean"], 2)` sobre un máximo de 1).
+- K-Means separa mejor a los socios que otras tres técnicas y que una segmentación por reglas de
+  hoja de cálculo, que no distingue a quien compra barato de quien paga tarifa completa.
+- Los mapas de la última sección muestran que cada segmento ocupa su propia zona, aunque las
+  fronteras se tocan: el comportamiento de los clientes es un continuo.
+:::
 
-- **Inercia** (suma de distancias al centroide): siempre baja al aumentar *k*; se busca el
-  **codo**, donde añadir un segmento deja de aportar mucho. Se detecta automáticamente como el
-  punto más alejado de la recta que une los extremos de la curva.
-- **Silhouette** (−1 a 1): cuánto más cerca está cada socio de su clúster que del vecino. Se
-  calcula sobre una muestra estratificada de `{python} num(params.silhouette_sample_size)` socios.
-- **Calinski-Harabasz** (↑) y **Davies-Bouldin** (↓): separación entre clústeres frente a su
-  dispersión interna.
+## ¿Cuántos segmentos? {#seleccion-k}
+
+{{< term k-means "K-Means" >}} necesita que se le indique cuántos grupos buscar
+({{< term k "k" >}}). Se entrenó un modelo para cada *k* =
+`{python} params.k_min`…`{python} params.k_max` sobre los `{python} num(metrics["members"])`
+socios, con las métricas ya preparadas (ver [Métricas LRFMC](03-lrfmc.qmd)), y se midieron cuatro
+criterios:
+
+- {{< term inercia "Inercia" >}} (lo lejos que queda cada socio del centro de su grupo): siempre
+  baja al aumentar *k*; se busca el **codo**, donde añadir un segmento deja de aportar mucho. Se
+  detecta automáticamente como el punto más alejado de la recta que une los extremos de la curva.
+- {{< term silhouette "Silhouette" >}} (de −1 a 1): cuánto más cerca está cada socio de su grupo
+  que del vecino. Se calcula sobre una {{< term muestra "muestra estratificada" >}} de
+  `{python} num(params.silhouette_sample_size)` socios.
+- {{< term ch-db "Calinski-Harabasz" >}} (↑ mejor) y Davies-Bouldin (↓ mejor): separación entre
+  grupos frente a su dispersión interna.
 
 ```{python}
 #| label: fig-metricas-k
 #| fig-cap: "Las cuatro métricas para cada número de segmentos. Pasa el cursor para comparar un mismo k."
 mc.k_metrics_chart(table, chosen_k=k)
 ```
+
+::: {.callout-note collapse="true"}
+## Detalle técnico: métricas para cada k
 
 ```{python}
 #| label: tbl-metricas-k
@@ -105,13 +125,14 @@ view.index.name = "k"
     ).highlight_between(subset=pd.IndexSlice[k, :], color="#2a78d633")
 )
 ```
+:::
 
 ::: {.insight}
 **k = `{python} k`.** Tres criterios coinciden:
 
 1. **Codo de la inercia** en *k* = `{python} elbow`.
-2. **Máximo local del silhouette** (`{python} num(chosen["silhouette"], 3)`) entre los *k* de
-   3 a 8. Repetir el cálculo con cinco muestras distintas da una desviación de ±0,001, menor que
+2. **Máximo local del silhouette** (`{python} num(chosen["silhouette"], 3)`), es decir, mejor que
+   sus vecinos, entre los *k* de 3 a 8. Repetir el cálculo con cinco muestras distintas da una desviación de ±0,001, menor que
    la diferencia con *k* = 4 (`{python} num(by_k.loc[4, "silhouette"], 3)`) y *k* = 6
    (`{python} num(by_k.loc[6, "silhouette"], 3)`).
 3. **Mínimo local de Davies-Bouldin** (`{python} num(chosen["db"], 3)`, frente a
@@ -126,7 +147,7 @@ algo habitual cuando los grupos no son esféricos, así que no ayuda a decidir. 
 socios, muy por encima del mínimo del 3 % exigido a un segmento accionable.
 :::
 
-### Silhouette plot
+### ¿Encaja cada socio en su grupo? {#silhouette-plot}
 
 ```{python}
 #| label: fig-silhouette-plot
@@ -135,7 +156,8 @@ mc.silhouette_plot_chart(curves, chosen_k=k)
 ```
 
 ::: {.insight}
-Un silhouette negativo indica un socio asignado a un clúster aunque está algo más cerca de otro.
+Un silhouette negativo indica un socio asignado a un {{< term cluster "clúster" >}} (grupo) aunque
+está algo más cerca de otro.
 Con *k* = `{python} k` solo le ocurre al `{python} pct(chosen["negative_pct"])` de los socios: la
 proporción más baja entre los *k* con 4 o más segmentos
 (`{python} pct(by_k.loc[4, "negative_pct"])` con *k* = 4,
@@ -147,8 +169,8 @@ separación: solo reparten a los socios en grupos más pequeños (el mínimo baj
 
 ### ¿Los cinco grupos tienen sentido de negocio?
 
-Vista previa de los clústeres con *k* = `{python} k` (mediana de cada métrica en sus unidades
-originales). El perfilado completo, con nombres y recomendaciones, está en
+Vista previa de los clústeres con *k* = `{python} k` ({{< term mediana "mediana" >}} de cada
+métrica en sus unidades originales). El perfilado completo, con nombres y recomendaciones, está en
 [Segmentos](05-segmentos.qmd).
 
 ```{python}
@@ -181,26 +203,27 @@ Con datos reales de clientes, cuyo comportamiento es un continuo y no grupos ais
 silhouette rara vez supera 0,25: el mejor valor con un número de segmentos útil es
 `{python} num(middle["silhouette"].max(), 3)`. Por eso el proyecto usa:
 
-- **Criterio principal: estabilidad.** K-Means entrenado con distintas semillas debe producir
-  los mismos segmentos (ARI medio ≥ `{python} num(quality.min_stability_ari, 2)`). Se evalúa en
-  la siguiente sección.
+- **Criterio principal: {{< term estabilidad "estabilidad" >}}.** K-Means entrenado con
+  distintos puntos de partida debe producir los mismos segmentos (ARI medio ≥
+  `{python} num(quality.min_stability_ari, 2)`). Se evalúa en la siguiente sección.
 - **Criterios secundarios:** silhouette ≥ `{python} num(quality.min_silhouette, 2)` (*k* =
   `{python} k` obtiene `{python} num(chosen["silhouette"], 3)` ✅) y ningún segmento por debajo
   del `{python} pct(quality.min_segment_pct, 0)` de los socios (el más pequeño tiene el
   `{python} pct(chosen["min_cluster_pct"])` ✅).
 :::
 
-## Modelo K-Means final
+## El modelo final
 
 El modelo final es K-Means con *k* = `{python} k`, entrenado sobre los
-`{python} num(metrics["members"])` socios (10 inicializaciones, semilla fija). Se guarda en
-`models/kmeans.joblib`: junto con `models/preprocessor.joblib` permite asignar segmentos a
-socios nuevos con exactamente las mismas transformaciones.
+`{python} num(metrics["members"])` socios (10 inicializaciones, {{< term semilla "semilla" >}}
+fija). Se guarda en `models/kmeans.joblib`: junto con `models/preprocessor.joblib` permite
+asignar segmentos a socios nuevos con exactamente las mismas transformaciones.
 
-### Estabilidad: el criterio principal
+### ¿Son estables los segmentos? {#estabilidad}
 
-Un segmento solo sirve para decidir acciones si no depende del azar. Se mide con el **ARI**
-(*Adjusted Rand Index*: 1 = misma partición, 0 = coincidencia al azar) de dos formas:
+Un segmento solo sirve para decidir acciones si no depende del azar. Se mide con el
+{{< term ari "ARI" >}} (*Adjusted Rand Index*: 1 = misma partición, 0 = coincidencia al azar) de
+dos formas:
 
 - **Semillas:** `{python} stab["seeds"]` modelos con semillas distintas, comparados por pares
   (`{python} int((stability["method"] == "semillas").sum())` comparaciones).
@@ -234,20 +257,23 @@ socios casi igual.
 
 ## Comparación con otros modelos
 
-¿Aporta K-Means algo que no den alternativas más simples o más flexibles? Se compara con cuatro
-enfoques sobre las mismas features escaladas:
+¿Aporta K-Means algo que no den alternativas más simples o más flexibles? Se compara
+({{< term benchmark "benchmark" >}}) con cuatro enfoques sobre las mismas métricas escaladas:
 
-- **Baseline por quintiles («sin ML»):** cada métrica se puntúa de 1 a 5 según su quintil y los
-  socios se reparten con reglas RFM clásicas (Campeones, Leales, En riesgo, Hibernando y
-  Potenciales). Es lo que haría un equipo de marketing con una hoja de cálculo.
-- **GMM** (mezcla de gaussianas) con `{python} k` componentes: grupos elípticos y probabilidad
-  de pertenencia. La covarianza `{python} gmm_cov[metrics["benchmark"]["gmm_covariance_type"]]`
-  tiene el menor BIC.
-- **Agglomerative (Ward):** jerárquico. Su memoria crece con el cuadrado de los socios, así que
-  se entrena con una muestra de `{python} num(config.modeling.agglomerative_sample_size)` y el
-  resto se asigna al grupo con el centroide más cercano.
-- **DBSCAN:** grupos por densidad. `min_samples` = `{python} metrics["benchmark"]["dbscan_min_samples"]`
-  (2 × nº de features) y `eps` en el codo del gráfico *k-distance*.
+- {{< term baseline "Baseline por quintiles" >}} **(«sin ML»):** cada métrica se puntúa de 1 a 5
+  según su quintil y los socios se reparten con reglas {{< term rfm "RFM" >}} clásicas (Campeones,
+  Leales, En riesgo, Hibernando y Potenciales). Es lo que haría un equipo de marketing con una
+  hoja de cálculo.
+- {{< term gmm "GMM" >}} (mezcla de gaussianas) con `{python} k` componentes: grupos elípticos y
+  probabilidad de pertenencia. La covarianza
+  `{python} gmm_cov[metrics["benchmark"]["gmm_covariance_type"]]` tiene el menor BIC.
+- {{< term ward "Agglomerative (Ward)" >}}: jerárquico. Su memoria crece con el cuadrado de los
+  socios, así que se entrena con una muestra de
+  `{python} num(config.modeling.agglomerative_sample_size)` y el resto se asigna al grupo con el
+  centroide más cercano.
+- {{< term dbscan "DBSCAN" >}}: grupos por densidad. `min_samples` =
+  `{python} metrics["benchmark"]["dbscan_min_samples"]` (2 × nº de métricas) y `eps` en el codo
+  del gráfico *k-distance*.
 
 ```{python}
 #| label: tbl-benchmark
@@ -357,7 +383,7 @@ pertenencia de GMM sí es útil como señal complementaria: los socios con proba
 en la frontera entre dos segmentos.
 :::
 
-### DBSCAN: socios atípicos
+### DBSCAN: socios atípicos {#atipicos}
 
 ```{python}
 #| label: fig-k-distance
@@ -375,8 +401,9 @@ DBSCAN marca como **ruido** al `{python} pct(bench.loc["DBSCAN", "noise_pct"])` 
 `{python} num(outliers["F"].median())` frente a `{python} num(lrfmc["F"].median())`) acumulan casi
 el doble de kilómetros (`{python} num(outliers["M"].median())` frente a
 `{python} num(lrfmc["M"].median())`) y el `{python} pct((outliers["C"] > 1).mean(), 0)` paga más que la tarifa completa (cabinas
-premium), frente al `{python} pct((lrfmc["C"] > 1).mean())` del total. No forman un segmento
-propio, pero conviene revisarlos a mano antes de lanzar campañas masivas. Quedan marcados en
+premium), frente al `{python} pct((lrfmc["C"] > 1).mean())` del total. Estos
+{{< term atipico "atípicos" >}} no forman un segmento propio, pero conviene revisarlos a mano
+antes de lanzar campañas masivas. Quedan marcados en
 `segments.parquet` (`dbscan_outlier`).
 :::
 
@@ -388,15 +415,19 @@ las reglas por quintiles ignoran. De los otros modelos se conservan dos señales
 perfilado: la probabilidad de pertenencia de GMM y la marca de atípico de DBSCAN.
 :::
 
-## Reducción de dimensionalidad
+## Los segmentos en un mapa {#reduccion-dimensionalidad}
 
-Los segmentos viven en un espacio de cinco dimensiones (L, R, F, M, C). Para verlos se proyectan
-a 2D y 3D con dos técnicas complementarias. Las proyecciones **solo sirven para visualizar**:
-K-Means se entrenó con las cinco features y aquí no se vuelve a agrupar nada.
+Cada socio se describe con cinco números (L, R, F, M, C), imposibles de dibujar a la vez. Para
+ver los segmentos se resumen en 2 o 3 ejes con dos técnicas complementarias de
+{{< term reduccion-dimensionalidad "reducción de dimensionalidad" >}}. Estos mapas **solo sirven
+para visualizar**: K-Means se entrenó con las cinco métricas y aquí no se vuelve a agrupar nada.
 
-### PCA: qué ejes ordenan a los clientes
+### PCA: qué ejes ordenan a los clientes {#pca}
 
-PCA busca las direcciones de máxima varianza. Se ajusta con los
+{{< term pca "PCA" >}} crea nuevos ejes, las *componentes*, que combinan las cinco métricas: el
+primero recoge la mayor parte de las diferencias entre socios (la *varianza explicada*), el
+segundo la mayor parte de lo que queda, y así sucesivamente. Los {{< term loadings "loadings" >}}
+indican cuánto pesa cada métrica en cada eje. Se ajusta con los
 `{python} num(metrics["members"])` socios; los gráficos muestran una muestra estratificada de
 `{python} num(projection["pca_sample_size"])` (cada clúster con su proporción real).
 
@@ -455,9 +486,9 @@ y los **recientes** (1) quedan en extremos opuestos de PC3, igual que los dos gr
 que ya se distinguían en PC2.
 :::
 
-### t-SNE: vecindarios locales
+### t-SNE: quién está cerca de quién {#tsne}
 
-t-SNE es no lineal: coloca cerca a los socios que son vecinos en las cinco dimensiones, pero no
+{{< term tsne "t-SNE" >}} coloca cerca a los socios que se parecen en las cinco métricas, pero no
 conserva las distancias globales (el tamaño de cada región y la distancia entre regiones no se
 interpretan). Se calcula sobre una muestra estratificada de
 `{python} num(projection["tsne_sample_size"])` socios con semilla fija, para dos valores de
@@ -485,8 +516,9 @@ trust_table.style.format({"Trustworthiness": lambda v: num(v, 3)})
 ```
 
 ::: {.insight}
-Medido sobre los mismos `{python} num(projection["trust_sample_size"])` socios y sus
-`{python} projection["trust_neighbors"]` vecinos más cercanos, t-SNE conserva casi todos los
+¿Qué mapa es más fiel? Lo mide la {{< term trustworthiness "trustworthiness" >}}, sobre los
+mismos `{python} num(projection["trust_sample_size"])` socios y sus
+`{python} projection["trust_neighbors"]` vecinos más cercanos: t-SNE conserva casi todos los
 vecindarios (`{python} num(trust["t-SNE (perplexity 30)"], 3)`), frente a
 `{python} num(trust["PCA 2D"], 3)` del plano PCA y `{python} num(trust["PCA 3D"], 3)` en 3D. PCA
 explica **qué ejes** diferencian a los segmentos; t-SNE muestra **quién está cerca de quién**.

@@ -14,21 +14,26 @@ website:
   repo-url: https://github.com/freddxvill/segmentacion-clientes-aerolinea
   page-navigation: true
   navbar:
+    # Primero lo que necesita negocio (resultados); el método, agrupado en un menú.
     left:
       - href: index.qmd
         text: Inicio
-      - href: 01-datos.qmd
-        text: Datos
-      - href: 02-eda.qmd
-        text: EDA
-      - href: 03-lrfmc.qmd
-        text: LRFMC
-      - href: 04-clustering.qmd
-        text: Clustering
       - href: 05-segmentos.qmd
         text: Segmentos
       - href: 06-conclusiones.qmd
         text: Conclusiones
+      - text: Cómo se hizo
+        menu:
+          - href: 01-datos.qmd
+            text: "1 · Datos"
+          - href: 02-eda.qmd
+            text: "2 · Exploración de los datos"
+          - href: 03-lrfmc.qmd
+            text: "3 · Métricas LRFMC"
+          - href: 04-clustering.qmd
+            text: "4 · Modelo de segmentación"
+      - href: glosario.qmd
+        text: Glosario
     right:
       - icon: github
         href: https://github.com/freddxvill/segmentacion-clientes-aerolinea
@@ -45,4 +50,6 @@ format:
     toc-title: "En esta página"
     code-fold: true
     code-summary: "Ver código"
-    include-after-body: _tabs-resize.html
+    include-after-body:
+      - _tabs-resize.html
+      - _glosario.html

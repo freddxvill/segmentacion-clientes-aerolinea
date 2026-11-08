@@ -1,0 +1,462 @@
+---
+title: "Glosario"
+description: "Los términos técnicos del sitio, explicados sin jerga."
+toc-depth: 2
+---
+
+<!--
+Cada término es un encabezado `### Nombre {#id}` y su PRIMER PÁRRAFO es la definición corta que
+aparece al pasar el cursor sobre el término en las demás páginas (shortcode `term`): que sea
+breve (una o dos frases) y se entienda sola. Los párrafos siguientes amplían con ejemplos.
+-->
+
+Pensado para quien no se dedica a la ciencia de datos. En las demás páginas, las palabras con
+**subrayado de puntos** muestran su definición al pasar el cursor (o al tocarlas en una tableta)
+y enlazan a su ficha en esta página. Los términos están agrupados por tema; este índice los
+ordena alfabéticamente.
+
+{{< glosario-indice >}}
+
+## El negocio y el programa
+
+### Programa de viajero frecuente (FFP) {#ffp}
+
+Programa de fidelización de una aerolínea (*Frequent Flyer Program*): el socio acumula puntos al
+volar y los canjea por billetes, mejoras de clase u otros premios.
+
+Los socios suben de nivel según cuánto vuelan, y cada nivel da más ventajas. En este proyecto,
+cada fila de los datos es un socio del programa.
+
+### Nivel del programa {#nivel-programa}
+
+Categoría del socio dentro del programa (en los datos, `FFP_TIER`: 4, 5 o 6). Los niveles altos,
+5 y 6, corresponden a quienes más vuelan.
+
+El nivel **no se usó para formar los segmentos**: se reservó para comprobar después si los
+segmentos tienen relación con él ([validación externa](#validacion-externa)).
+
+### Segmento y segmentación {#segmento}
+
+Un segmento es un grupo de clientes que se comportan de forma parecida. Segmentar es dividir a
+toda la base de clientes en esos grupos para tratar a cada uno de la forma más adecuada.
+
+En lugar de enviar la misma campaña a todos, cada segmento recibe acciones pensadas para él. Aquí
+los segmentos salen de un algoritmo de [agrupación](#clustering) aplicado a las métricas
+[LRFMC](#lrfmc) y luego reciben un nombre comercial (VIP, Cazadores de ofertas, etc.).
+
+### KPI {#kpi}
+
+Indicador clave de desempeño (*Key Performance Indicator*): la cifra concreta con la que se mide si
+una acción funciona, por ejemplo la tasa de reactivación o el ingreso por socio.
+
+Cada recomendación del sitio lleva su KPI, para poder decidir con datos si la acción se mantiene o
+se descarta.
+
+### Grupo de control y experimento A/B {#grupo-control}
+
+Parte de los clientes que, a propósito, no recibe una acción. Comparar sus resultados con los de
+quienes sí la recibieron mide el efecto real de la acción.
+
+A esa comparación se le llama experimento A/B. Sin grupo de control no se puede saber si una
+mejora se debe a la campaña o habría ocurrido igual, por ejemplo por la temporada.
+
+### Ingreso {#ingreso}
+
+Lo que pagó el socio por sus billetes en cada uno de los dos años observados (en los datos,
+`SUM_YR_1` y `SUM_YR_2`). Mide el valor de cada segmento, pero no se usó para formarlos.
+
+La moneda no está documentada y no descuenta costes, así que sirve para comparar segmentos entre
+sí, no para calcular rentabilidad.
+
+### Tendencia de ingreso {#tendencia-ingreso}
+
+Compara el ingreso del año más reciente con el del anterior en una escala de −1 a 1: −1 = no
+generó ingresos el último año, 0 = igual que el anterior, +1 = solo generó ingresos el último
+año.
+
+Un valor cercano a −1 es una señal de abandono. Es una [variable de perfilado](#feature): describe
+a los segmentos, pero no entra en el modelo.
+
+## Las métricas LRFMC
+
+### RFM {#rfm}
+
+Método clásico de marketing que describe a cada cliente con tres números: hace cuánto que compró
+por última vez (*Recency*), cuántas veces compra (*Frequency*) y cuánto gasta (*Monetary*).
+
+Es la base de muchas segmentaciones en comercio y banca. [LRFMC](#lrfmc) es su adaptación a las
+aerolíneas.
+
+### LRFMC {#lrfmc}
+
+Adaptación de RFM a las aerolíneas: describe a cada socio con cinco métricas, antigüedad (L),
+meses sin volar (R), número de vuelos (F), kilómetros volados (M) y descuento medio de sus
+tarifas (C).
+
+Las dos letras nuevas aportan lo que [RFM](#rfm) no ve en aviación: cuánto tiempo lleva el cliente
+con la aerolínea (L) y si compra tarifas caras o en oferta (C). Es un modelo habitual en los
+estudios sobre programas de viajero frecuente.
+
+### L · Antigüedad {#l}
+
+Meses que lleva el socio en el programa, desde su alta hasta el final del periodo observado
+(31/03/2014). Un valor alto indica un socio veterano.
+
+### R · Recencia {#r}
+
+Meses desde el último vuelo del socio. Un valor alto es una mala señal: hace mucho que no vuela.
+
+### F · Frecuencia {#f}
+
+Número de vuelos del socio durante los dos años observados.
+
+### M · Kilómetros volados {#m}
+
+Kilómetros que voló el socio en los dos años observados. En aviación miden mejor el valor del
+cliente que el gasto bruto, porque el precio del billete depende sobre todo de la distancia.
+
+### C · Descuento medio {#c}
+
+Lo que pagó el socio, de media, en relación con la tarifa completa: 1,0 = tarifa completa, 0,5 =
+la mitad. Por encima de 1, cabinas premium.
+
+Un C bajo indica un cliente sensible al precio, que compra en oferta; un C alto, uno que paga por
+flexibilidad o comodidad.
+
+## Preparación de los datos
+
+### Análisis exploratorio (EDA) {#eda}
+
+Primera revisión de los datos (*Exploratory Data Analysis*): gráficos y resúmenes para entender
+cómo son los clientes, detectar errores y decidir cómo preparar los datos antes de modelar.
+
+### Limpieza de datos {#limpieza}
+
+Corrección o eliminación de datos erróneos o incompletos antes del análisis: fechas imposibles,
+ubicaciones vacías, socios sin ingresos registrados, etc.
+
+Aquí solo se elimina a un socio si sus datos no permiten calcular las métricas; si el error está
+en un dato secundario (edad, ciudad), se anula ese valor y el socio se conserva.
+
+### Trazabilidad (*data lineage*) {#trazabilidad}
+
+Registro de cada cambio que sufren los datos: qué regla se aplicó, a cuántas filas y por qué.
+Permite auditar la limpieza y repetirla exactamente.
+
+### Valor nulo y *placeholder* {#nulo}
+
+Un valor nulo es un dato ausente. Un *placeholder* es un relleno que parece un dato pero significa
+«sin dato», como `.`, `-` o `0` en el campo de la ciudad.
+
+Durante la limpieza, los *placeholders* se convierten en nulos para que no se confundan con
+valores reales.
+
+### Mediana {#mediana}
+
+El valor del medio: la mitad de los socios está por encima y la otra mitad por debajo. A
+diferencia de la media, no se deja arrastrar por unos pocos valores extremos.
+
+Por eso el sitio describe a los segmentos con medianas: si un socio hizo 200 vuelos, la media de
+su grupo sube mucho, pero la mediana apenas cambia.
+
+### Percentil, cuartil y quintil {#percentil}
+
+Cortes que dividen a los socios ordenados por una métrica. El percentil 25 (P25) deja por debajo
+al 25 % de los socios; los cuartiles dividen en 4 grupos iguales y los quintiles, en 5.
+
+### Asimetría (cola larga) {#asimetria}
+
+Mide cuánto se inclina una distribución hacia un lado. Hay una «cola larga» cuando la mayoría
+tiene valores bajos y unos pocos, valores muy altos, como en los vuelos: casi todos vuelan poco y
+unos pocos, muchísimo.
+
+Un valor cercano a 0 indica una distribución equilibrada; por encima de 1, una cola larga
+marcada. Sin corregirla, los pocos casos extremos dominarían la segmentación.
+
+### Escala logarítmica {#escala-log}
+
+Eje en el que cada marca multiplica la anterior (1, 10, 100, 1.000…) en lugar de sumarle una
+cantidad fija. Permite ver en un mismo gráfico a socios con 2 vuelos y con 200.
+
+### Correlación de Spearman (ρ) {#correlacion}
+
+Mide de −1 a 1 si dos variables suben o bajan juntas: 1 = siempre suben juntas, 0 = no hay
+relación, −1 = cuando una sube, la otra baja.
+
+La versión de Spearman compara posiciones en un ranking en lugar de valores, así que los valores
+extremos no la distorsionan.
+
+### Transformación (log1p, Yeo-Johnson) {#transformacion}
+
+Operación matemática que «comprime» los valores muy altos de una métrica para corregir su
+asimetría, sin cambiar el orden de los socios: quien volaba más sigue volando más.
+
+`log1p` aplica un logaritmo; Yeo-Johnson busca la intensidad de corrección adecuada para cada
+métrica. El proyecto usa Yeo-Johnson porque deja las cinco métricas equilibradas (ver
+[asimetría](#asimetria)).
+
+### Escalado (StandardScaler, RobustScaler) {#escalado}
+
+Paso que pone todas las métricas en una escala común, para que ninguna pese más que otra solo por
+sus unidades. Sin escalar, los miles de kilómetros aplastarían al descuento, que va de 0 a 1,5.
+
+`StandardScaler` deja cada métrica con media 0 y desviación 1 (ver [z-score](#z-score));
+`RobustScaler` usa la mediana y los cuartiles. El proyecto usa `StandardScaler`.
+
+### z-score (puntuación estándar) {#z-score}
+
+Cuántas desviaciones estándar se aleja un valor de la media: 0 = justo en la media, +1 = bastante
+por encima, −1 = bastante por debajo. Permite comparar métricas con unidades distintas.
+
+En el mapa de calor de los segmentos, un z-score de +1 en vuelos significa que el segmento vuela
+claramente más que el socio típico.
+
+### Feature y variable de perfilado {#feature}
+
+Una *feature* es cada dato que recibe el modelo para agrupar (aquí, las cinco métricas LRFMC). Una
+variable de perfilado no entra al modelo: se usa después para describir los segmentos.
+
+Las variables de perfilado del proyecto son el ingreso, su tendencia, la edad, el género y el
+nivel del programa. Dejarlas fuera del modelo permite usarlas para comprobar si los segmentos
+tienen sentido ([validación externa](#validacion-externa)).
+
+### Pipeline {#pipeline}
+
+Cadena de pasos que se aplica siempre en el mismo orden, por ejemplo transformar y después
+escalar. Guardarla garantiza que un socio nuevo se procese exactamente igual que los socios con
+los que se entrenó el modelo.
+
+## Agrupación (clustering)
+
+### Clustering (agrupamiento) {#clustering}
+
+Técnica que forma grupos de clientes parecidos sin que nadie le diga de antemano qué grupos
+buscar: los descubre a partir de los datos.
+
+Se llama *aprendizaje no supervisado* porque no hay una respuesta correcta con la que comparar. Por
+eso los grupos se validan de otras formas: con su [estabilidad](#estabilidad) y con
+[validación externa](#validacion-externa).
+
+### Clúster {#cluster}
+
+Cada grupo que forma el algoritmo de agrupación. Cuando se interpreta y recibe un nombre y unas
+acciones, pasa a llamarse segmento.
+
+### K-Means {#k-means}
+
+Algoritmo de agrupación que reparte a los clientes en *k* grupos de forma que cada cliente quede lo
+más cerca posible del centro de su grupo.
+
+Funciona por repetición: coloca *k* centros, asigna cada socio al más cercano, mueve cada centro
+al promedio de sus socios y repite hasta que nada cambia. Es rápido, fácil de explicar y de
+aplicar a socios nuevos. Es el modelo elegido en este proyecto, con *k* = 5.
+
+### k (número de segmentos) {#k}
+
+Cuántos grupos debe formar K-Means. El algoritmo no lo decide solo: se prueban varios valores y se
+elige con métricas como el [codo](#inercia) o el [silhouette](#silhouette) y con criterio de
+negocio.
+
+### Centroide {#centroide}
+
+El «socio promedio» de un grupo: el punto central, cuyas métricas son la media de las de todos los
+socios del grupo. Resume el perfil típico del segmento.
+
+### Distancia euclídea {#distancia}
+
+La distancia «en línea recta» entre dos socios, calculada con sus cinco métricas a la vez. Dos
+socios con métricas parecidas están cerca, y K-Means agrupa a los que están cerca.
+
+### Inercia y método del codo {#inercia}
+
+La inercia suma lo lejos que está cada socio del centro de su grupo: cuanto menor, más compactos
+los grupos. Siempre baja al añadir grupos, así que se busca el «codo», donde añadir uno más ya
+apenas mejora.
+
+### Silhouette (coeficiente de silueta) {#silhouette}
+
+Mide de −1 a 1 si cada socio está más cerca de su propio grupo que del grupo vecino: cerca de 1 =
+grupos bien separados, 0 = socio en la frontera, negativo = quizá encajaría mejor en otro grupo.
+
+Con clientes reales, cuyo comportamiento cambia de forma gradual, son habituales valores de 0,2 a
+0,3: los grupos se tocan, pero siguen siendo útiles. El *silhouette plot* muestra el valor de cada
+socio, agrupado por clúster.
+
+### Calinski-Harabasz y Davies-Bouldin {#ch-db}
+
+Dos métricas que comparan lo separados que están los grupos entre sí con lo dispersos que son por
+dentro. En Calinski-Harabasz, más alto es mejor; en Davies-Bouldin, más bajo es mejor.
+
+### Semilla aleatoria {#semilla}
+
+Número que fija el punto de partida de un proceso con azar, como la colocación inicial de los
+centros de K-Means. Con la misma semilla, el resultado se repite exactamente.
+
+Cambiar la semilla y comprobar que los segmentos no cambian es una forma de medir su
+[estabilidad](#estabilidad).
+
+### Estabilidad {#estabilidad}
+
+Que el modelo dé los mismos segmentos aunque cambie su punto de partida o la muestra de socios. Es
+el criterio principal de calidad del proyecto: un segmento que cambia al repetir el análisis no
+sirve para decidir acciones.
+
+Se mide con el [ARI](#ari), repitiendo el modelo con distintas [semillas](#semilla) y con distintas
+[submuestras](#muestra) de socios.
+
+### ARI (Adjusted Rand Index) {#ari}
+
+Mide de 0 a 1 cuánto coinciden dos formas de agrupar a los mismos socios: 1 = idénticas, 0 =
+coincidencia al azar. En este proyecto, por encima de 0,9 se considera estable.
+
+Descuenta las coincidencias que se darían por pura casualidad, por eso es más exigente que un
+simple porcentaje de acuerdo.
+
+### Muestra y submuestra estratificada {#muestra}
+
+Parte de los socios elegida al azar, que se usa cuando un cálculo es muy lento con todos. Es
+estratificada si conserva la proporción de cada grupo: si los VIP son el 21 % del total, también
+lo son de la muestra.
+
+### Benchmark (comparación de modelos) {#benchmark}
+
+Comparar el modelo elegido con alternativas sobre los mismos datos y con las mismas métricas, para
+justificar la elección.
+
+Aquí K-Means se comparó con una segmentación por reglas ([quintiles](#baseline)), con
+[GMM](#gmm), con [Ward](#ward) y con [DBSCAN](#dbscan).
+
+### Baseline por quintiles {#baseline}
+
+Segmentación de referencia sin algoritmos: cada métrica se puntúa de 1 a 5 según el quintil del
+socio y se aplican reglas fijas (Campeones, Leales, En riesgo…). Es lo que haría un equipo con una
+hoja de cálculo.
+
+Si un modelo no supera con claridad a esta línea base (*baseline*), no compensa su complejidad.
+Ver [percentil, cuartil y quintil](#percentil).
+
+### GMM (mezcla de gaussianas) {#gmm}
+
+Algoritmo de agrupación que supone que cada grupo tiene forma de nube elíptica y da a cada socio
+una probabilidad de pertenecer a cada grupo, en lugar de una asignación tajante.
+
+La forma de las nubes se eligió con el BIC, un criterio que premia el buen ajuste pero penaliza la
+complejidad. Una probabilidad baja señala a un socio en la frontera entre dos segmentos.
+
+### Ward (clustering jerárquico) {#ward}
+
+Algoritmo que empieza con cada socio como un grupo propio y va uniendo, paso a paso, los dos grupos
+más parecidos hasta quedarse con el número deseado.
+
+Ward es la regla de unión que menos dispersa los grupos. Su memoria crece muy deprisa con el número
+de clientes, así que aquí se entrena con una [muestra](#muestra).
+
+### DBSCAN {#dbscan}
+
+Algoritmo que forma grupos con las zonas donde los socios están muy juntos y deja fuera, como
+«ruido», a los socios aislados. No necesita que se le diga cuántos grupos buscar.
+
+Su parámetro principal, `eps`, es la distancia máxima para considerar vecinos a dos socios, y se
+elige con el gráfico *k-distance*. En este proyecto no encontró grupos separados, pero sirvió para
+marcar [atípicos](#atipico).
+
+### Atípico (*outlier*) {#atipico}
+
+Cliente con una combinación de métricas poco común, lejos del resto. No forma un segmento propio,
+pero conviene revisarlo antes de incluirlo en campañas masivas.
+
+## Visualización de los segmentos
+
+### Reducción de dimensionalidad {#reduccion-dimensionalidad}
+
+Técnicas que resumen muchas variables en dos o tres para poder dibujar a los socios en un plano o
+en 3D, intentando conservar quién se parece a quién.
+
+Cada socio se describe con cinco métricas, imposibles de dibujar a la vez. Aquí solo se usan para
+visualizar: los segmentos se formaron con las cinco métricas.
+
+### PCA (análisis de componentes principales) {#pca}
+
+Técnica que crea nuevos ejes, las *componentes principales*, combinando las métricas originales. El
+primero recoge la mayor parte de las diferencias entre socios, el segundo la mayor parte de lo que
+queda, y así sucesivamente.
+
+La *varianza explicada* indica qué parte de las diferencias entre socios recoge cada componente. El
+*biplot* dibuja a los socios sobre las dos primeras componentes, con flechas que indican hacia
+dónde crece cada métrica. Ver [loadings](#loadings).
+
+### Loadings (cargas) {#loadings}
+
+El peso de cada métrica original en una componente de PCA. Sirven para interpretarla: si los vuelos
+y los kilómetros pesan mucho en la primera componente, esa componente mide «actividad».
+
+### t-SNE {#tsne}
+
+Técnica que dibuja a los socios en un plano colocando cerca a los que se parecen. Es buena para ver
+si los grupos están bien formados, pero el tamaño de cada región y la distancia entre regiones no
+significan nada.
+
+Su parámetro *perplexity* indica a cuántos vecinos atiende cada socio. Si las conclusiones se
+mantienen con varios valores, son fiables.
+
+### Trustworthiness {#trustworthiness}
+
+Mide de 0 a 1 qué parte de los vecinos más cercanos de cada socio siguen siendo vecinos en el
+gráfico 2D o 3D. Cerca de 1 = el mapa es fiel a los datos.
+
+## Validación e interpretación
+
+### Validación externa {#validacion-externa}
+
+Comprobar los segmentos con información que no se usó para formarlos, como el ingreso, el nivel del
+programa, la edad o el género. Si los segmentos difieren en esas variables, captan algo real.
+
+### p-valor y significancia estadística {#p-valor}
+
+Probabilidad de observar una diferencia así de grande por pura casualidad. Por debajo de 0,05 se
+dice que la diferencia es «estadísticamente significativa».
+
+Con más de 60.000 socios, hasta las diferencias minúsculas resultan significativas. Por eso el sitio
+se fija en el [tamaño del efecto](#tamano-efecto).
+
+### Tamaño del efecto {#tamano-efecto}
+
+Mide cuánto difieren los segmentos, no solo si difieren. Se etiqueta como pequeño, mediano o
+grande según umbrales habituales en estadística.
+
+El proyecto usa dos medidas que van de 0 (ninguna diferencia) a 1: la
+[V de Cramér](#v-cramer), para variables de categorías, y la [ε² de Kruskal-Wallis](#kruskal),
+para variables numéricas.
+
+### V de Cramér {#v-cramer}
+
+Mide de 0 a 1 la relación entre dos variables de categorías, como segmento y nivel del programa: 0
+= el nivel se reparte igual en todos los segmentos, 1 = el segmento determina el nivel.
+
+Se calcula a partir de la prueba chi-cuadrado. Umbrales usados: desde 0,07 pequeño, desde 0,21
+mediano y desde 0,35 grande.
+
+### Kruskal-Wallis y ε² {#kruskal}
+
+Prueba que compara una variable numérica, como el ingreso o la edad, entre varios grupos. Su ε²
+(épsilon cuadrado) indica de 0 a 1 qué parte de las diferencias entre socios explica el grupo.
+
+Trabaja con posiciones en un ranking en lugar de valores, para que los extremos no la distorsionen.
+Umbrales usados: desde 0,01 pequeño, desde 0,06 mediano y desde 0,14 grande. Un ε² alto en
+ingreso significa que, sabiendo el segmento de un socio, ya se sabe buena parte de cuánto aporta.
+
+### Arquetipo {#arquetipo}
+
+Regla escrita que define un nombre de segmento, por ejemplo «VIP = vuela mucho, recorre muchos
+kilómetros y voló hace poco». Cada segmento recibe el nombre del arquetipo que mejor describe a su
+socio promedio.
+
+### Algoritmo húngaro {#hungaro}
+
+Método matemático para repartir tareas de forma óptima. Aquí reparte los cinco nombres entre los
+cinco segmentos de modo que el encaje total sea el mejor posible y ningún nombre se repita.
+
+### Análisis de sensibilidad {#sensibilidad}
+
+Comprobar si una conclusión cambia al modificar los supuestos. Aquí se alteraron al azar los pesos
+de las reglas de nombres (hasta ±30 %) para verificar que cada segmento conserva su nombre.

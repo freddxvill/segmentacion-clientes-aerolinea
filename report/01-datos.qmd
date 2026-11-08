@@ -22,12 +22,25 @@ summary = ec.eda_summary(df)
 nulled = {s["rule"]: s["rows"] for s in report["steps"]}
 ```
 
+::: {.en-breve}
+[En pocas palabras]{.en-breve-titulo}
+
+- Los datos describen a `{python} num(report["input_rows"])` socios de un programa de viajero
+  frecuente durante dos años (abril de 2012 a marzo de 2014): vuelos, kilómetros, tarifas,
+  ingresos, puntos y algunos datos de perfil.
+- Solo se descartó al `{python} pct(report["dropped_rows"] / report["input_rows"])` de los
+  socios: los que no tenían ingresos registrados o solo volaron canjeando puntos.
+- Los demás errores (fechas imposibles, ciudades vacías) se corrigieron sin eliminar a nadie, y
+  cada corrección queda registrada para poder auditarla y repetirla.
+:::
+
 ## Fuente
 
 Los datos provienen de la competición de Kaggle
 [`sa-customer-segmentation`](https://www.kaggle.com/competitions/sa-customer-segmentation):
-socios de un **programa de viajero frecuente** (FFP) de una aerolínea, con su actividad durante
-una ventana de observación de dos años que termina el **31 de marzo de 2014** (`LOAD_TIME`).
+socios de un {{< term ffp "programa de viajero frecuente" >}} (FFP) de una aerolínea, con su
+actividad durante una ventana de observación de dos años que termina el **31 de marzo de 2014**
+(`LOAD_TIME`).
 
 ::: {.callout-warning}
 ## Procedencia
@@ -53,19 +66,23 @@ de las 23 columnas y la huella SHA-256, está en `docs/data-card.md` del reposit
 
 ## Qué contiene cada socio
 
+Los nombres en `código` son los de las columnas originales del dataset. Las cinco métricas
+{{< term lrfmc "LRFMC" >}} (L, R, F, M y C) se calculan a partir de ellas.
+
 | Grupo | Columnas | Uso en el proyecto |
 |---|---|---|
 | Perfil | `GENDER`, `AGE`, `WORK_CITY`, `WORK_PROVINCE`, `WORK_COUNTRY` | Perfilado de segmentos |
-| Programa | `FFP_DATE` (alta), `FFP_TIER` (nivel 4/5/6) | **L** y validación externa |
+| Programa | `FFP_DATE` (alta), `FFP_TIER` (nivel 4/5/6) | **L** y {{< term validacion-externa "validación externa" >}} |
 | Actividad | `FLIGHT_COUNT`, `SEG_KM_SUM`, `LAST_TO_END`, `avg_discount` | **F**, **M**, **R**, **C** |
 | Ingresos | `SUM_YR_1`, `SUM_YR_2` | Perfilado y riesgo de abandono |
 | Puntos | `BP_SUM`, `Points_Sum`, `Point_NotFlight`, `EXCHANGE_COUNT` | Perfilado |
 
 ## Limpieza
 
-Las reglas están en `src/segmentacion/data/clean.py` y cada una deja constancia de cuántas filas
-toca (*data lineage*). El criterio general: **solo se elimina un socio si su fila no sirve para
-calcular LRFMC**; si el problema está en una columna de perfil, se anula ese valor y el socio se
+La {{< term limpieza "limpieza" >}} sigue reglas escritas (en `src/segmentacion/data/clean.py`) y
+cada una deja constancia de cuántas filas toca ({{< term trazabilidad "trazabilidad" >}}). El
+criterio general: **solo se elimina un socio si sus datos no sirven para calcular las métricas
+LRFMC**; si el problema está en un dato de perfil (edad, ciudad), se anula ese valor y el socio se
 conserva.
 
 ```{python}
@@ -104,8 +121,8 @@ ec.null_values_chart(report)
 ```
 
 ::: {.insight}
-Tras limpiar hay **más** nulos en ubicación, no menos: los *placeholders* pasan a contarse como lo
-que son, datos ausentes. Las columnas que alimentan LRFMC (fechas de alta, vuelos, km, recencia y
+Tras limpiar hay **más** {{< term nulo "valores vacíos" >}} en ubicación, no menos: los rellenos
+que significaban «sin dato» (*placeholders*) pasan a contarse como lo que son, datos ausentes. Las columnas que alimentan LRFMC (fechas de alta, vuelos, km, recencia y
 descuento) quedan **sin ningún nulo**, y los de ingresos desaparecen porque esas filas se
 eliminan.
 :::
@@ -120,7 +137,8 @@ eliminan.
 )
 ```
 
-### Normalización de texto
+::: {.callout-note collapse="true"}
+## Detalle técnico: normalización de texto
 
 Además de las reglas anteriores, el texto de ubicación se normaliza sin contar filas:
 
@@ -129,12 +147,17 @@ Además de las reglas anteriores, el texto de ubicación se normaliza sin contar
 - **sufijos administrativos** en pinyin: `guangdongsheng` (*sheng* = provincia) o `guangzhoushi`
   (*shi* = ciudad) se unen con `guangdong` y `guangzhou`. El sufijo se quita solo si la forma
   corta ya existe, para no romper nombres reales como *Huangshi*.
+:::
 
-## Hipótesis confirmadas en el EDA
+## Supuestos comprobados en la exploración
+
+Antes de modelar se comprobó que los datos significan lo que se suponía. Por ejemplo, que
+`avg_discount` (la métrica **C**) mide el precio pagado frente a la tarifa completa: si es así,
+debe subir con el ingreso por kilómetro, y lo hace.
 
 | Supuesto | Resultado |
 |---|---|
-| `avg_discount` es el precio pagado sobre la tarifa completa | ✅ Correlación de Spearman de `{python} num(summary["spearman_c_revenue_km"], 2)` con el ingreso por km. 1,0 = tarifa completa; `{python} pct(summary["discount_above_1"])` de los socios supera 1 (cabinas premium). Tras limpiar no hay descuentos 0. |
+| `avg_discount` es el precio pagado sobre la tarifa completa | ✅ {{< term correlacion "Correlación de Spearman" >}} de `{python} num(summary["spearman_c_revenue_km"], 2)` con el ingreso por km. 1,0 = tarifa completa; `{python} pct(summary["discount_above_1"])` de los socios supera 1 (cabinas premium). Tras limpiar no hay descuentos 0. |
 | `SUM_YR_2` es el año más reciente | ✅ El `{python} pct(summary["yr2_zero_inactive"], 0)` de los socios con `SUM_YR_2 = 0` lleva más de un año sin volar. |
 | `LOAD_TIME` es una fecha de corte única | ✅ 31/03/2014 para todos los socios. |
 | `GENDER` solo toma *Male*/*Female* | ✅ 3 nulos. |

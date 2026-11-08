@@ -2,6 +2,8 @@
 title: "Segmentación avanzada de clientes"
 subtitle: "Cinco segmentos de socios de un programa de viajero frecuente, con el modelo LRFMC y K-Means"
 toc: false
+execute:
+  echo: false
 ---
 
 ```{python}
@@ -31,15 +33,16 @@ stab = metrics["stability"]
 
 ## El problema
 
-Una aerolínea tiene `{python} num(lineage["output_rows"])` socios en su programa de viajero
-frecuente y los trata casi igual: mismos correos, mismas promociones. Pero no valen lo mismo ni
-se comportan igual. La pregunta de negocio es **a quién retener, a quién hacer crecer y a quién
-reactivar**, y con qué acción en cada caso.
+Una aerolínea tiene `{python} num(lineage["output_rows"])` socios en su
+{{< term ffp "programa de viajero frecuente" >}} y los trata casi igual: mismos correos, mismas
+promociones. Pero no valen lo mismo ni se comportan igual. La pregunta de negocio es **a quién
+retener, a quién hacer crecer y a quién reactivar**, y con qué acción en cada caso.
 
 ## El enfoque
 
-Se describe a cada socio con cinco métricas, el modelo **LRFMC**, la versión de RFM para
-aviación:
+Cada socio se describe con cinco métricas de comportamiento, el modelo
+{{< term lrfmc "LRFMC" >}}, una adaptación a las aerolíneas del clásico {{< term rfm "RFM" >}}
+del marketing:
 
 | | Métrica | Pregunta |
 |---|---|---|
@@ -49,9 +52,10 @@ aviación:
 | **M** | Kilómetros volados | ¿Cuánto consume? |
 | **C** | Descuento medio de sus tarifas | ¿Paga tarifa completa o compra en oferta? |
 
-Las métricas se transforman (Yeo-Johnson) y se escalan, y **K-Means** las agrupa en
-`{python} metrics["k"]` segmentos. El ingreso de cada socio **no entra al modelo**: se reserva
-para comprobar después si los segmentos difieren en valor real.
+Un algoritmo de agrupación, {{< term k-means "K-Means" >}}, reúne a los socios que se parecen en
+esas cinco métricas y forma `{python} metrics["k"]` {{< term segmento "segmentos" >}}. El
+{{< term ingreso "ingreso" >}} de cada socio **no entra al modelo**: se reserva para comprobar
+después si los segmentos difieren en valor real. Y difieren mucho.
 
 ## Resumen ejecutivo
 
@@ -62,7 +66,7 @@ para comprobar después si los segmentos difieren en valor real.
 :::
 ::: {.g-col-12 .g-col-sm-6 .g-col-lg-3 .kpi}
 [`{python} pct(vip["revenue_share"], 0)`]{.kpi-value}
-[del ingreso viene de los VIP, el `{python} pct(vip["pct"], 0)` de los socios]{.kpi-label}
+[del ingreso viene de los VIP, que son el `{python} pct(vip["pct"], 0)` de los socios]{.kpi-label}
 :::
 ::: {.g-col-12 .g-col-sm-6 .g-col-lg-3 .kpi}
 [`{python} pct(risk["pct"], 0)`]{.kpi-value}
@@ -70,7 +74,7 @@ para comprobar después si los segmentos difieren en valor real.
 :::
 ::: {.g-col-12 .g-col-sm-6 .g-col-lg-3 .kpi}
 [`{python} num(stab["seed_ari_mean"], 2)`]{.kpi-value}
-[de estabilidad (ARI entre semillas): los segmentos son reproducibles]{.kpi-label}
+[de {{< term estabilidad "estabilidad" >}} sobre un máximo de 1: repetir el análisis da los mismos segmentos]{.kpi-label}
 :::
 :::
 
@@ -107,21 +111,29 @@ summary.style.hide(axis="index").set_properties(**{"text-align": "left"})
    meses sin volar, pero los primeros pagaban tarifas casi completas y los segundos compran en
    oferta: un mismo descuento sería un error para unos u otros.
 
-El segmento explica el `{python} pct(tests.loc["revenue_total", "effect"], 0)` de la variabilidad
-del ingreso (efecto **grande**), aunque el ingreso no se usó para segmentar.
+Saber a qué segmento pertenece un socio explica el
+`{python} pct(tests.loc["revenue_total", "effect"], 0)` de las diferencias de ingreso entre
+socios (un {{< term tamano-efecto "efecto" >}} **grande**), aunque el ingreso no se usó para
+formar los segmentos.
 :::
 
 ## Cómo leer este sitio
 
-| Capítulo | Qué contiene |
-|---|---|
-| [Datos](01-datos.qmd) | Fuente, ficha del dataset y trazabilidad de la limpieza. |
-| [EDA](02-eda.qmd) | Exploración interactiva de las métricas y del perfil de los socios. |
-| [LRFMC](03-lrfmc.qmd) | Construcción de las métricas, tratamiento de la asimetría y escalado. |
-| [Clustering](04-clustering.qmd) | Elección de *k*, K-Means, estabilidad, comparación de modelos y PCA/t-SNE. |
-| [Segmentos](05-segmentos.qmd) | Perfil, nombre y recomendaciones de cada segmento. |
-| [Conclusiones](06-conclusiones.qmd) | Conclusiones de negocio, limitaciones y próximos pasos. |
+**Si tienes cinco minutos**, basta con esta página, los [Segmentos](05-segmentos.qmd) (la ficha de
+cada grupo, con sus acciones) y las [Conclusiones](06-conclusiones.qmd) (plan de acción y
+limitaciones).
 
-Todos los gráficos son interactivos: pasa el cursor por encima para ver el detalle. El código
-de cada gráfico está plegado bajo **Ver código**, y el proyecto completo (pipeline, tests y
-notebooks) se reproduce con un comando.
+**Si quieres ver cómo se hizo**, el menú *Cómo se hizo* recorre el análisis paso a paso:
+
+| Paso | Qué responde |
+|---|---|
+| [1 · Datos](01-datos.qmd) | ¿De dónde salen los datos y cómo se limpiaron? |
+| [2 · Exploración de los datos](02-eda.qmd) | ¿Cómo son los socios antes de segmentar? |
+| [3 · Métricas LRFMC](03-lrfmc.qmd) | ¿Cómo se calculan y preparan las cinco métricas? |
+| [4 · Modelo de segmentación](04-clustering.qmd) | ¿Por qué cinco segmentos y por qué K-Means? ¿Son fiables? |
+
+**¿Un término técnico?** Las palabras con subrayado de puntos muestran su definición al pasar el
+cursor (o al tocarlas en una tableta), y todas están explicadas en el [Glosario](glosario.qmd).
+
+Todos los gráficos son interactivos: pasa el cursor por encima para ver el detalle. En las páginas
+de método, el código de cada gráfico está plegado bajo **Ver código**.

@@ -1,0 +1,38 @@
+<script>
+  // Términos enlazados con el shortcode `term` (a.term): muestran su definición en un tooltip (tippy, que Quarto
+  // ya carga) al pasar el cursor o al enfocarlos con el teclado. En pantallas táctiles el primer
+  // toque abre el tooltip en vez de navegar; el tooltip lleva el enlace a la ficha del glosario.
+  document.addEventListener("DOMContentLoaded", () => {
+    const touch = window.matchMedia("(hover: none)").matches;
+    document.querySelectorAll("a.term").forEach((link) => {
+      if (typeof window.tippy !== "function") {
+        link.title = link.dataset.def;
+        return;
+      }
+      const box = document.createElement("div");
+      box.className = "term-tip";
+      const title = document.createElement("strong");
+      title.textContent = link.dataset.term;
+      const text = document.createElement("p");
+      text.textContent = link.dataset.def;
+      const more = document.createElement("a");
+      more.href = link.href;
+      more.textContent = "Ver en el glosario →";
+      box.append(title, text, more);
+      window.tippy(link, {
+        content: box,
+        theme: "quarto",
+        maxWidth: 340,
+        placement: "top",
+        interactive: true,
+        interactiveBorder: 8,
+        appendTo: () => document.body,
+        trigger: touch ? "click" : "mouseenter focus",
+        delay: touch ? 0 : [150, 0],
+      });
+      if (touch) {
+        link.addEventListener("click", (event) => event.preventDefault());
+      }
+    });
+  });
+</script>
