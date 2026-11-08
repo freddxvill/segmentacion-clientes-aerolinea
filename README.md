@@ -4,6 +4,7 @@
 [![Sitio](https://github.com/freddxvill/segmentacion-clientes-aerolinea/actions/workflows/publish.yml/badge.svg)](https://freddxvill.github.io/segmentacion-clientes-aerolinea/)
 ![Python 3.13](https://img.shields.io/badge/python-3.13-3776ab?logo=python&logoColor=white)
 [![Quarto](https://img.shields.io/badge/sitio-Quarto-4a8fc7)](https://freddxvill.github.io/segmentacion-clientes-aerolinea/)
+[![Licencia MIT](https://img.shields.io/badge/licencia-MIT-green)](LICENSE)
 
 Segmentación de los 62.044 socios de un programa de viajero frecuente de una aerolínea con el
 modelo **LRFMC** y **K-Means**: cinco segmentos con nombre comercial, perfil, pruebas estadísticas
@@ -181,3 +182,8 @@ Los gráficos son interactivos en JupyterLab, VS Code o nbviewer; en GitHub se v
 
 Python 3.13 · uv · pandas · scikit-learn · SciPy · pandera · Altair + VegaFusion · Plotly ·
 Quarto · pytest · Ruff · poethepoet · GitHub Actions + GitHub Pages.
+
+## Licencia
+
+El código se distribuye bajo la [licencia MIT](LICENSE). Los datos **no** están cubiertos por
+ella: pertenecen a su publicador en Kaggle y el CSV no se incluye en el repositorio.

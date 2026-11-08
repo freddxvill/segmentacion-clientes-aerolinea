@@ -2289,7 +2289,7 @@ wheels = [
 ]
 
 [[package]]
-name = "segmentacoin-avanzada-clientes"
+name = "segmentacion-clientes-aerolinea"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [

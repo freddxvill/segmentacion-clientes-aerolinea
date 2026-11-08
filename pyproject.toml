@@ -1,8 +1,10 @@
 [project]
-name = "segmentacoin-avanzada-clientes"
+name = "segmentacion-clientes-aerolinea"
 version = "0.1.0"
 description = "Segmentación avanzada de clientes de una aerolínea con el modelo LRFMC y K-Means."
 readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.13"
 dependencies = [
     "altair>=6.3.0",
