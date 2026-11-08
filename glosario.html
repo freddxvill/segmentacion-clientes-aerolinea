@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="es" xml:lang="es"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.31">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="Los términos técnicos del sitio, explicados sin jerga.">
+
+<title>Glosario – Segmentación LRFMC</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-e1a5c8363afafaef2c763b6775fbf3ca.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-8ef56b68f8fa1e9d2ba328e99e439f80.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-e1a5c8363afafaef2c763b6775fbf3ca.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-66877eef761f0ea22bb07511e0e88aad.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-6dbb3941f245be64c78f15ac264a6a39.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-66877eef761f0ea22bb07511e0e88aad.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "Sin resultados",
+    "search-matching-documents-text": "documentos encontrados",
+    "search-copy-link-title": "Copiar el enlace en la búsqueda",
+    "search-hide-matches-text": "Ocultar resultados adicionales",
+    "search-more-match-text": "resultado adicional en este documento",
+    "search-more-matches-text": "resultados adicionales en este documento",
+    "search-clear-button-title": "Borrar",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancelar",
+    "search-submit-button-title": "Enviar",
+    "search-label": "Buscar"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">Segmentación LRFMC</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Buscar"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Navegación de palanca" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="./index.html"> 
+<span class="menu-text">Inicio</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./05-segmentos.html"> 
+<span class="menu-text">Segmentos</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./06-conclusiones.html"> 
+<span class="menu-text">Conclusiones</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-cómo-se-hizo" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Cómo se hizo</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-cómo-se-hizo">    
+        <li>
+    <a class="dropdown-item" href="./01-datos.html">
+ <span class="dropdown-text">1 · Datos</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./02-eda.html">
+ <span class="dropdown-text">2 · Exploración de los datos</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./03-lrfmc.html">
+ <span class="dropdown-text">3 · Métricas LRFMC</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./04-clustering.html">
+ <span class="dropdown-text">4 · Modelo de segmentación</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link active" href="./glosario.html" aria-current="page"> 
+<span class="menu-text">Glosario</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="./resumen.html"> <i class="bi bi-play-circle" role="img">
+</i> 
+<span class="menu-text">Resumen interactivo</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/freddxvill/segmentacion-clientes-aerolinea"> <i class="bi bi-github" role="img" aria-label="Código en GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Alternar modo oscuro"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">En esta página</h2>
+   
+  <ul class="collapse">
+  <li><a href="#el-negocio-y-el-programa" id="toc-el-negocio-y-el-programa" class="nav-link active" data-scroll-target="#el-negocio-y-el-programa">El negocio y el programa</a></li>
+  <li><a href="#las-métricas-lrfmc" id="toc-las-métricas-lrfmc" class="nav-link" data-scroll-target="#las-métricas-lrfmc">Las métricas LRFMC</a></li>
+  <li><a href="#preparación-de-los-datos" id="toc-preparación-de-los-datos" class="nav-link" data-scroll-target="#preparación-de-los-datos">Preparación de los datos</a></li>
+  <li><a href="#agrupación-clustering" id="toc-agrupación-clustering" class="nav-link" data-scroll-target="#agrupación-clustering">Agrupación (clustering)</a></li>
+  <li><a href="#visualización-de-los-segmentos" id="toc-visualización-de-los-segmentos" class="nav-link" data-scroll-target="#visualización-de-los-segmentos">Visualización de los segmentos</a></li>
+  <li><a href="#validación-e-interpretación" id="toc-validación-e-interpretación" class="nav-link" data-scroll-target="#validación-e-interpretación">Validación e interpretación</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Glosario</h1>
+</div>
+
+<div>
+  <div class="description">
+    Los términos técnicos del sitio, explicados sin jerga.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<!--
+Cada término es un encabezado `### Nombre {#id}` y su PRIMER PÁRRAFO es la definición corta que
+aparece al pasar el cursor sobre el término en las demás páginas (shortcode `term`): que sea
+breve (una o dos frases) y se entienda sola. Los párrafos siguientes amplían con ejemplos.
+-->
+<p>Pensado para quien no se dedica a la ciencia de datos. En las demás páginas, las palabras con <strong>subrayado de puntos</strong> muestran su definición al pasar el cursor (o al tocarlas en una tableta) y enlazan a su ficha en esta página. Los términos están agrupados por tema; este índice los ordena alfabéticamente.</p>
+<div class="glosario-indice">
+<ul>
+<li><a href="#hungaro">Algoritmo húngaro</a></li>
+<li><a href="#sensibilidad">Análisis de sensibilidad</a></li>
+<li><a href="#eda">Análisis exploratorio (EDA)</a></li>
+<li><a href="#ari">ARI (Adjusted Rand Index)</a></li>
+<li><a href="#arquetipo">Arquetipo</a></li>
+<li><a href="#asimetria">Asimetría (cola larga)</a></li>
+<li><a href="#atipico">Atípico (outlier)</a></li>
+<li><a href="#baseline">Baseline por quintiles</a></li>
+<li><a href="#benchmark">Benchmark (comparación de modelos)</a></li>
+<li><a href="#c">C · Descuento medio</a></li>
+<li><a href="#ch-db">Calinski-Harabasz y Davies-Bouldin</a></li>
+<li><a href="#centroide">Centroide</a></li>
+<li><a href="#clustering">Clustering (agrupamiento)</a></li>
+<li><a href="#cluster">Clúster</a></li>
+<li><a href="#correlacion">Correlación de Spearman (ρ)</a></li>
+<li><a href="#dbscan">DBSCAN</a></li>
+<li><a href="#distancia">Distancia euclídea</a></li>
+<li><a href="#escala-log">Escala logarítmica</a></li>
+<li><a href="#escalado">Escalado (StandardScaler, RobustScaler)</a></li>
+<li><a href="#estabilidad">Estabilidad</a></li>
+<li><a href="#f">F · Frecuencia</a></li>
+<li><a href="#feature">Feature y variable de perfilado</a></li>
+<li><a href="#gmm">GMM (mezcla de gaussianas)</a></li>
+<li><a href="#grupo-control">Grupo de control y experimento A/B</a></li>
+<li><a href="#inercia">Inercia y método del codo</a></li>
+<li><a href="#ingreso">Ingreso</a></li>
+<li><a href="#k">k (número de segmentos)</a></li>
+<li><a href="#k-means">K-Means</a></li>
+<li><a href="#kpi">KPI</a></li>
+<li><a href="#kruskal">Kruskal-Wallis y ε²</a></li>
+<li><a href="#l">L · Antigüedad</a></li>
+<li><a href="#limpieza">Limpieza de datos</a></li>
+<li><a href="#loadings">Loadings (cargas)</a></li>
+<li><a href="#lrfmc">LRFMC</a></li>
+<li><a href="#m">M · Kilómetros volados</a></li>
+<li><a href="#mediana">Mediana</a></li>
+<li><a href="#muestra">Muestra y submuestra estratificada</a></li>
+<li><a href="#nivel-programa">Nivel del programa</a></li>
+<li><a href="#p-valor">p-valor y significancia estadística</a></li>
+<li><a href="#pca">PCA (análisis de componentes principales)</a></li>
+<li><a href="#percentil">Percentil, cuartil y quintil</a></li>
+<li><a href="#pipeline">Pipeline</a></li>
+<li><a href="#ffp">Programa de viajero frecuente (FFP)</a></li>
+<li><a href="#r">R · Recencia</a></li>
+<li><a href="#reduccion-dimensionalidad">Reducción de dimensionalidad</a></li>
+<li><a href="#rfm">RFM</a></li>
+<li><a href="#segmento">Segmento y segmentación</a></li>
+<li><a href="#semilla">Semilla aleatoria</a></li>
+<li><a href="#silhouette">Silhouette (coeficiente de silueta)</a></li>
+<li><a href="#tsne">t-SNE</a></li>
+<li><a href="#tamano-efecto">Tamaño del efecto</a></li>
+<li><a href="#tendencia-ingreso">Tendencia de ingreso</a></li>
+<li><a href="#transformacion">Transformación (log1p, Yeo-Johnson)</a></li>
+<li><a href="#trazabilidad">Trazabilidad (data lineage)</a></li>
+<li><a href="#trustworthiness">Trustworthiness</a></li>
+<li><a href="#v-cramer">V de Cramér</a></li>
+<li><a href="#validacion-externa">Validación externa</a></li>
+<li><a href="#nulo">Valor nulo y placeholder</a></li>
+<li><a href="#ward">Ward (clustering jerárquico)</a></li>
+<li><a href="#z-score">z-score (puntuación estándar)</a></li>
+</ul>
+</div>
+<section id="el-negocio-y-el-programa" class="level2">
+<h2 class="anchored" data-anchor-id="el-negocio-y-el-programa">El negocio y el programa</h2>
+<section id="ffp" class="level3">
+<h3 class="anchored" data-anchor-id="ffp">Programa de viajero frecuente (FFP)</h3>
+<p>Programa de fidelización de una aerolínea (<em>Frequent Flyer Program</em>): el socio acumula puntos al volar y los canjea por billetes, mejoras de clase u otros premios.</p>
+<p>Los socios suben de nivel según cuánto vuelan, y cada nivel da más ventajas. En este proyecto, cada fila de los datos es un socio del programa.</p>
+</section>
+<section id="nivel-programa" class="level3">
+<h3 class="anchored" data-anchor-id="nivel-programa">Nivel del programa</h3>
+<p>Categoría del socio dentro del programa (en los datos, <code>FFP_TIER</code>: 4, 5 o 6). Los niveles altos, 5 y 6, corresponden a quienes más vuelan.</p>
+<p>El nivel <strong>no se usó para formar los segmentos</strong>: se reservó para comprobar después si los segmentos tienen relación con él (<a href="#validacion-externa">validación externa</a>).</p>
+</section>
+<section id="segmento" class="level3">
+<h3 class="anchored" data-anchor-id="segmento">Segmento y segmentación</h3>
+<p>Un segmento es un grupo de clientes que se comportan de forma parecida. Segmentar es dividir a toda la base de clientes en esos grupos para tratar a cada uno de la forma más adecuada.</p>
+<p>En lugar de enviar la misma campaña a todos, cada segmento recibe acciones pensadas para él. Aquí los segmentos salen de un algoritmo de <a href="#clustering">agrupación</a> aplicado a las métricas <a href="#lrfmc">LRFMC</a> y luego reciben un nombre comercial (VIP, Cazadores de ofertas, etc.).</p>
+</section>
+<section id="kpi" class="level3">
+<h3 class="anchored" data-anchor-id="kpi">KPI</h3>
+<p>Indicador clave de desempeño (<em>Key Performance Indicator</em>): la cifra concreta con la que se mide si una acción funciona, por ejemplo la tasa de reactivación o el ingreso por socio.</p>
+<p>Cada recomendación del sitio lleva su KPI, para poder decidir con datos si la acción se mantiene o se descarta.</p>
+</section>
+<section id="grupo-control" class="level3">
+<h3 class="anchored" data-anchor-id="grupo-control">Grupo de control y experimento A/B</h3>
+<p>Parte de los clientes que, a propósito, no recibe una acción. Comparar sus resultados con los de quienes sí la recibieron mide el efecto real de la acción.</p>
+<p>A esa comparación se le llama experimento A/B. Sin grupo de control no se puede saber si una mejora se debe a la campaña o habría ocurrido igual, por ejemplo por la temporada.</p>
+</section>
+<section id="ingreso" class="level3">
+<h3 class="anchored" data-anchor-id="ingreso">Ingreso</h3>
+<p>Lo que pagó el socio por sus billetes en cada uno de los dos años observados (en los datos, <code>SUM_YR_1</code> y <code>SUM_YR_2</code>). Mide el valor de cada segmento, pero no se usó para formarlos.</p>
+<p>La moneda no está documentada y no descuenta costes, así que sirve para comparar segmentos entre sí, no para calcular rentabilidad.</p>
+</section>
+<section id="tendencia-ingreso" class="level3">
+<h3 class="anchored" data-anchor-id="tendencia-ingreso">Tendencia de ingreso</h3>
+<p>Compara el ingreso del año más reciente con el del anterior en una escala de −1 a 1: −1 = no generó ingresos el último año, 0 = igual que el anterior, +1 = solo generó ingresos el último año.</p>
+<p>Un valor cercano a −1 es una señal de abandono. Es una <a href="#feature">variable de perfilado</a>: describe a los segmentos, pero no entra en el modelo.</p>
+</section>
+</section>
+<section id="las-métricas-lrfmc" class="level2">
+<h2 class="anchored" data-anchor-id="las-métricas-lrfmc">Las métricas LRFMC</h2>
+<section id="rfm" class="level3">
+<h3 class="anchored" data-anchor-id="rfm">RFM</h3>
+<p>Método clásico de marketing que describe a cada cliente con tres números: hace cuánto que compró por última vez (<em>Recency</em>), cuántas veces compra (<em>Frequency</em>) y cuánto gasta (<em>Monetary</em>).</p>
+<p>Es la base de muchas segmentaciones en comercio y banca. <a href="#lrfmc">LRFMC</a> es su adaptación a las aerolíneas.</p>
+</section>
+<section id="lrfmc" class="level3">
+<h3 class="anchored" data-anchor-id="lrfmc">LRFMC</h3>
+<p>Adaptación de RFM a las aerolíneas: describe a cada socio con cinco métricas, antigüedad (L), meses sin volar (R), número de vuelos (F), kilómetros volados (M) y descuento medio de sus tarifas (C).</p>
+<p>Las dos letras nuevas aportan lo que <a href="#rfm">RFM</a> no ve en aviación: cuánto tiempo lleva el cliente con la aerolínea (L) y si compra tarifas caras o en oferta (C). Es un modelo habitual en los estudios sobre programas de viajero frecuente.</p>
+</section>
+<section id="l" class="level3">
+<h3 class="anchored" data-anchor-id="l">L · Antigüedad</h3>
+<p>Meses que lleva el socio en el programa, desde su alta hasta el final del periodo observado (31/03/2014). Un valor alto indica un socio veterano.</p>
+</section>
+<section id="r" class="level3">
+<h3 class="anchored" data-anchor-id="r">R · Recencia</h3>
+<p>Meses desde el último vuelo del socio. Un valor alto es una mala señal: hace mucho que no vuela.</p>
+</section>
+<section id="f" class="level3">
+<h3 class="anchored" data-anchor-id="f">F · Frecuencia</h3>
+<p>Número de vuelos del socio durante los dos años observados.</p>
+</section>
+<section id="m" class="level3">
+<h3 class="anchored" data-anchor-id="m">M · Kilómetros volados</h3>
+<p>Kilómetros que voló el socio en los dos años observados. En aviación miden mejor el valor del cliente que el gasto bruto, porque el precio del billete depende sobre todo de la distancia.</p>
+</section>
+<section id="c" class="level3">
+<h3 class="anchored" data-anchor-id="c">C · Descuento medio</h3>
+<p>Lo que pagó el socio, de media, en relación con la tarifa completa: 1,0 = tarifa completa, 0,5 = la mitad. Por encima de 1, cabinas premium.</p>
+<p>Un C bajo indica un cliente sensible al precio, que compra en oferta; un C alto, uno que paga por flexibilidad o comodidad.</p>
+</section>
+</section>
+<section id="preparación-de-los-datos" class="level2">
+<h2 class="anchored" data-anchor-id="preparación-de-los-datos">Preparación de los datos</h2>
+<section id="eda" class="level3">
+<h3 class="anchored" data-anchor-id="eda">Análisis exploratorio (EDA)</h3>
+<p>Primera revisión de los datos (<em>Exploratory Data Analysis</em>): gráficos y resúmenes para entender cómo son los clientes, detectar errores y decidir cómo preparar los datos antes de modelar.</p>
+</section>
+<section id="limpieza" class="level3">
+<h3 class="anchored" data-anchor-id="limpieza">Limpieza de datos</h3>
+<p>Corrección o eliminación de datos erróneos o incompletos antes del análisis: fechas imposibles, ubicaciones vacías, socios sin ingresos registrados, etc.</p>
+<p>Aquí solo se elimina a un socio si sus datos no permiten calcular las métricas; si el error está en un dato secundario (edad, ciudad), se anula ese valor y el socio se conserva.</p>
+</section>
+<section id="trazabilidad" class="level3">
+<h3 class="anchored" data-anchor-id="trazabilidad">Trazabilidad (<em>data lineage</em>)</h3>
+<p>Registro de cada cambio que sufren los datos: qué regla se aplicó, a cuántas filas y por qué. Permite auditar la limpieza y repetirla exactamente.</p>
+</section>
+<section id="nulo" class="level3">
+<h3 class="anchored" data-anchor-id="nulo">Valor nulo y <em>placeholder</em></h3>
+<p>Un valor nulo es un dato ausente. Un <em>placeholder</em> es un relleno que parece un dato pero significa «sin dato», como <code>.</code>, <code>-</code> o <code>0</code> en el campo de la ciudad.</p>
+<p>Durante la limpieza, los <em>placeholders</em> se convierten en nulos para que no se confundan con valores reales.</p>
+</section>
+<section id="mediana" class="level3">
+<h3 class="anchored" data-anchor-id="mediana">Mediana</h3>
+<p>El valor del medio: la mitad de los socios está por encima y la otra mitad por debajo. A diferencia de la media, no se deja arrastrar por unos pocos valores extremos.</p>
+<p>Por eso el sitio describe a los segmentos con medianas: si un socio hizo 200 vuelos, la media de su grupo sube mucho, pero la mediana apenas cambia.</p>
+</section>
+<section id="percentil" class="level3">
+<h3 class="anchored" data-anchor-id="percentil">Percentil, cuartil y quintil</h3>
+<p>Cortes que dividen a los socios ordenados por una métrica. El percentil 25 (P25) deja por debajo al 25 % de los socios; los cuartiles dividen en 4 grupos iguales y los quintiles, en 5.</p>
+</section>
+<section id="asimetria" class="level3">
+<h3 class="anchored" data-anchor-id="asimetria">Asimetría (cola larga)</h3>
+<p>Mide cuánto se inclina una distribución hacia un lado. Hay una «cola larga» cuando la mayoría tiene valores bajos y unos pocos, valores muy altos, como en los vuelos: casi todos vuelan poco y unos pocos, muchísimo.</p>
+<p>Un valor cercano a 0 indica una distribución equilibrada; por encima de 1, una cola larga marcada. Sin corregirla, los pocos casos extremos dominarían la segmentación.</p>
+</section>
+<section id="escala-log" class="level3">
+<h3 class="anchored" data-anchor-id="escala-log">Escala logarítmica</h3>
+<p>Eje en el que cada marca multiplica la anterior (1, 10, 100, 1.000…) en lugar de sumarle una cantidad fija. Permite ver en un mismo gráfico a socios con 2 vuelos y con 200.</p>
+</section>
+<section id="correlacion" class="level3">
+<h3 class="anchored" data-anchor-id="correlacion">Correlación de Spearman (ρ)</h3>
+<p>Mide de −1 a 1 si dos variables suben o bajan juntas: 1 = siempre suben juntas, 0 = no hay relación, −1 = cuando una sube, la otra baja.</p>
+<p>La versión de Spearman compara posiciones en un ranking en lugar de valores, así que los valores extremos no la distorsionan.</p>
+</section>
+<section id="transformacion" class="level3">
+<h3 class="anchored" data-anchor-id="transformacion">Transformación (log1p, Yeo-Johnson)</h3>
+<p>Operación matemática que «comprime» los valores muy altos de una métrica para corregir su asimetría, sin cambiar el orden de los socios: quien volaba más sigue volando más.</p>
+<p><code>log1p</code> aplica un logaritmo; Yeo-Johnson busca la intensidad de corrección adecuada para cada métrica. El proyecto usa Yeo-Johnson porque deja las cinco métricas equilibradas (ver <a href="#asimetria">asimetría</a>).</p>
+</section>
+<section id="escalado" class="level3">
+<h3 class="anchored" data-anchor-id="escalado">Escalado (StandardScaler, RobustScaler)</h3>
+<p>Paso que pone todas las métricas en una escala común, para que ninguna pese más que otra solo por sus unidades. Sin escalar, los miles de kilómetros aplastarían al descuento, que va de 0 a 1,5.</p>
+<p><code>StandardScaler</code> deja cada métrica con media 0 y desviación 1 (ver <a href="#z-score">z-score</a>); <code>RobustScaler</code> usa la mediana y los cuartiles. El proyecto usa <code>StandardScaler</code>.</p>
+</section>
+<section id="z-score" class="level3">
+<h3 class="anchored" data-anchor-id="z-score">z-score (puntuación estándar)</h3>
+<p>Cuántas desviaciones estándar se aleja un valor de la media: 0 = justo en la media, +1 = bastante por encima, −1 = bastante por debajo. Permite comparar métricas con unidades distintas.</p>
+<p>En el mapa de calor de los segmentos, un z-score de +1 en vuelos significa que el segmento vuela claramente más que el socio típico.</p>
+</section>
+<section id="feature" class="level3">
+<h3 class="anchored" data-anchor-id="feature">Feature y variable de perfilado</h3>
+<p>Una <em>feature</em> es cada dato que recibe el modelo para agrupar (aquí, las cinco métricas LRFMC). Una variable de perfilado no entra al modelo: se usa después para describir los segmentos.</p>
+<p>Las variables de perfilado del proyecto son el ingreso, su tendencia, la edad, el género y el nivel del programa. Dejarlas fuera del modelo permite usarlas para comprobar si los segmentos tienen sentido (<a href="#validacion-externa">validación externa</a>).</p>
+</section>
+<section id="pipeline" class="level3">
+<h3 class="anchored" data-anchor-id="pipeline">Pipeline</h3>
+<p>Cadena de pasos que se aplica siempre en el mismo orden, por ejemplo transformar y después escalar. Guardarla garantiza que un socio nuevo se procese exactamente igual que los socios con los que se entrenó el modelo.</p>
+</section>
+</section>
+<section id="agrupación-clustering" class="level2">
+<h2 class="anchored" data-anchor-id="agrupación-clustering">Agrupación (clustering)</h2>
+<section id="clustering" class="level3">
+<h3 class="anchored" data-anchor-id="clustering">Clustering (agrupamiento)</h3>
+<p>Técnica que forma grupos de clientes parecidos sin que nadie le diga de antemano qué grupos buscar: los descubre a partir de los datos.</p>
+<p>Se llama <em>aprendizaje no supervisado</em> porque no hay una respuesta correcta con la que comparar. Por eso los grupos se validan de otras formas: con su <a href="#estabilidad">estabilidad</a> y con <a href="#validacion-externa">validación externa</a>.</p>
+</section>
+<section id="cluster" class="level3">
+<h3 class="anchored" data-anchor-id="cluster">Clúster</h3>
+<p>Cada grupo que forma el algoritmo de agrupación. Cuando se interpreta y recibe un nombre y unas acciones, pasa a llamarse segmento.</p>
+</section>
+<section id="k-means" class="level3">
+<h3 class="anchored" data-anchor-id="k-means">K-Means</h3>
+<p>Algoritmo de agrupación que reparte a los clientes en <em>k</em> grupos de forma que cada cliente quede lo más cerca posible del centro de su grupo.</p>
+<p>Funciona por repetición: coloca <em>k</em> centros, asigna cada socio al más cercano, mueve cada centro al promedio de sus socios y repite hasta que nada cambia. Es rápido, fácil de explicar y de aplicar a socios nuevos. Es el modelo elegido en este proyecto, con <em>k</em> = 5.</p>
+</section>
+<section id="k" class="level3">
+<h3 class="anchored" data-anchor-id="k">k (número de segmentos)</h3>
+<p>Cuántos grupos debe formar K-Means. El algoritmo no lo decide solo: se prueban varios valores y se elige con métricas como el <a href="#inercia">codo</a> o el <a href="#silhouette">silhouette</a> y con criterio de negocio.</p>
+</section>
+<section id="centroide" class="level3">
+<h3 class="anchored" data-anchor-id="centroide">Centroide</h3>
+<p>El «socio promedio» de un grupo: el punto central, cuyas métricas son la media de las de todos los socios del grupo. Resume el perfil típico del segmento.</p>
+</section>
+<section id="distancia" class="level3">
+<h3 class="anchored" data-anchor-id="distancia">Distancia euclídea</h3>
+<p>La distancia «en línea recta» entre dos socios, calculada con sus cinco métricas a la vez. Dos socios con métricas parecidas están cerca, y K-Means agrupa a los que están cerca.</p>
+</section>
+<section id="inercia" class="level3">
+<h3 class="anchored" data-anchor-id="inercia">Inercia y método del codo</h3>
+<p>La inercia suma lo lejos que está cada socio del centro de su grupo: cuanto menor, más compactos los grupos. Siempre baja al añadir grupos, así que se busca el «codo», donde añadir uno más ya apenas mejora.</p>
+</section>
+<section id="silhouette" class="level3">
+<h3 class="anchored" data-anchor-id="silhouette">Silhouette (coeficiente de silueta)</h3>
+<p>Mide de −1 a 1 si cada socio está más cerca de su propio grupo que del grupo vecino: cerca de 1 = grupos bien separados, 0 = socio en la frontera, negativo = quizá encajaría mejor en otro grupo.</p>
+<p>Con clientes reales, cuyo comportamiento cambia de forma gradual, son habituales valores de 0,2 a 0,3: los grupos se tocan, pero siguen siendo útiles. El <em>silhouette plot</em> muestra el valor de cada socio, agrupado por clúster.</p>
+</section>
+<section id="ch-db" class="level3">
+<h3 class="anchored" data-anchor-id="ch-db">Calinski-Harabasz y Davies-Bouldin</h3>
+<p>Dos métricas que comparan lo separados que están los grupos entre sí con lo dispersos que son por dentro. En Calinski-Harabasz, más alto es mejor; en Davies-Bouldin, más bajo es mejor.</p>
+</section>
+<section id="semilla" class="level3">
+<h3 class="anchored" data-anchor-id="semilla">Semilla aleatoria</h3>
+<p>Número que fija el punto de partida de un proceso con azar, como la colocación inicial de los centros de K-Means. Con la misma semilla, el resultado se repite exactamente.</p>
+<p>Cambiar la semilla y comprobar que los segmentos no cambian es una forma de medir su <a href="#estabilidad">estabilidad</a>.</p>
+</section>
+<section id="estabilidad" class="level3">
+<h3 class="anchored" data-anchor-id="estabilidad">Estabilidad</h3>
+<p>Que el modelo dé los mismos segmentos aunque cambie su punto de partida o la muestra de socios. Es el criterio principal de calidad del proyecto: un segmento que cambia al repetir el análisis no sirve para decidir acciones.</p>
+<p>Se mide con el <a href="#ari">ARI</a>, repitiendo el modelo con distintas <a href="#semilla">semillas</a> y con distintas <a href="#muestra">submuestras</a> de socios.</p>
+</section>
+<section id="ari" class="level3">
+<h3 class="anchored" data-anchor-id="ari">ARI (Adjusted Rand Index)</h3>
+<p>Mide de 0 a 1 cuánto coinciden dos formas de agrupar a los mismos socios: 1 = idénticas, 0 = coincidencia al azar. En este proyecto, por encima de 0,9 se considera estable.</p>
+<p>Descuenta las coincidencias que se darían por pura casualidad, por eso es más exigente que un simple porcentaje de acuerdo.</p>
+</section>
+<section id="muestra" class="level3">
+<h3 class="anchored" data-anchor-id="muestra">Muestra y submuestra estratificada</h3>
+<p>Parte de los socios elegida al azar, que se usa cuando un cálculo es muy lento con todos. Es estratificada si conserva la proporción de cada grupo: si los VIP son el 21 % del total, también lo son de la muestra.</p>
+</section>
+<section id="benchmark" class="level3">
+<h3 class="anchored" data-anchor-id="benchmark">Benchmark (comparación de modelos)</h3>
+<p>Comparar el modelo elegido con alternativas sobre los mismos datos y con las mismas métricas, para justificar la elección.</p>
+<p>Aquí K-Means se comparó con una segmentación por reglas (<a href="#baseline">quintiles</a>), con <a href="#gmm">GMM</a>, con <a href="#ward">Ward</a> y con <a href="#dbscan">DBSCAN</a>.</p>
+</section>
+<section id="baseline" class="level3">
+<h3 class="anchored" data-anchor-id="baseline">Baseline por quintiles</h3>
+<p>Segmentación de referencia sin algoritmos: cada métrica se puntúa de 1 a 5 según el quintil del socio y se aplican reglas fijas (Campeones, Leales, En riesgo…). Es lo que haría un equipo con una hoja de cálculo.</p>
+<p>Si un modelo no supera con claridad a esta línea base (<em>baseline</em>), no compensa su complejidad. Ver <a href="#percentil">percentil, cuartil y quintil</a>.</p>
+</section>
+<section id="gmm" class="level3">
+<h3 class="anchored" data-anchor-id="gmm">GMM (mezcla de gaussianas)</h3>
+<p>Algoritmo de agrupación que supone que cada grupo tiene forma de nube elíptica y da a cada socio una probabilidad de pertenecer a cada grupo, en lugar de una asignación tajante.</p>
+<p>La forma de las nubes se eligió con el BIC, un criterio que premia el buen ajuste pero penaliza la complejidad. Una probabilidad baja señala a un socio en la frontera entre dos segmentos.</p>
+</section>
+<section id="ward" class="level3">
+<h3 class="anchored" data-anchor-id="ward">Ward (clustering jerárquico)</h3>
+<p>Algoritmo que empieza con cada socio como un grupo propio y va uniendo, paso a paso, los dos grupos más parecidos hasta quedarse con el número deseado.</p>
+<p>Ward es la regla de unión que menos dispersa los grupos. Su memoria crece muy deprisa con el número de clientes, así que aquí se entrena con una <a href="#muestra">muestra</a>.</p>
+</section>
+<section id="dbscan" class="level3">
+<h3 class="anchored" data-anchor-id="dbscan">DBSCAN</h3>
+<p>Algoritmo que forma grupos con las zonas donde los socios están muy juntos y deja fuera, como «ruido», a los socios aislados. No necesita que se le diga cuántos grupos buscar.</p>
+<p>Su parámetro principal, <code>eps</code>, es la distancia máxima para considerar vecinos a dos socios, y se elige con el gráfico <em>k-distance</em>. En este proyecto no encontró grupos separados, pero sirvió para marcar <a href="#atipico">atípicos</a>.</p>
+</section>
+<section id="atipico" class="level3">
+<h3 class="anchored" data-anchor-id="atipico">Atípico (<em>outlier</em>)</h3>
+<p>Cliente con una combinación de métricas poco común, lejos del resto. No forma un segmento propio, pero conviene revisarlo antes de incluirlo en campañas masivas.</p>
+</section>
+</section>
+<section id="visualización-de-los-segmentos" class="level2">
+<h2 class="anchored" data-anchor-id="visualización-de-los-segmentos">Visualización de los segmentos</h2>
+<section id="reduccion-dimensionalidad" class="level3">
+<h3 class="anchored" data-anchor-id="reduccion-dimensionalidad">Reducción de dimensionalidad</h3>
+<p>Técnicas que resumen muchas variables en dos o tres para poder dibujar a los socios en un plano o en 3D, intentando conservar quién se parece a quién.</p>
+<p>Cada socio se describe con cinco métricas, imposibles de dibujar a la vez. Aquí solo se usan para visualizar: los segmentos se formaron con las cinco métricas.</p>
+</section>
+<section id="pca" class="level3">
+<h3 class="anchored" data-anchor-id="pca">PCA (análisis de componentes principales)</h3>
+<p>Técnica que crea nuevos ejes, las <em>componentes principales</em>, combinando las métricas originales. El primero recoge la mayor parte de las diferencias entre socios, el segundo la mayor parte de lo que queda, y así sucesivamente.</p>
+<p>La <em>varianza explicada</em> indica qué parte de las diferencias entre socios recoge cada componente. El <em>biplot</em> dibuja a los socios sobre las dos primeras componentes, con flechas que indican hacia dónde crece cada métrica. Ver <a href="#loadings">loadings</a>.</p>
+</section>
+<section id="loadings" class="level3">
+<h3 class="anchored" data-anchor-id="loadings">Loadings (cargas)</h3>
+<p>El peso de cada métrica original en una componente de PCA. Sirven para interpretarla: si los vuelos y los kilómetros pesan mucho en la primera componente, esa componente mide «actividad».</p>
+</section>
+<section id="tsne" class="level3">
+<h3 class="anchored" data-anchor-id="tsne">t-SNE</h3>
+<p>Técnica que dibuja a los socios en un plano colocando cerca a los que se parecen. Es buena para ver si los grupos están bien formados, pero el tamaño de cada región y la distancia entre regiones no significan nada.</p>
+<p>Su parámetro <em>perplexity</em> indica a cuántos vecinos atiende cada socio. Si las conclusiones se mantienen con varios valores, son fiables.</p>
+</section>
+<section id="trustworthiness" class="level3">
+<h3 class="anchored" data-anchor-id="trustworthiness">Trustworthiness</h3>
+<p>Mide de 0 a 1 qué parte de los vecinos más cercanos de cada socio siguen siendo vecinos en el gráfico 2D o 3D. Cerca de 1 = el mapa es fiel a los datos.</p>
+</section>
+</section>
+<section id="validación-e-interpretación" class="level2">
+<h2 class="anchored" data-anchor-id="validación-e-interpretación">Validación e interpretación</h2>
+<section id="validacion-externa" class="level3">
+<h3 class="anchored" data-anchor-id="validacion-externa">Validación externa</h3>
+<p>Comprobar los segmentos con información que no se usó para formarlos, como el ingreso, el nivel del programa, la edad o el género. Si los segmentos difieren en esas variables, captan algo real.</p>
+</section>
+<section id="p-valor" class="level3">
+<h3 class="anchored" data-anchor-id="p-valor">p-valor y significancia estadística</h3>
+<p>Probabilidad de observar una diferencia así de grande por pura casualidad. Por debajo de 0,05 se dice que la diferencia es «estadísticamente significativa».</p>
+<p>Con más de 60.000 socios, hasta las diferencias minúsculas resultan significativas. Por eso el sitio se fija en el <a href="#tamano-efecto">tamaño del efecto</a>.</p>
+</section>
+<section id="tamano-efecto" class="level3">
+<h3 class="anchored" data-anchor-id="tamano-efecto">Tamaño del efecto</h3>
+<p>Mide cuánto difieren los segmentos, no solo si difieren. Se etiqueta como pequeño, mediano o grande según umbrales habituales en estadística.</p>
+<p>El proyecto usa dos medidas que van de 0 (ninguna diferencia) a 1: la <a href="#v-cramer">V de Cramér</a>, para variables de categorías, y la <a href="#kruskal">ε² de Kruskal-Wallis</a>, para variables numéricas.</p>
+</section>
+<section id="v-cramer" class="level3">
+<h3 class="anchored" data-anchor-id="v-cramer">V de Cramér</h3>
+<p>Mide de 0 a 1 la relación entre dos variables de categorías, como segmento y nivel del programa: 0 = el nivel se reparte igual en todos los segmentos, 1 = el segmento determina el nivel.</p>
+<p>Se calcula a partir de la prueba chi-cuadrado. Umbrales usados: desde 0,07 pequeño, desde 0,21 mediano y desde 0,35 grande.</p>
+</section>
+<section id="kruskal" class="level3">
+<h3 class="anchored" data-anchor-id="kruskal">Kruskal-Wallis y ε²</h3>
+<p>Prueba que compara una variable numérica, como el ingreso o la edad, entre varios grupos. Su ε² (épsilon cuadrado) indica de 0 a 1 qué parte de las diferencias entre socios explica el grupo.</p>
+<p>Trabaja con posiciones en un ranking en lugar de valores, para que los extremos no la distorsionen. Umbrales usados: desde 0,01 pequeño, desde 0,06 mediano y desde 0,14 grande. Un ε² alto en ingreso significa que, sabiendo el segmento de un socio, ya se sabe buena parte de cuánto aporta.</p>
+</section>
+<section id="arquetipo" class="level3">
+<h3 class="anchored" data-anchor-id="arquetipo">Arquetipo</h3>
+<p>Regla escrita que define un nombre de segmento, por ejemplo «VIP = vuela mucho, recorre muchos kilómetros y voló hace poco». Cada segmento recibe el nombre del arquetipo que mejor describe a su socio promedio.</p>
+</section>
+<section id="hungaro" class="level3">
+<h3 class="anchored" data-anchor-id="hungaro">Algoritmo húngaro</h3>
+<p>Método matemático para repartir tareas de forma óptima. Aquí reparte los cinco nombres entre los cinco segmentos de modo que el encaje total sea el mejor posible y ningún nombre se repita.</p>
+</section>
+<section id="sensibilidad" class="level3">
+<h3 class="anchored" data-anchor-id="sensibilidad">Análisis de sensibilidad</h3>
+<p>Comprobar si una conclusión cambia al modificar los supuestos. Aquí se alteraron al azar los pesos de las reglas de nombres (hasta ±30 %) para verificar que cada segmento conserva su nombre.</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script>
+  // Los gráficos Altair con width="container" que están en una pestaña oculta o en un bloque
+  // plegado se dibujan con ancho 0. vega-embed recalcula el ancho con el evento "resize" de la
+  // ventana, así que se lanza uno cada vez que se muestra una pestaña o se despliega un bloque.
+  for (const shown of ["shown.bs.tab", "shown.bs.collapse"]) {
+    document.addEventListener(shown, () => window.dispatchEvent(new Event("resize")));
+  }
+</script>
+<script>
+  // Términos enlazados con el shortcode `term` (a.term): muestran su definición en un tooltip (tippy, que Quarto
+  // ya carga) al pasar el cursor o al enfocarlos con el teclado. En pantallas táctiles el primer
+  // toque abre el tooltip en vez de navegar; el tooltip lleva el enlace a la ficha del glosario.
+  document.addEventListener("DOMContentLoaded", () => {
+    const touch = window.matchMedia("(hover: none)").matches;
+    document.querySelectorAll("a.term").forEach((link) => {
+      if (typeof window.tippy !== "function") {
+        link.title = link.dataset.def;
+        return;
+      }
+      const box = document.createElement("div");
+      box.className = "term-tip";
+      const title = document.createElement("strong");
+      title.textContent = link.dataset.term;
+      const text = document.createElement("p");
+      text.textContent = link.dataset.def;
+      const more = document.createElement("a");
+      more.href = link.href;
+      more.textContent = "Ver en el glosario →";
+      box.append(title, text, more);
+      window.tippy(link, {
+        content: box,
+        theme: "quarto",
+        maxWidth: 340,
+        placement: "top",
+        interactive: true,
+        interactiveBorder: 8,
+        appendTo: () => document.body,
+        trigger: touch ? "click" : "mouseenter focus",
+        delay: touch ? 0 : [150, 0],
+      });
+      if (touch) {
+        link.addEventListener("click", (event) => event.preventDefault());
+      }
+    });
+  });
+</script>
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copiado");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copiado");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/freddxvill\.github\.io\/segmentacion-clientes-aerolinea\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+      &nbsp;
+    </div>   
+    <div class="nav-footer-center">
+<p>Proyecto de portafolio · Segmentación avanzada de clientes</p>
+</div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

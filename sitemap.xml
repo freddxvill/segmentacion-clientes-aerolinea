@@ -1,31 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://freddxvill.github.io/segmentacion-clientes-aerolinea/04-clustering.html</loc>
-    <lastmod>2026-10-21T05:18:48.049Z</lastmod>
-  </url>
-  <url>
-    <loc>https://freddxvill.github.io/segmentacion-clientes-aerolinea/05-segmentos.html</loc>
-    <lastmod>2026-10-21T05:18:48.049Z</lastmod>
-  </url>
-  <url>
-    <loc>https://freddxvill.github.io/segmentacion-clientes-aerolinea/01-datos.html</loc>
-    <lastmod>2026-10-21T05:18:48.049Z</lastmod>
-  </url>
-  <url>
-    <loc>https://freddxvill.github.io/segmentacion-clientes-aerolinea/06-conclusiones.html</loc>
-    <lastmod>2026-10-21T05:18:48.049Z</lastmod>
-  </url>
-  <url>
-    <loc>https://freddxvill.github.io/segmentacion-clientes-aerolinea/02-eda.html</loc>
-    <lastmod>2026-10-21T05:18:48.049Z</lastmod>
-  </url>
-  <url>
     <loc>https://freddxvill.github.io/segmentacion-clientes-aerolinea/03-lrfmc.html</loc>
-    <lastmod>2026-10-21T05:18:48.049Z</lastmod>
+    <lastmod>2026-11-08T22:42:23.215Z</lastmod>
   </url>
   <url>
     <loc>https://freddxvill.github.io/segmentacion-clientes-aerolinea/index.html</loc>
-    <lastmod>2026-10-21T05:18:48.057Z</lastmod>
+    <lastmod>2026-11-08T22:42:23.222Z</lastmod>
+  </url>
+  <url>
+    <loc>https://freddxvill.github.io/segmentacion-clientes-aerolinea/glosario.html</loc>
+    <lastmod>2026-11-08T22:42:23.222Z</lastmod>
+  </url>
+  <url>
+    <loc>https://freddxvill.github.io/segmentacion-clientes-aerolinea/02-eda.html</loc>
+    <lastmod>2026-11-08T22:42:23.215Z</lastmod>
+  </url>
+  <url>
+    <loc>https://freddxvill.github.io/segmentacion-clientes-aerolinea/04-clustering.html</loc>
+    <lastmod>2026-11-08T22:42:23.215Z</lastmod>
+  </url>
+  <url>
+    <loc>https://freddxvill.github.io/segmentacion-clientes-aerolinea/01-datos.html</loc>
+    <lastmod>2026-11-08T22:42:23.215Z</lastmod>
+  </url>
+  <url>
+    <loc>https://freddxvill.github.io/segmentacion-clientes-aerolinea/05-segmentos.html</loc>
+    <lastmod>2026-11-08T22:42:23.215Z</lastmod>
+  </url>
+  <url>
+    <loc>https://freddxvill.github.io/segmentacion-clientes-aerolinea/06-conclusiones.html</loc>
+    <lastmod>2026-11-08T22:42:23.215Z</lastmod>
   </url>
 </urlset>

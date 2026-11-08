@@ -8,7 +8,7 @@
 
 <meta name="description" content="Distribuciones, relaciones y perfil de los socios del programa de viajero frecuente.">
 
-<title>Análisis exploratorio – Segmentación LRFMC</title>
+<title>Exploración de los datos – Segmentación LRFMC</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -77,9 +77,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="site_libs/quarto-html/quarto-syntax-highlighting-e1a5c8363afafaef2c763b6775fbf3ca.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-628db3fb6a0efd94e422bffd96040bf0.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="site_libs/bootstrap/bootstrap-dark-8d74bbc2ee5d6c9226c9607137fb9405.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="site_libs/bootstrap/bootstrap-628db3fb6a0efd94e422bffd96040bf0.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-66877eef761f0ea22bb07511e0e88aad.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-6dbb3941f245be64c78f15ac264a6a39.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-66877eef761f0ea22bb07511e0e88aad.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -298,22 +298,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span class="menu-text">Inicio</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="./01-datos.html"> 
-<span class="menu-text">Datos</span></a>
-  </li>  
-  <li class="nav-item">
-    <a class="nav-link active" href="./02-eda.html" aria-current="page"> 
-<span class="menu-text">EDA</span></a>
-  </li>  
-  <li class="nav-item">
-    <a class="nav-link" href="./03-lrfmc.html"> 
-<span class="menu-text">LRFMC</span></a>
-  </li>  
-  <li class="nav-item">
-    <a class="nav-link" href="./04-clustering.html"> 
-<span class="menu-text">Clustering</span></a>
-  </li>  
-  <li class="nav-item">
     <a class="nav-link" href="./05-segmentos.html"> 
 <span class="menu-text">Segmentos</span></a>
   </li>  
@@ -321,8 +305,40 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <a class="nav-link" href="./06-conclusiones.html"> 
 <span class="menu-text">Conclusiones</span></a>
   </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-cómo-se-hizo" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Cómo se hizo</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-cómo-se-hizo">    
+        <li>
+    <a class="dropdown-item" href="./01-datos.html">
+ <span class="dropdown-text">1 · Datos</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./02-eda.html">
+ <span class="dropdown-text">2 · Exploración de los datos</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./03-lrfmc.html">
+ <span class="dropdown-text">3 · Métricas LRFMC</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./04-clustering.html">
+ <span class="dropdown-text">4 · Modelo de segmentación</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="./glosario.html"> 
+<span class="menu-text">Glosario</span></a>
+  </li>  
 </ul>
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="./resumen.html"> <i class="bi bi-play-circle" role="img">
+</i> 
+<span class="menu-text">Resumen interactivo</span></a>
+  </li>  
   <li class="nav-item compact">
     <a class="nav-link" href="https://github.com/freddxvill/segmentacion-clientes-aerolinea"> <i class="bi bi-github" role="img" aria-label="Código en GitHub">
 </i> 
@@ -364,7 +380,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Análisis exploratorio</h1>
+<h1 class="title">Exploración de los datos</h1>
 </div>
 
 <div>
@@ -386,7 +402,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>Exploración de los <strong>62.044 socios</strong> del dataset limpio (ver <a href="./01-datos.html">Datos</a>). Todos los gráficos son interactivos: pasa el cursor para ver el detalle y usa los controles bajo cada gráfico. Las métricas LRFMC se calculan con las fórmulas del proyecto: <strong>L</strong> = meses desde el alta, <strong>R</strong> = meses desde el último vuelo, <strong>F</strong> = vuelos, <strong>M</strong> = km volados y <strong>C</strong> = descuento medio.</p>
+<div class="en-breve">
+<p><span class="en-breve-titulo">En pocas palabras</span></p>
+<ul>
+<li>Antes de segmentar se revisó cómo se reparte cada métrica entre los socios y cómo se relacionan entre sí.</li>
+<li>Unos pocos socios vuelan muchísimo más que el resto (más de 200 vuelos, frente a una mediana de 7): hay que corregir esa «cola larga» para que no dominen la segmentación.</li>
+<li>El nivel del programa solo distingue a la élite: los niveles 5 y 6 son el 8 % de los socios y generan el 30 % del ingreso. El resto es un bloque grande y variado que la segmentación tiene que abrir.</li>
+<li>Hay una señal clara de abandono: el 18 % de los socios no generó ingresos en el último año.</li>
+</ul>
+</div>
+<p><a href="./glosario.html#eda" class="term" data-def="Primera revisión de los datos (Exploratory Data Analysis): gráficos y resúmenes para entender cómo son los clientes, detectar errores y decidir cómo preparar los datos antes de modelar." data-term="Análisis exploratorio (EDA)">Exploración</a> de los <strong>62.044 socios</strong> del dataset limpio (ver <a href="./01-datos.html">Datos</a>). Todos los gráficos son interactivos: pasa el cursor para ver el detalle y usa los controles bajo cada gráfico. Las métricas <a href="./glosario.html#lrfmc" class="term" data-def="Adaptación de RFM a las aerolíneas: describe a cada socio con cinco métricas, antigüedad (L), meses sin volar (R), número de vuelos (F), kilómetros volados (M) y descuento medio de sus tarifas (C)." data-term="LRFMC">LRFMC</a> son: <strong>L</strong> = meses desde el alta, <strong>R</strong> = meses desde el último vuelo, <strong>F</strong> = vuelos, <strong>M</strong> = km volados y <strong>C</strong> = descuento medio.</p>
 <section id="distribución-de-las-métricas-lrfmc" class="level2">
 <h2 class="anchored" data-anchor-id="distribución-de-las-métricas-lrfmc">Distribución de las métricas LRFMC</h2>
 <div id="cell-fig-distribucion" class="cell" data-execution_count="2">
@@ -399,23 +424,23 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div aria-describedby="fig-distribucion-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 
 <style>
-  #altair-viz-060ad73ea88843b99f04bc52bb15dfdf.vega-embed {
+  #altair-viz-3e55e0c606324aa683d890b7ca62bab7.vega-embed {
     width: 100%;
     display: flex;
   }
 
-  #altair-viz-060ad73ea88843b99f04bc52bb15dfdf.vega-embed details,
-  #altair-viz-060ad73ea88843b99f04bc52bb15dfdf.vega-embed details summary {
+  #altair-viz-3e55e0c606324aa683d890b7ca62bab7.vega-embed details,
+  #altair-viz-3e55e0c606324aa683d890b7ca62bab7.vega-embed details summary {
     position: relative;
   }
 </style>
-<div id="altair-viz-060ad73ea88843b99f04bc52bb15dfdf"></div>
+<div id="altair-viz-3e55e0c606324aa683d890b7ca62bab7"></div>
 <script type="text/javascript">
   var VEGA_DEBUG = (typeof VEGA_DEBUG == "undefined") ? {} : VEGA_DEBUG;
   (function(spec, embedOpt){
     let outputDiv = document.currentScript.previousElementSibling;
-    if (outputDiv.id !== "altair-viz-060ad73ea88843b99f04bc52bb15dfdf") {
-      outputDiv = document.getElementById("altair-viz-060ad73ea88843b99f04bc52bb15dfdf");
+    if (outputDiv.id !== "altair-viz-3e55e0c606324aa683d890b7ca62bab7") {
+      outputDiv = document.getElementById("altair-viz-3e55e0c606324aa683d890b7ca62bab7");
     }
 
     const paths = {
@@ -473,8 +498,8 @@ Figura&nbsp;1: Histograma de cada métrica LRFMC. Cambia la variable y la escala
 </div>
 </div>
 <div class="insight">
-<p><strong>Qué vemos.</strong> La frecuencia y los kilómetros tienen una cola larga a la derecha (asimetría de 3,20 y 3,87): el socio mediano hizo 7 vuelos y 10.200 km en dos años, pero hay socios con más de 200 vuelos. En escala logarítmica ambas se vuelven casi simétricas. La recencia se concentra en los primeros meses (mediana 3,5) y el descuento medio se agrupa en torno a 0,71.</p>
-<p><strong>Qué implica.</strong> K-Means usa distancias euclídeas: sin transformar, unos pocos viajeros intensivos dominarían los centroides. Hace falta corregir la asimetría antes de escalar.</p>
+<p><strong>Qué vemos.</strong> La frecuencia y los kilómetros tienen una cola larga a la derecha (<a href="./glosario.html#asimetria" class="term" data-def="Mide cuánto se inclina una distribución hacia un lado. Hay una «cola larga» cuando la mayoría tiene valores bajos y unos pocos, valores muy altos, como en los vuelos: casi todos vuelan poco y unos pocos, muchísimo." data-term="Asimetría (cola larga)">asimetría</a> de 3,20 y 3,87): el socio <a href="./glosario.html#mediana" class="term" data-def="El valor del medio: la mitad de los socios está por encima y la otra mitad por debajo. A diferencia de la media, no se deja arrastrar por unos pocos valores extremos." data-term="Mediana">mediano</a> hizo 7 vuelos y 10.200 km en dos años, pero hay socios con más de 200 vuelos. En <a href="./glosario.html#escala-log" class="term" data-def="Eje en el que cada marca multiplica la anterior (1, 10, 100, 1.000…) en lugar de sumarle una cantidad fija. Permite ver en un mismo gráfico a socios con 2 vuelos y con 200." data-term="Escala logarítmica">escala logarítmica</a> ambas se vuelven casi simétricas. La recencia se concentra en los primeros meses (mediana 3,5) y el descuento medio se agrupa en torno a 0,71.</p>
+<p><strong>Qué implica.</strong> <a href="./glosario.html#k-means" class="term" data-def="Algoritmo de agrupación que reparte a los clientes en k grupos de forma que cada cliente quede lo más cerca posible del centro de su grupo." data-term="K-Means">K-Means</a> agrupa por <a href="./glosario.html#distancia" class="term" data-def="La distancia «en línea recta» entre dos socios, calculada con sus cinco métricas a la vez. Dos socios con métricas parecidas están cerca, y K-Means agrupa a los que están cerca." data-term="Distancia euclídea">distancia</a>: sin corregir la cola larga, unos pocos viajeros intensivos dominarían el perfil de cada grupo. Hace falta corregir la asimetría antes de escalar.</p>
 </div>
 </section>
 <section id="efecto-de-las-transformaciones" class="level2">
@@ -489,23 +514,23 @@ Figura&nbsp;1: Histograma de cada métrica LRFMC. Cambia la variable y la escala
 <div aria-describedby="fig-asimetria-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 
 <style>
-  #altair-viz-c9cf5698c957483192f178793c7a4f0f.vega-embed {
+  #altair-viz-2b3899f73d98493db8b4370891ddc45a.vega-embed {
     width: 100%;
     display: flex;
   }
 
-  #altair-viz-c9cf5698c957483192f178793c7a4f0f.vega-embed details,
-  #altair-viz-c9cf5698c957483192f178793c7a4f0f.vega-embed details summary {
+  #altair-viz-2b3899f73d98493db8b4370891ddc45a.vega-embed details,
+  #altair-viz-2b3899f73d98493db8b4370891ddc45a.vega-embed details summary {
     position: relative;
   }
 </style>
-<div id="altair-viz-c9cf5698c957483192f178793c7a4f0f"></div>
+<div id="altair-viz-2b3899f73d98493db8b4370891ddc45a"></div>
 <script type="text/javascript">
   var VEGA_DEBUG = (typeof VEGA_DEBUG == "undefined") ? {} : VEGA_DEBUG;
   (function(spec, embedOpt){
     let outputDiv = document.currentScript.previousElementSibling;
-    if (outputDiv.id !== "altair-viz-c9cf5698c957483192f178793c7a4f0f") {
-      outputDiv = document.getElementById("altair-viz-c9cf5698c957483192f178793c7a4f0f");
+    if (outputDiv.id !== "altair-viz-2b3899f73d98493db8b4370891ddc45a") {
+      outputDiv = document.getElementById("altair-viz-2b3899f73d98493db8b4370891ddc45a");
     }
 
     const paths = {
@@ -563,8 +588,8 @@ Figura&nbsp;2: Forma de cada métrica estandarizada (z) según la transformació
 </div>
 </div>
 <div class="insight">
-<p><strong>Qué vemos.</strong> <code>log1p</code> corrige M y R, pero deja la frecuencia con asimetría 0,54 y el descuento con 0,42. <strong>Yeo-Johnson</strong> deja las cinco métricas con |asimetría| &lt; 0,1 (F: 0,09).</p>
-<p><strong>Qué implica.</strong> Yeo-Johnson es la candidata principal para la Fase 5; además admite ceros, a diferencia de Box-Cox. <code>log1p</code> queda como alternativa más interpretable.</p>
+<p><strong>Qué vemos.</strong> Se probaron dos <a href="./glosario.html#transformacion" class="term" data-def="Operación matemática que «comprime» los valores muy altos de una métrica para corregir su asimetría, sin cambiar el orden de los socios: quien volaba más sigue volando más." data-term="Transformación (log1p, Yeo-Johnson)">transformaciones</a>. <code>log1p</code> corrige M y R, pero deja la frecuencia con asimetría 0,54 y el descuento con 0,42. <strong>Yeo-Johnson</strong> deja las cinco métricas con |asimetría| &lt; 0,1 (F: 0,09).</p>
+<p><strong>Qué implica.</strong> Yeo-Johnson es la candidata principal para preparar las métricas (ver <a href="./03-lrfmc.html">Métricas LRFMC</a>); además admite ceros, a diferencia de Box-Cox. <code>log1p</code> queda como alternativa más fácil de interpretar.</p>
 </div>
 </section>
 <section id="correlación-entre-variables" class="level2">
@@ -579,23 +604,23 @@ Figura&nbsp;2: Forma de cada métrica estandarizada (z) según la transformació
 <div aria-describedby="fig-correlacion-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 
 <style>
-  #altair-viz-2a9cfad6c94e4400869f4afdf2c81621.vega-embed {
+  #altair-viz-a8a83837c7e24924a996c71941cacf1e.vega-embed {
     width: 100%;
     display: flex;
   }
 
-  #altair-viz-2a9cfad6c94e4400869f4afdf2c81621.vega-embed details,
-  #altair-viz-2a9cfad6c94e4400869f4afdf2c81621.vega-embed details summary {
+  #altair-viz-a8a83837c7e24924a996c71941cacf1e.vega-embed details,
+  #altair-viz-a8a83837c7e24924a996c71941cacf1e.vega-embed details summary {
     position: relative;
   }
 </style>
-<div id="altair-viz-2a9cfad6c94e4400869f4afdf2c81621"></div>
+<div id="altair-viz-a8a83837c7e24924a996c71941cacf1e"></div>
 <script type="text/javascript">
   var VEGA_DEBUG = (typeof VEGA_DEBUG == "undefined") ? {} : VEGA_DEBUG;
   (function(spec, embedOpt){
     let outputDiv = document.currentScript.previousElementSibling;
-    if (outputDiv.id !== "altair-viz-2a9cfad6c94e4400869f4afdf2c81621") {
-      outputDiv = document.getElementById("altair-viz-2a9cfad6c94e4400869f4afdf2c81621");
+    if (outputDiv.id !== "altair-viz-a8a83837c7e24924a996c71941cacf1e") {
+      outputDiv = document.getElementById("altair-viz-a8a83837c7e24924a996c71941cacf1e");
     }
 
     const paths = {
@@ -653,8 +678,8 @@ Figura&nbsp;3: Correlación de Spearman (por rangos, robusta a la asimetría) en
 </div>
 </div>
 <div class="insight">
-<p><strong>Qué vemos.</strong> F y M están muy correlacionadas (ρ = 0,90) y ambas se mueven con el ingreso y los puntos. La recencia va en sentido contrario a la frecuencia (ρ = -0,58): quien vuela poco, además, hace tiempo que no vuela. El descuento (C) es casi independiente del resto (|ρ| ≤ 0,12 con las demás métricas LRFMC).</p>
-<p><strong>Qué implica.</strong> F y M aportan información parecida, así que en conjunto pesan casi el doble en la distancia; conviene tenerlo presente al interpretar los clústeres (la PCA de la Fase 8 lo hará visible). C, en cambio, aporta una dimensión propia: la <strong>sensibilidad al precio</strong>. Que M correlacione tanto con el ingreso valida usar los km como medida del valor.</p>
+<p><strong>Qué vemos.</strong> F y M están muy <a href="./glosario.html#correlacion" class="term" data-def="Mide de −1 a 1 si dos variables suben o bajan juntas: 1 = siempre suben juntas, 0 = no hay relación, −1 = cuando una sube, la otra baja." data-term="Correlación de Spearman (ρ)">correlacionadas</a> (ρ = 0,90, donde 1 = suben siempre juntas) y ambas se mueven con el ingreso y los puntos. La recencia va en sentido contrario a la frecuencia (ρ = -0,58): quien vuela poco, además, hace tiempo que no vuela. El descuento (C) es casi independiente del resto (|ρ| ≤ 0,12 con las demás métricas LRFMC).</p>
+<p><strong>Qué implica.</strong> F y M aportan información parecida, así que en conjunto pesan casi el doble en la distancia; conviene tenerlo presente al interpretar los grupos (el mapa <a href="./glosario.html#pca" class="term" data-def="Técnica que crea nuevos ejes, las componentes principales, combinando las métricas originales. El primero recoge la mayor parte de las diferencias entre socios, el segundo la mayor parte de lo que queda, y así sucesivamente." data-term="PCA (análisis de componentes principales)">PCA</a> de la página <a href="./04-clustering.html#pca">Modelo de segmentación</a> lo hace visible). C, en cambio, aporta una dimensión propia: la <strong>sensibilidad al precio</strong>. Que M correlacione tanto con el ingreso valida usar los km como medida del valor.</p>
 </div>
 </section>
 <section id="vuelos-kilómetros-y-descuento" class="level2">
@@ -669,23 +694,23 @@ Figura&nbsp;3: Correlación de Spearman (por rangos, robusta a la asimetría) en
 <div aria-describedby="fig-scatter-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 
 <style>
-  #altair-viz-f79688d1e6f2499880855b274da6673f.vega-embed {
+  #altair-viz-b5a1db61f75c4967a859340c27884957.vega-embed {
     width: 100%;
     display: flex;
   }
 
-  #altair-viz-f79688d1e6f2499880855b274da6673f.vega-embed details,
-  #altair-viz-f79688d1e6f2499880855b274da6673f.vega-embed details summary {
+  #altair-viz-b5a1db61f75c4967a859340c27884957.vega-embed details,
+  #altair-viz-b5a1db61f75c4967a859340c27884957.vega-embed details summary {
     position: relative;
   }
 </style>
-<div id="altair-viz-f79688d1e6f2499880855b274da6673f"></div>
+<div id="altair-viz-b5a1db61f75c4967a859340c27884957"></div>
 <script type="text/javascript">
   var VEGA_DEBUG = (typeof VEGA_DEBUG == "undefined") ? {} : VEGA_DEBUG;
   (function(spec, embedOpt){
     let outputDiv = document.currentScript.previousElementSibling;
-    if (outputDiv.id !== "altair-viz-f79688d1e6f2499880855b274da6673f") {
-      outputDiv = document.getElementById("altair-viz-f79688d1e6f2499880855b274da6673f");
+    if (outputDiv.id !== "altair-viz-b5a1db61f75c4967a859340c27884957") {
+      outputDiv = document.getElementById("altair-viz-b5a1db61f75c4967a859340c27884957");
     }
 
     const paths = {
@@ -759,23 +784,23 @@ Figura&nbsp;4: Vuelos vs km volados (escala log). Arrastra sobre el gráfico par
 <div aria-describedby="fig-niveles-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 
 <style>
-  #altair-viz-8c40a5745b1b410aa4bb8c981ba0ef1e.vega-embed {
+  #altair-viz-9ec2c09a5eef4ce5ad88b6ed2a1d50f5.vega-embed {
     width: 100%;
     display: flex;
   }
 
-  #altair-viz-8c40a5745b1b410aa4bb8c981ba0ef1e.vega-embed details,
-  #altair-viz-8c40a5745b1b410aa4bb8c981ba0ef1e.vega-embed details summary {
+  #altair-viz-9ec2c09a5eef4ce5ad88b6ed2a1d50f5.vega-embed details,
+  #altair-viz-9ec2c09a5eef4ce5ad88b6ed2a1d50f5.vega-embed details summary {
     position: relative;
   }
 </style>
-<div id="altair-viz-8c40a5745b1b410aa4bb8c981ba0ef1e"></div>
+<div id="altair-viz-9ec2c09a5eef4ce5ad88b6ed2a1d50f5"></div>
 <script type="text/javascript">
   var VEGA_DEBUG = (typeof VEGA_DEBUG == "undefined") ? {} : VEGA_DEBUG;
   (function(spec, embedOpt){
     let outputDiv = document.currentScript.previousElementSibling;
-    if (outputDiv.id !== "altair-viz-8c40a5745b1b410aa4bb8c981ba0ef1e") {
-      outputDiv = document.getElementById("altair-viz-8c40a5745b1b410aa4bb8c981ba0ef1e");
+    if (outputDiv.id !== "altair-viz-9ec2c09a5eef4ce5ad88b6ed2a1d50f5") {
+      outputDiv = document.getElementById("altair-viz-9ec2c09a5eef4ce5ad88b6ed2a1d50f5");
     }
 
     const paths = {
@@ -834,7 +859,7 @@ Figura&nbsp;5: Distribución de cada métrica por nivel del programa. Haz clic e
 </div>
 <div class="insight">
 <p><strong>Qué vemos.</strong> Los niveles 5 y 6 son solo el 7,9 % de los socios, pero generan el <strong>29,6 % del ingreso</strong>. Vuelan unas seis veces más que el nivel 4 (mediana de 37 y 39 vuelos frente a 6), su último vuelo es reciente (0,4 meses de mediana) y pagan tarifas más cercanas a la completa.</p>
-<p><strong>Qué implica.</strong> El nivel del programa solo separa a la élite: el nivel 4 agrupa al 92 % de los socios con perfiles muy distintos. La segmentación LRFMC debe abrir ese bloque; el nivel servirá como <strong>validación externa</strong> de los clústeres.</p>
+<p><strong>Qué implica.</strong> El <a href="./glosario.html#nivel-programa" class="term" data-def="Categoría del socio dentro del programa (en los datos, FFP_TIER: 4, 5 o 6). Los niveles altos, 5 y 6, corresponden a quienes más vuelan." data-term="Nivel del programa">nivel del programa</a> solo separa a la élite: el nivel 4 agrupa al 92 % de los socios, con perfiles muy distintos. La segmentación LRFMC debe abrir ese bloque; el nivel servirá como <a href="./glosario.html#validacion-externa" class="term" data-def="Comprobar los segmentos con información que no se usó para formarlos, como el ingreso, el nivel del programa, la edad o el género. Si los segmentos difieren en esas variables, captan algo real." data-term="Validación externa">validación externa</a> de los segmentos.</p>
 </div>
 </section>
 <section id="edad-y-género" class="level2">
@@ -849,23 +874,23 @@ Figura&nbsp;5: Distribución de cada métrica por nivel del programa. Haz clic e
 <div aria-describedby="fig-edad-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 
 <style>
-  #altair-viz-ec50c6ede2ea4826a04de3c5181cdeda.vega-embed {
+  #altair-viz-daee399dbee443ae8f3c92eeec4ec6b2.vega-embed {
     width: 100%;
     display: flex;
   }
 
-  #altair-viz-ec50c6ede2ea4826a04de3c5181cdeda.vega-embed details,
-  #altair-viz-ec50c6ede2ea4826a04de3c5181cdeda.vega-embed details summary {
+  #altair-viz-daee399dbee443ae8f3c92eeec4ec6b2.vega-embed details,
+  #altair-viz-daee399dbee443ae8f3c92eeec4ec6b2.vega-embed details summary {
     position: relative;
   }
 </style>
-<div id="altair-viz-ec50c6ede2ea4826a04de3c5181cdeda"></div>
+<div id="altair-viz-daee399dbee443ae8f3c92eeec4ec6b2"></div>
 <script type="text/javascript">
   var VEGA_DEBUG = (typeof VEGA_DEBUG == "undefined") ? {} : VEGA_DEBUG;
   (function(spec, embedOpt){
     let outputDiv = document.currentScript.previousElementSibling;
-    if (outputDiv.id !== "altair-viz-ec50c6ede2ea4826a04de3c5181cdeda") {
-      outputDiv = document.getElementById("altair-viz-ec50c6ede2ea4826a04de3c5181cdeda");
+    if (outputDiv.id !== "altair-viz-daee399dbee443ae8f3c92eeec4ec6b2") {
+      outputDiv = document.getElementById("altair-viz-daee399dbee443ae8f3c92eeec4ec6b2");
     }
 
     const paths = {
@@ -924,7 +949,7 @@ Figura&nbsp;6: Pirámide de edad por género. Filtra por nivel del programa.
 </div>
 <div class="insight">
 <p><strong>Qué vemos.</strong> El 76,5 % de los socios son hombres y la edad mediana es de 41 años, con el grueso entre 30 y 50. En los niveles 5–6 la proporción de hombres sube al 86,9 % y la edad mediana a 44.</p>
-<p><strong>Qué implica.</strong> Es el perfil típico del viajero de negocios. Edad y género no entran al clustering (LRFMC describe comportamiento, no demografía), pero sirven para describir y nombrar los segmentos.</p>
+<p><strong>Qué implica.</strong> Es el perfil típico del viajero de negocios. Edad y género no entran al modelo (LRFMC describe comportamiento, no demografía), pero sirven para describir los segmentos (<a href="./glosario.html#feature" class="term" data-def="Una feature es cada dato que recibe el modelo para agrupar (aquí, las cinco métricas LRFMC). Una variable de perfilado no entra al modelo: se usa después para describir los segmentos." data-term="Feature y variable de perfilado">variables de perfilado</a>).</p>
 </div>
 </section>
 <section id="dónde-trabajan-los-socios" class="level2">
@@ -939,23 +964,23 @@ Figura&nbsp;6: Pirámide de edad por género. Filtra por nivel del programa.
 <div aria-describedby="fig-ubicaciones-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 
 <style>
-  #altair-viz-f162077b48834ed59b821ef3868f4e63.vega-embed {
+  #altair-viz-1a21682990694e4296050c93a6ce7656.vega-embed {
     width: 100%;
     display: flex;
   }
 
-  #altair-viz-f162077b48834ed59b821ef3868f4e63.vega-embed details,
-  #altair-viz-f162077b48834ed59b821ef3868f4e63.vega-embed details summary {
+  #altair-viz-1a21682990694e4296050c93a6ce7656.vega-embed details,
+  #altair-viz-1a21682990694e4296050c93a6ce7656.vega-embed details summary {
     position: relative;
   }
 </style>
-<div id="altair-viz-f162077b48834ed59b821ef3868f4e63"></div>
+<div id="altair-viz-1a21682990694e4296050c93a6ce7656"></div>
 <script type="text/javascript">
   var VEGA_DEBUG = (typeof VEGA_DEBUG == "undefined") ? {} : VEGA_DEBUG;
   (function(spec, embedOpt){
     let outputDiv = document.currentScript.previousElementSibling;
-    if (outputDiv.id !== "altair-viz-f162077b48834ed59b821ef3868f4e63") {
-      outputDiv = document.getElementById("altair-viz-f162077b48834ed59b821ef3868f4e63");
+    if (outputDiv.id !== "altair-viz-1a21682990694e4296050c93a6ce7656") {
+      outputDiv = document.getElementById("altair-viz-1a21682990694e4296050c93a6ce7656");
     }
 
     const paths = {
@@ -1014,7 +1039,7 @@ Figura&nbsp;7: Top 15 provincias o ciudades de trabajo. Cambia la dimensión y e
 </div>
 <div class="insight">
 <p><strong>Qué vemos.</strong> El 91,6 % de los socios trabaja en China. Guangdong concentra el 31,7 % y las tres primeras provincias suman el 54,4 %; por ciudad dominan Cantón (Guangzhou), Pekín, Shanghái y Shenzhen.</p>
-<p><strong>Qué implica.</strong> La base de socios es coherente con una aerolínea con <em>hub</em> en el sur de China. La ubicación es útil para el perfilado regional de los segmentos, no como variable de clustering.</p>
+<p><strong>Qué implica.</strong> La base de socios es coherente con una aerolínea con <em>hub</em> en el sur de China. La ubicación es útil para describir los segmentos por región, no para formarlos.</p>
 </div>
 </section>
 <section id="evolución-de-las-altas" class="level2">
@@ -1029,23 +1054,23 @@ Figura&nbsp;7: Top 15 provincias o ciudades de trabajo. Cambia la dimensión y e
 <div aria-describedby="fig-altas-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 
 <style>
-  #altair-viz-630a7c0487f94bbfbc9a1c858c863d60.vega-embed {
+  #altair-viz-24ee1747a3914876b321920f3aba97ac.vega-embed {
     width: 100%;
     display: flex;
   }
 
-  #altair-viz-630a7c0487f94bbfbc9a1c858c863d60.vega-embed details,
-  #altair-viz-630a7c0487f94bbfbc9a1c858c863d60.vega-embed details summary {
+  #altair-viz-24ee1747a3914876b321920f3aba97ac.vega-embed details,
+  #altair-viz-24ee1747a3914876b321920f3aba97ac.vega-embed details summary {
     position: relative;
   }
 </style>
-<div id="altair-viz-630a7c0487f94bbfbc9a1c858c863d60"></div>
+<div id="altair-viz-24ee1747a3914876b321920f3aba97ac"></div>
 <script type="text/javascript">
   var VEGA_DEBUG = (typeof VEGA_DEBUG == "undefined") ? {} : VEGA_DEBUG;
   (function(spec, embedOpt){
     let outputDiv = document.currentScript.previousElementSibling;
-    if (outputDiv.id !== "altair-viz-630a7c0487f94bbfbc9a1c858c863d60") {
-      outputDiv = document.getElementById("altair-viz-630a7c0487f94bbfbc9a1c858c863d60");
+    if (outputDiv.id !== "altair-viz-24ee1747a3914876b321920f3aba97ac") {
+      outputDiv = document.getElementById("altair-viz-24ee1747a3914876b321920f3aba97ac");
     }
 
     const paths = {
@@ -1119,23 +1144,23 @@ Figura&nbsp;8: Altas mensuales en el programa (FFP_DATE). Usa la rueda del rató
 <div aria-describedby="fig-tendencia-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 
 <style>
-  #altair-viz-1452f47fb64f484c9570059f12c285cc.vega-embed {
+  #altair-viz-1e4b08ddd720490eb64009cd038db893.vega-embed {
     width: 100%;
     display: flex;
   }
 
-  #altair-viz-1452f47fb64f484c9570059f12c285cc.vega-embed details,
-  #altair-viz-1452f47fb64f484c9570059f12c285cc.vega-embed details summary {
+  #altair-viz-1e4b08ddd720490eb64009cd038db893.vega-embed details,
+  #altair-viz-1e4b08ddd720490eb64009cd038db893.vega-embed details summary {
     position: relative;
   }
 </style>
-<div id="altair-viz-1452f47fb64f484c9570059f12c285cc"></div>
+<div id="altair-viz-1e4b08ddd720490eb64009cd038db893"></div>
 <script type="text/javascript">
   var VEGA_DEBUG = (typeof VEGA_DEBUG == "undefined") ? {} : VEGA_DEBUG;
   (function(spec, embedOpt){
     let outputDiv = document.currentScript.previousElementSibling;
-    if (outputDiv.id !== "altair-viz-1452f47fb64f484c9570059f12c285cc") {
-      outputDiv = document.getElementById("altair-viz-1452f47fb64f484c9570059f12c285cc");
+    if (outputDiv.id !== "altair-viz-1e4b08ddd720490eb64009cd038db893") {
+      outputDiv = document.getElementById("altair-viz-1e4b08ddd720490eb64009cd038db893");
     }
 
     const paths = {
@@ -1194,7 +1219,7 @@ Figura&nbsp;9: Balance de ingresos entre el año reciente (Y2) y el anterior (Y1
 </div>
 <div class="insight">
 <p><strong>Qué vemos.</strong> La distribución tiene dos picos en los extremos: el 17,7 % de los socios <strong>no generó ingresos en el año reciente</strong> (balance −1) y el 15,3 % solo los generó en ese año (+1). En total, el 50,1 % ingresó menos en el año 2 que en el año 1. Pasa el cursor sobre la barra de −1: su recencia mediana supera el año.</p>
-<p><strong>Qué implica.</strong> El balance −1 es una señal directa de <strong>abandono</strong>. La fórmula original del plan, <code>(Y2 − Y1) / (Y1 + 1)</code>, explota cuando <code>SUM_YR_1 = 0</code> (el 15,3 % de los socios); por eso en la Fase 4 se usará esta versión acotada en [−1, 1] como variable de perfilado.</p>
+<p><strong>Qué implica.</strong> El balance −1 es una señal directa de <strong>abandono</strong>. La fórmula habitual, <code>(Y2 − Y1) / (Y1 + 1)</code>, se dispara cuando el socio no tuvo ingresos el primer año (el 15,3 % de los socios); por eso el proyecto usa esta versión acotada entre −1 y 1, la <a href="./glosario.html#tendencia-ingreso" class="term" data-def="Compara el ingreso del año más reciente con el del anterior en una escala de −1 a 1: −1 = no generó ingresos el último año, 0 = igual que el anterior, +1 = solo generó ingresos el último año." data-term="Tendencia de ingreso">tendencia de ingreso</a> (ver <a href="./03-lrfmc.html#variables-de-perfilado">Métricas LRFMC</a>).</p>
 </div>
 </section>
 <section id="conclusiones-del-eda" class="level2">
@@ -1212,10 +1237,50 @@ Figura&nbsp;9: Balance de ingresos entre el año reciente (Y2) y el anterior (Y1
 
 </main> <!-- /main -->
 <script>
-  // Los gráficos Altair con width="container" que están en una pestaña oculta se dibujan con
-  // ancho 0. vega-embed recalcula el ancho con el evento "resize" de la ventana, así que se lanza
-  // uno cada vez que se muestra una pestaña.
-  document.addEventListener("shown.bs.tab", () => window.dispatchEvent(new Event("resize")));
+  // Los gráficos Altair con width="container" que están en una pestaña oculta o en un bloque
+  // plegado se dibujan con ancho 0. vega-embed recalcula el ancho con el evento "resize" de la
+  // ventana, así que se lanza uno cada vez que se muestra una pestaña o se despliega un bloque.
+  for (const shown of ["shown.bs.tab", "shown.bs.collapse"]) {
+    document.addEventListener(shown, () => window.dispatchEvent(new Event("resize")));
+  }
+</script>
+<script>
+  // Términos enlazados con el shortcode `term` (a.term): muestran su definición en un tooltip (tippy, que Quarto
+  // ya carga) al pasar el cursor o al enfocarlos con el teclado. En pantallas táctiles el primer
+  // toque abre el tooltip en vez de navegar; el tooltip lleva el enlace a la ficha del glosario.
+  document.addEventListener("DOMContentLoaded", () => {
+    const touch = window.matchMedia("(hover: none)").matches;
+    document.querySelectorAll("a.term").forEach((link) => {
+      if (typeof window.tippy !== "function") {
+        link.title = link.dataset.def;
+        return;
+      }
+      const box = document.createElement("div");
+      box.className = "term-tip";
+      const title = document.createElement("strong");
+      title.textContent = link.dataset.term;
+      const text = document.createElement("p");
+      text.textContent = link.dataset.def;
+      const more = document.createElement("a");
+      more.href = link.href;
+      more.textContent = "Ver en el glosario →";
+      box.append(title, text, more);
+      window.tippy(link, {
+        content: box,
+        theme: "quarto",
+        maxWidth: 340,
+        placement: "top",
+        interactive: true,
+        interactiveBorder: 8,
+        appendTo: () => document.body,
+        trigger: touch ? "click" : "mouseenter focus",
+        delay: touch ? 0 : [150, 0],
+      });
+      if (touch) {
+        link.addEventListener("click", (event) => event.preventDefault());
+      }
+    });
+  });
 </script>
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {

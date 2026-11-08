@@ -1,0 +1,882 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cinco tipos de viajero frecuente · Resumen del proyecto</title>
+<meta name="description" content="Resumen interactivo de la segmentación de 62.044 socios de un programa de viajero frecuente con el modelo LRFMC y K-Means: cinco segmentos, su fiabilidad y qué hacer con cada uno.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='4' fill='%2314161b'/%3E%3Ccircle cx='5' cy='6' r='2' fill='%234f93e6'/%3E%3Ccircle cx='11' cy='5' r='2' fill='%23f07c4a'/%3E%3Ccircle cx='8' cy='11' r='2' fill='%23f2b12a'/%3E%3C/svg%3E">
+<script>document.documentElement.classList.add('js');</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300..700;1,8..60,400&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<!--
+  Plantilla de `src/segmentacion/viz/summary_page.py` (no editar report/resumen.html a mano).
+  Cada marcador entre dobles corchetes se sustituye por una cifra del pipeline; los datos de los gráficos llegan como
+  JSON en <script id="data">. Estilo: skill «scrollytelling-explainer».
+-->
+<style>
+:root {
+  --serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --sans: "Source Sans 3", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --head: 64px;
+  color-scheme: dark;
+}
+/* Temas por sección. --c*: marcas de cada segmento; --t*: texto de cada segmento (contraste AA). */
+.night {
+  --bg: #14161b; --ink: #f1efe9; --muted: #a3a6ad; --faint: #262a31; --soft: #4a505b;
+  --line: #333843; --card: rgba(20, 22, 27, .92); --panel: #1b1e25; --accent: #f0b85a;
+  --neutral: #5d636f;
+  --c0: #4f93e6; --c1: #f07c4a; --c2: #2fc28c; --c3: #f2b12a; --c4: #ee8fb3;
+  --t0: #82b4f0; --t1: #f59a72; --t2: #62d4aa; --t3: #f5c55e; --t4: #f3a9c6;
+}
+.paper {
+  --bg: #f5f2ea; --ink: #17191e; --muted: #5c6068; --faint: #e6e1d5; --soft: #b9b2a2;
+  --line: #d9d2c3; --card: rgba(245, 242, 234, .94); --panel: #fbf9f3; --accent: #a0570f;
+  --neutral: #c2bbab;
+  --c0: #2a78d6; --c1: #eb6834; --c2: #1baf7a; --c3: #eda100; --c4: #e87ba4;
+  --t0: #1d5fb0; --t1: #b84a1a; --t2: #0d7d55; --t3: #8a5f00; --t4: #b03e6c;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: #14161b; color: #f1efe9; font: 400 17px/1.5 var(--sans); overflow-x: hidden; }
+a { color: inherit; }
+main { display: block; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+:focus-visible { outline: 2px solid #f0b85a; outline-offset: 3px; border-radius: 4px; }
+
+/* Cabecera, barra de progreso y navegación ----------------------------------------------------- */
+.bar { position: fixed; top: 0; left: 0; right: 0; height: 3px; background: #fff; mix-blend-mode: difference; transform-origin: left center; transform: scaleX(0); z-index: 41; }
+.top { position: fixed; inset: 0 0 auto 0; height: var(--head); z-index: 40; display: flex; align-items: center; gap: 18px; padding: 0 22px; color: #f1efe9; pointer-events: none; transition: color .3s; }
+.top > * { pointer-events: auto; }
+body.lit .top, body.lit .nav { color: #17191e; }
+.mark { font: 600 14px/1 var(--mono); letter-spacing: .02em; text-decoration: none; white-space: nowrap; }
+.mark span { opacity: .55; font-weight: 400; }
+.crumb { margin: 0; padding-left: 18px; border-left: 1px solid color-mix(in srgb, currentColor 28%, transparent); display: grid; row-gap: 2px; max-width: 46vw; font: 600 13.5px/1.3 var(--sans); opacity: 0; transform: translateY(-4px); transition: opacity .35s, transform .35s; }
+body.inch .crumb { opacity: 1; transform: none; }
+.crumb .ct, .crumb .cc { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.crumb .cc { font-weight: 400; opacity: .75; transition: opacity .22s; }
+.crumb .cc.off { opacity: 0; }
+.crumb .cc i { font: 500 12px var(--mono); font-style: normal; margin-right: .8em; }
+.acts { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+.pill { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 999px; border: 1px solid color-mix(in srgb, currentColor 35%, transparent); font: 600 14px/1 var(--sans); text-decoration: none; white-space: nowrap; background: transparent; color: inherit; transition: background .15s, border-color .15s; }
+.pill:hover { background: color-mix(in srgb, currentColor 10%, transparent); }
+.pill.cta { background: #f0b85a; border-color: #f0b85a; color: #17191e; }
+.pill.cta:hover { background: #f5c97a; }
+.gh { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 50%; border: 1px solid color-mix(in srgb, currentColor 35%, transparent); }
+.gh svg { width: 18px; height: 18px; fill: currentColor; }
+.nav { position: fixed; left: 22px; bottom: 18px; z-index: 40; display: flex; gap: 8px; align-items: center; color: #f1efe9; transition: color .3s; }
+.nav button { width: 40px; height: 40px; border-radius: 50%; border: 1px solid color-mix(in srgb, currentColor 35%, transparent); background: color-mix(in srgb, currentColor 4%, transparent); color: inherit; font: 22px/1 var(--sans); cursor: pointer; transition: background .15s; }
+.nav button:hover { background: color-mix(in srgb, currentColor 14%, transparent); }
+.nav .hint { font: 12px var(--mono); opacity: .6; margin-left: 4px; }
+
+/* Capítulos: escenario fijo + pasos ------------------------------------------------------------ */
+.ch { position: relative; background: var(--bg); color: var(--ink); }
+.stage { position: sticky; top: 0; height: 100svh; overflow: hidden; }
+.steps { position: relative; margin-top: -100svh; pointer-events: none; }
+.step { height: 100svh; }
+.viz { position: absolute; inset: 11vh 4% 9vh 42%; margin: 0; }
+.viz > svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.says { position: absolute; left: 6vw; width: 32vw; top: 50%; transform: translateY(-50%); margin: 0; padding: 0; list-style: none; counter-reset: s; z-index: 2; }
+.says li { position: relative; padding-left: 1.55em; counter-increment: s; font: 400 clamp(17px, 1.25vw, 20px)/1.45 var(--serif); }
+.says li::before { content: counter(s); position: absolute; left: 0; top: 0; font-weight: 600; color: var(--accent); }
+.says li + li { margin-top: .8em; }
+.says b { font-weight: 650; }
+.k { font-style: normal; font-weight: 650; }
+.t0 { color: var(--t0); } .t1 { color: var(--t1); } .t2 { color: var(--t2); } .t3 { color: var(--t3); } .t4 { color: var(--t4); }
+.js .says li::before { content: attr(data-n); }  /* con pasos ocultos, counter() no los cuenta */
+.js .says li.next { display: none; }
+.js .says li.past { font-size: clamp(14.5px, 1.02vw, 16.5px); line-height: 1.42; color: var(--muted); margin-top: .5em; }
+.js .says li.past .k, .js .says li.past b { color: inherit; font-weight: 600; }
+.js .says li.now { font-size: clamp(23px, 2.2vw, 37px); line-height: 1.22; letter-spacing: -.01em; animation: rise .55s cubic-bezier(.2, .7, .2, 1) both; }
+.js .says li.past + li.now { margin-top: .85em; padding-top: .85em; border-top: 1px solid var(--line); }
+.js .says li.past + li.now::before { top: .85em; }
+
+/* «Ver los datos» */
+.data { position: relative; z-index: 3; background: var(--bg); color: var(--ink); border-top: 1px solid var(--line); padding: 0 6vw; }
+.data summary { cursor: pointer; padding: 18px 0; font: 500 13px var(--mono); letter-spacing: .03em; color: var(--muted); list-style: none; width: max-content; }
+.data summary::-webkit-details-marker { display: none; }
+.data summary::before { content: "▸ "; }
+.data[open] summary::before { content: "▾ "; }
+.data summary:hover { color: var(--ink); }
+.data .note { margin: 0 0 14px; max-width: 72ch; font-size: 15px; color: var(--muted); }
+.tw { overflow-x: auto; margin-bottom: 28px; }
+.data table { border-collapse: collapse; font: 14.5px/1.4 var(--sans); min-width: min(100%, 560px); }
+.data th, .data td { text-align: left; vertical-align: top; padding: 7px 18px 7px 0; border-bottom: 1px solid var(--line); }
+.data th { font-weight: 600; color: var(--muted); }
+.data .n { text-align: right; font: 13px var(--mono); white-space: nowrap; }
+
+/* Gráficos SVG */
+.viz text { font-family: var(--sans); font-size: 14px; fill: var(--ink); }
+.viz .cap { font: 500 12.5px var(--mono); letter-spacing: .02em; fill: var(--muted); }
+.viz .lab { font-size: 13px; fill: var(--muted); }
+.viz .num { font-family: var(--mono); font-size: 12.5px; }
+.viz .ann { font-weight: 650; font-size: 15px; }
+.viz .rowlab, .viz .leg-name { font-weight: 650; font-size: 15px; }
+.viz .letter { font: 500 38px var(--mono); fill: var(--soft); transition: fill .4s; }
+.viz .vlab { font-weight: 650; font-size: 13px; }
+.viz .maplab { font-weight: 700; font-size: 15px; transition: opacity .45s; }
+.viz text.t0 { fill: var(--t0); } .viz text.t1 { fill: var(--t1); } .viz text.t2 { fill: var(--t2); } .viz text.t3 { fill: var(--t3); } .viz text.t4 { fill: var(--t4); }
+.halo { paint-order: stroke; stroke: var(--bg); stroke-width: 5px; stroke-linejoin: round; }
+.f0 { fill: var(--c0); } .f1 { fill: var(--c1); } .f2 { fill: var(--c2); } .f3 { fill: var(--c3); } .f4 { fill: var(--c4); } .fn { fill: var(--neutral); }
+.cell { transition: fill .35s, opacity .35s; }
+.axis { stroke: var(--soft); stroke-width: 1.5; }
+.grid { stroke: var(--line); stroke-width: 1; }
+.medline { stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 3 4; }
+.thr { stroke: #e8655a; stroke-width: 1.5; stroke-dasharray: 5 5; }
+.dot { stroke: var(--bg); stroke-width: 2; transition: opacity .3s; }
+.mrow { transition: opacity .45s; }
+.mrow.next { opacity: .2; } .mrow.past { opacity: .62; }
+.mrow.now .letter { fill: var(--accent); }
+.hbar { fill: var(--soft); transition: fill .3s, opacity .3s; }
+.hbar.hot { fill: var(--accent); }
+.bracket { fill: none; stroke: var(--accent); stroke-width: 1.5; }
+.sil { fill: none; stroke: var(--ink); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+.pt { fill: var(--bg); stroke: var(--ink); stroke-width: 2; transition: opacity .3s, fill .3s, stroke .3s; }
+.pt.hot { fill: var(--accent); stroke: var(--accent); }
+.band { fill: var(--accent); fill-opacity: .14; }
+.adot { fill: var(--c0); fill-opacity: .8; transition: opacity .3s; }
+.mean { fill: var(--ink); }
+.bmain { fill: var(--accent); } .bother { fill: var(--soft); }
+.pts circle { fill: var(--neutral); transition: fill .6s, opacity .45s; }
+.pts circle.off { opacity: 0 !important; }
+.pts.colored .s0 { fill: var(--c0); } .pts.colored .s1 { fill: var(--c1); } .pts.colored .s2 { fill: var(--c2); } .pts.colored .s3 { fill: var(--c3); } .pts.colored .s4 { fill: var(--c4); }
+.pts.hl circle { opacity: .1; }
+.pts.hl-0 .s0, .pts.hl-1 .s1, .pts.hl-2 .s2, .pts.hl-3 .s3, .pts.hl-4 .s4 { opacity: 1; }
+
+/* Fichas de segmento */
+.cards { inset: 11vh 5% 9vh 44%; }
+.seg { position: relative; display: flex; flex-direction: column; gap: 14px; margin-bottom: 16px; padding: 22px 26px; overflow: hidden; background: var(--panel); border: 1px solid var(--line); border-top: 4px solid var(--c); border-radius: 14px; }
+.js .seg { position: absolute; inset: 0; margin: 0; opacity: 0; transform: translateY(14px); transition: opacity .45s, transform .45s; }
+.js .seg.on { opacity: 1; transform: none; }
+.seg header p { margin: 0; }
+.seg-n { font: 500 12px var(--mono); color: var(--muted); }
+.seg h3 { margin: 4px 0 2px; font: 600 clamp(26px, 2.3vw, 40px)/1.05 var(--serif); letter-spacing: -.015em; color: var(--tc); }
+.seg-size { font-size: 14px; color: var(--muted); }
+.seg-kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.seg-kpis b { display: block; font: 500 clamp(28px, 2.7vw, 46px)/1 var(--mono); letter-spacing: -.03em; }
+.seg-kpis span { font-size: 14px; color: var(--muted); }
+.seg-kpis i { display: block; height: 6px; margin-top: 8px; border-radius: 3px; background: linear-gradient(90deg, var(--c) var(--w), var(--faint) var(--w)); }
+.seg-why { margin: 0; font: 400 16px/1.45 var(--serif); }
+.lab2 { display: block; margin-bottom: 3px; font: 500 11px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.seg-prof { width: 100%; max-width: 400px; height: auto; flex-shrink: 0; }
+.seg-prof text { font: 12px var(--sans); fill: var(--muted); }
+.seg-prof .b { fill: var(--c); }
+.seg-prof .mid { stroke: var(--soft); stroke-width: 1; }
+.seg-prof .ax { font-size: 11px; }
+.seg-act p { margin: 0; font-size: 15px; line-height: 1.45; }
+.seg-act .kpi { margin-top: 4px; font-size: 14px; color: var(--muted); }
+
+/* Portada ---------------------------------------------------------------------------------------- */
+.cover { position: relative; min-height: 100svh; display: flex; align-items: center; padding: calc(var(--head) + 4vh) 7vw 10vh; background: var(--bg); color: var(--ink); overflow: hidden; }
+.sky { position: absolute; inset: -4% -2% -4% 34%; opacity: .85; will-change: transform; }
+.sky svg { width: 100%; height: 100%; display: block; }
+.sky circle { fill-opacity: .75; }
+.cover::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(90deg, var(--bg) 30%, color-mix(in srgb, var(--bg) 60%, transparent) 56%, color-mix(in srgb, var(--bg) 8%, transparent) 88%), linear-gradient(0deg, var(--bg) 0%, transparent 22%); }
+.cover-in { position: relative; z-index: 1; max-width: min(92vw, 1100px); }
+.kick { margin: 0 0 3vh; font: 500 clamp(12px, .95vw, 15px)/1.3 var(--mono); letter-spacing: .04em; color: var(--muted); }
+.cover h1 { margin: 0; max-width: 12ch; font: 500 clamp(46px, 6.4vw, 128px)/.97 var(--serif); letter-spacing: -.035em; }
+.dek { margin: 3.4vh 0 0; max-width: 33em; font: 400 clamp(18px, 1.5vw, 25px)/1.4 var(--serif); color: var(--muted); }
+.toc { display: flex; flex-wrap: wrap; gap: 8px 10px; margin: 5vh 0 0; padding: 0; list-style: none; max-width: 780px; }
+.toc a { display: inline-flex; align-items: center; gap: 8px; padding: 8px 13px 8px 11px; border-radius: 999px; border: 1px solid var(--line); background: color-mix(in srgb, var(--bg) 70%, transparent); font: 600 14px/1 var(--sans); text-decoration: none; transition: transform .15s, border-color .15s; }
+.toc a:hover { transform: translateY(-2px); border-color: var(--muted); }
+.toc a i { width: 8px; height: 8px; border-radius: 50%; background: var(--d); }
+.toc a small { font: 500 11px var(--mono); color: var(--muted); }
+.cue { position: absolute; left: 50%; bottom: 3vh; z-index: 1; width: 1.5px; height: 8vh; background: linear-gradient(var(--ink), transparent); transform-origin: center top; opacity: 0; }
+.js .cover h1 .w { display: inline-block; opacity: 0; transform: translateY(.28em); }
+.js .cover .kick, .js .cover .dek, .js .cover .toc { opacity: 0; }
+.cover.go h1 .w { animation: rise .9s cubic-bezier(.2, .7, .2, 1) forwards; animation-delay: calc(var(--i) * 75ms); }
+.cover.go .kick { animation: fade .8s ease .1s forwards; }
+.cover.go .dek { animation: fade 1s ease 1s forwards; }
+.cover.go .toc { animation: fade 1s ease 1.3s forwards; }
+.cover.go .cue { animation: cue 2.4s ease-in-out 2.4s infinite; }
+
+/* Cierre: preguntas, límites y la historia en texto ------------------------------------------- */
+.quiz, .limits, .story { background: var(--bg); color: var(--ink); padding: 14vh 7vw 12vh; }
+.quiz h2, .limits h2, .story h2 { margin: 0 0 5vh; font: 500 clamp(32px, 3.6vw, 60px)/1.05 var(--serif); letter-spacing: -.02em; }
+.qs { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 5vh 4vw; }
+.qn { margin: 0; font: 500 12px var(--mono); color: var(--accent); }
+.q h3 { margin: 10px 0 18px; font: 400 clamp(19px, 1.45vw, 23px)/1.3 var(--serif); }
+.opts { display: grid; gap: 10px; }
+.opts button { position: relative; text-align: left; padding: 13px 40px 13px 16px; border-radius: 10px; border: 1px solid var(--line); background: transparent; color: var(--ink); font: 600 15.5px var(--sans); cursor: pointer; transition: background .12s, border-color .12s, opacity .2s; }
+.opts button:hover:not(:disabled) { border-color: var(--muted); background: color-mix(in srgb, var(--ink) 6%, transparent); }
+.opts button:disabled { cursor: default; }
+.opts button:disabled:not(.right):not(.wrong) { opacity: .45; }
+.opts button.right { border-color: #2fc28c; background: color-mix(in srgb, #2fc28c 16%, transparent); }
+.opts button.wrong { border-color: #e8655a; background: color-mix(in srgb, #e8655a 14%, transparent); }
+.opts button.right::after, .opts button.wrong::after { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-weight: 700; }
+.opts button.right::after { content: "✓"; color: #2fc28c; }
+.opts button.wrong::after { content: "✗"; color: #e8655a; }
+.why { margin: 14px 0 0; font-size: 15.5px; line-height: 1.5; color: var(--muted); }
+.js .why { display: none; }
+.q.done .why { display: block; animation: fade .4s ease both; }
+.score { min-height: 1.5em; margin: 6vh 0 0; font: 500 14px var(--mono); color: var(--muted); }
+.limits ul { list-style: none; margin: 0; padding: 0; max-width: 1000px; }
+.limits li { padding: 3.2vh 0; border-top: 1px solid var(--line); font: 400 clamp(19px, 1.65vw, 27px)/1.38 var(--serif); }
+.limits li b { font-weight: 600; }
+.story p { max-width: 66ch; margin: 0 0 1.15em; font: 400 clamp(18px, 1.3vw, 21px)/1.6 var(--serif); }
+.story .kick { opacity: 1; }
+.links { display: flex; flex-wrap: wrap; gap: 10px; margin: 5vh 0 6vh; }
+.credits { max-width: 82ch; padding-top: 3vh; border-top: 1px solid var(--line); font: 14px/1.6 var(--sans); color: var(--muted); }
+.credits code { font: 13px var(--mono); }
+
+@keyframes rise { from { opacity: 0; transform: translateY(.28em); } to { opacity: 1; transform: none; } }
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes cue { 0% { transform: scaleY(0); opacity: .9; } 55% { transform: scaleY(1); opacity: .9; } 100% { transform: scaleY(1); opacity: 0; } }
+
+/* Tableta y pantallas verticales: visual arriba, paso actual abajo en una tarjeta. */
+@media (max-width: 1099px), (max-aspect-ratio: 4/3) {
+  .viz, .cards { inset: calc(var(--head) + 6px) 4% calc(37svh + 52px) 4%; }
+  .says { left: 4vw; right: 4vw; width: auto; top: auto; bottom: calc(2svh + 56px); transform: none; max-height: 32svh; overflow: hidden; padding: 16px 20px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+  .js .says li.past { display: none; }
+  .js .says li.now { font-size: clamp(19px, 3vw, 27px); }
+  .js .says li.now, .js .says li.past + li.now { margin-top: 0; padding-top: 0; border-top: 0; }
+  .js .says li.past + li.now::before { top: 0; }
+  .crumb { max-width: 40vw; }
+  .seg { padding: 16px 20px; gap: 10px; }
+  .seg-why { font-size: 15px; }
+  .sky { inset: 30% -10% -10% 0; opacity: .5; }
+  .cover::after { background: linear-gradient(180deg, var(--bg) 25%, color-mix(in srgb, var(--bg) 55%, transparent) 60%, var(--bg) 100%); }
+}
+@media (hover: none) { .nav .hint { display: none; } }
+@media (max-width: 760px) {
+  :root { --head: 56px; }
+  .top { padding: 0 14px; gap: 10px; }
+  .crumb, .acts .pill:not(.cta), .nav .hint { display: none; }
+  .pill.cta { padding: 8px 12px; font-size: 13px; }
+  .nav button { width: 36px; height: 36px; font-size: 18px; }
+  .seg-prof { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+  .js .cover h1 .w, .js .cover .kick, .js .cover .dek, .js .cover .toc { opacity: 1; transform: none; }
+  .cue { display: none; }
+}
+</style>
+</head>
+<body>
+<div class="bar" aria-hidden="true"></div>
+<header class="top">
+  <a class="mark" href="#portada">LRFMC <span>· resumen</span></a>
+  <p class="crumb" aria-hidden="true"><span class="ct">Cinco tipos de viajero frecuente</span><span class="cc"><i></i><span></span></span></p>
+  <nav class="acts" aria-label="Enlaces del proyecto">
+    <a class="pill" href="https://freddxvill.github.io/segmentacion-clientes-aerolinea/glosario.html">Glosario</a>
+    <a class="pill cta" href="https://freddxvill.github.io/segmentacion-clientes-aerolinea/">Análisis completo →</a>
+    <a class="gh" href="https://github.com/freddxvill/segmentacion-clientes-aerolinea" aria-label="Código en GitHub"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8a8 8 0 0 0 5.47 7.59c.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.92-.89-1.17-.89-1.17-.73-.5.06-.49.06-.49.8.06 1.23.83 1.23.83.71 1.22 1.87.87 2.33.66.07-.52.28-.87.5-1.07-1.78-.2-3.65-.89-3.65-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg></a>
+  </nav>
+</header>
+<nav class="nav" aria-label="Pasos">
+  <button type="button" id="prev" aria-label="Paso anterior">‹</button>
+  <button type="button" id="next" aria-label="Paso siguiente">›</button>
+  <span class="hint" aria-hidden="true">← →</span>
+</nav>
+
+<main>
+<!-- 1 · Apertura en frío -->
+<section class="ch night" id="valor" data-chart="valor" data-title="Dónde está el valor">
+  <div class="stage">
+    <h2 class="sr-only">Dónde está el valor</h2>
+    <ol class="says">
+      <li>Una aerolínea tiene <b>62.044 socios</b> en su programa de viajero frecuente. Hasta ahora, los trata a todos igual: mismos correos, mismas promociones.</li>
+      <li>Pero no viajan igual. Por su forma de volar, se reparten en <b>cinco segmentos</b> de tamaño parecido: del 14 % al 23 % de los socios.</li>
+      <li>Los <em class="k t0">VIP</em> son uno de cada cinco socios: el 21 %.</li>
+      <li>Y generan el <b>56 % del ingreso</b>. Los dos segmentos que llevan meses sin volar suman el 34 % de los socios y solo el 9 % del ingreso.</li>
+    </ol>
+    <figure class="viz" role="img" aria-label="Cuadrícula de 100 cuadrados por segmento: los VIP son el 21 % de los socios y aportan el 56 % del ingreso."><svg></svg></figure>
+  </div>
+  <div class="steps" aria-hidden="true"><div class="step"></div><div class="step"></div><div class="step"></div><div class="step"></div></div>
+  <details class="data"><summary>Ver los datos</summary><div class="tw"><table><thead><tr><th>Segmento</th><th class="n">% de los socios</th><th class="n">% del ingreso</th></tr></thead><tbody><tr><td>VIP</td><td class="n">21,3 %</td><td class="n">55,9 %</td></tr><tr><td>Nuevos con potencial</td><td class="n">23,1 %</td><td class="n">23,2 %</td></tr><tr><td>Veteranos ocasionales</td><td class="n">21,7 %</td><td class="n">12,0 %</td></tr><tr><td>En riesgo de abandono</td><td class="n">19,4 %</td><td class="n">6,0 %</td></tr><tr><td>Cazadores de ofertas</td><td class="n">14,4 %</td><td class="n">2,8 %</td></tr></tbody></table></div></details>
+</section>
+
+<!-- Portada -->
+<section class="cover night" id="portada">
+  <div class="sky" aria-hidden="true"><svg viewBox="0 0 600 520" preserveAspectRatio="xMidYMid slice"></svg></div>
+  <div class="cover-in">
+    <p class="kick">Resumen del proyecto · Segmentación de clientes con LRFMC</p>
+    <h1>Cinco tipos de viajero frecuente</h1>
+    <p class="dek">Cómo se agrupó a 62.044 socios de un programa de fidelización por su forma de viajar, qué tan fiable es el resultado y qué hacer con cada grupo.</p>
+    <ol class="toc" aria-label="Capítulos">
+      <li><a href="#valor" style="--d:#4f93e6"><i></i>Dónde está el valor</a></li>
+      <li><a href="#metricas" style="--d:#f07c4a"><i></i>Cinco números por socio</a></li>
+      <li><a href="#cola" style="--d:#2fc28c"><i></i>Pocos vuelan muchísimo</a></li>
+      <li><a href="#cuantos" style="--d:#f2b12a"><i></i>¿Cuántos grupos?</a></li>
+      <li><a href="#mapa" style="--d:#ee8fb3"><i></i>El mapa de los socios</a></li>
+      <li><a href="#fiable" style="--d:#4f93e6"><i></i>¿Es fiable?</a></li>
+      <li><a href="#segmentos" style="--d:#f07c4a"><i></i>Cinco segmentos, cinco estrategias</a></li>
+      <li><a href="#preguntas" style="--d:#a3a6ad"><i></i>Tres preguntas</a></li>
+    </ol>
+  </div>
+  <div class="cue" aria-hidden="true"></div>
+</section>
+
+<!-- 2 · LRFMC -->
+<section class="ch paper" id="metricas" data-chart="metricas" data-title="Cinco números por socio">
+  <div class="stage">
+    <h2 class="sr-only">Cinco números por socio</h2>
+    <ol class="says">
+      <li>Para agruparlos, cada socio se resume en cinco números, el modelo <b>LRFMC</b>. <b>L · Antigüedad</b>: meses en el programa. El socio típico lleva 42 meses.</li>
+      <li><b>R · Recencia</b>: meses desde su último vuelo. Aquí, más es peor: el socio típico voló hace 3,5 meses; los <em class="k t3">En riesgo de abandono</em>, hace 11,5 meses.</li>
+      <li><b>F · Frecuencia</b>: vuelos en dos años. El socio típico hizo 7; un <em class="k t0">VIP</em>, 24.</li>
+      <li><b>M · Kilómetros</b>: lo que vuela. En aviación miden el valor mejor que el gasto, porque el precio depende de la distancia. El socio típico: 10.200 km.</li>
+      <li><b>C · Descuento</b>: lo que paga frente a la tarifa completa. Los <em class="k t4">Cazadores de ofertas</em> pagan el 50 %; los <em class="k t3">En riesgo de abandono</em>, el 82 %.</li>
+    </ol>
+    <figure class="viz" role="img" aria-label="Mediana de cada métrica LRFMC por segmento frente al socio típico."><svg></svg></figure>
+  </div>
+  <div class="steps" aria-hidden="true"><div class="step"></div><div class="step"></div><div class="step"></div><div class="step"></div><div class="step"></div></div>
+  <details class="data"><summary>Ver los datos</summary><p class="note">Medianas de cada métrica: el valor del medio, que no se deja arrastrar por unos pocos casos extremos.</p><div class="tw"><table><thead><tr><th>Métrica (mediana)</th><th class="n">Socio típico</th><th class="n">VIP</th><th class="n">Nuevos</th><th class="n">Veteranos</th><th class="n">En riesgo</th><th class="n">Cazadores</th></tr></thead><tbody><tr><td>L · Antigüedad (meses)</td><td class="n">42</td><td class="n">69</td><td class="n">24</td><td class="n">74</td><td class="n">32</td><td class="n">29</td></tr><tr><td>R · Meses sin volar</td><td class="n">3,5</td><td class="n">0,6</td><td class="n">1,9</td><td class="n">4,2</td><td class="n">11,5</td><td class="n">8,7</td></tr><tr><td>F · Vuelos en dos años</td><td class="n">7</td><td class="n">24</td><td class="n">11</td><td class="n">6</td><td class="n">3</td><td class="n">3</td></tr><tr><td>M · Kilómetros</td><td class="n">10.200</td><td class="n">34.336</td><td class="n">15.314</td><td class="n">9.131</td><td class="n">3.731</td><td class="n">4.422</td></tr><tr><td>C · Precio pagado / tarifa completa</td><td class="n">71 %</td><td class="n">74 %</td><td class="n">70 %</td><td class="n">70 %</td><td class="n">82 %</td><td class="n">50 %</td></tr></tbody></table></div></details>
+</section>
+
+<!-- 3 · Asimetría -->
+<section class="ch paper" id="cola" data-chart="cola" data-title="Pocos vuelan muchísimo">
+  <div class="stage">
+    <h2 class="sr-only">Pocos vuelan muchísimo</h2>
+    <ol class="says">
+      <li>La mayoría vuela poco: la mitad de los socios hizo <b>7 vuelos o menos</b> en dos años.</li>
+      <li>Pero unos pocos vuelan muchísimo, hasta <b>213 vuelos</b>. Esa «cola larga» dominaría la agrupación: los grupos se formarían alrededor de unos pocos extremos.</li>
+      <li>Por eso, antes de agrupar, cada métrica se <b>comprime</b> y se pone en una escala común. Ningún socio pesa más por ser extremo, y las cinco métricas cuentan lo mismo.</li>
+    </ol>
+    <figure class="viz" role="img" aria-label="Histograma del número de vuelos, con una cola larga hacia la derecha, que tras la transformación queda equilibrado."><svg></svg></figure>
+  </div>
+  <div class="steps" aria-hidden="true"><div class="step"></div><div class="step"></div><div class="step"></div></div>
+  <details class="data"><summary>Ver los datos</summary><p class="note">La transformación usada es Yeo-Johnson seguida de un escalado estándar (media 0, desviación 1).</p><div class="tw"><table><thead><tr><th>Socios que vuelan…</th><th class="n">Vuelos en dos años</th></tr></thead><tbody><tr><td>la mitad, como mucho</td><td class="n">7</td></tr><tr><td>el 75 %, como mucho</td><td class="n">15</td></tr><tr><td>el 95 %, como mucho</td><td class="n">39</td></tr><tr><td>el 99 %, como mucho</td><td class="n">70</td></tr><tr><td>el que más</td><td class="n">213</td></tr></tbody></table></div></details>
+</section>
+
+<!-- 4 · Número de grupos -->
+<section class="ch night" id="cuantos" data-chart="cuantos" data-title="¿Cuántos grupos?">
+  <div class="stage">
+    <h2 class="sr-only">¿Cuántos grupos?</h2>
+    <ol class="says">
+      <li>¿En cuántos grupos dividir a los socios? Se probaron de <b>2 a 10</b>, midiendo qué tan separados quedan unos de otros.</li>
+      <li>Con <b>2 grupos</b> la separación es máxima, pero solo distingue a quien vuela de quien no. No sirve para diseñar acciones.</li>
+      <li>Con <b>5</b>, tres criterios técnicos coinciden y cada grupo cuenta una historia de negocio distinta. Es el número elegido.</li>
+    </ol>
+    <figure class="viz" role="img" aria-label="Separación entre grupos (silhouette) para cada número de grupos; se elige 5."><svg></svg></figure>
+  </div>
+  <div class="steps" aria-hidden="true"><div class="step"></div><div class="step"></div><div class="step"></div></div>
+  <details class="data"><summary>Ver los datos</summary><p class="note">Además de la separación (silhouette), se miraron el «codo» de la inercia y el índice de Davies-Bouldin: los tres señalan 5 grupos.</p><div class="tw"><table><thead><tr><th class="n">Grupos (k)</th><th class="n">Separación (silhouette)</th><th class="n">Grupo más pequeño</th></tr></thead><tbody><tr><td class="n">2</td><td class="n">0,289</td><td class="n">48,2 %</td></tr><tr><td class="n">3</td><td class="n">0,238</td><td class="n">25,5 %</td></tr><tr><td class="n">4</td><td class="n">0,208</td><td class="n">19,2 %</td></tr><tr><td class="n">5</td><td class="n">0,212</td><td class="n">14,4 %</td></tr><tr><td class="n">6</td><td class="n">0,201</td><td class="n">12,8 %</td></tr><tr><td class="n">7</td><td class="n">0,208</td><td class="n">10,5 %</td></tr><tr><td class="n">8</td><td class="n">0,199</td><td class="n">9,2 %</td></tr><tr><td class="n">9</td><td class="n">0,204</td><td class="n">3,8 %</td></tr><tr><td class="n">10</td><td class="n">0,209</td><td class="n">3,6 %</td></tr></tbody></table></div></details>
+</section>
+
+<!-- 5 · Mapa -->
+<section class="ch night" id="mapa" data-chart="mapa" data-title="El mapa de los socios">
+  <div class="stage">
+    <h2 class="sr-only">El mapa de los socios</h2>
+    <ol class="says">
+      <li>Cada punto es un socio. El mapa coloca juntos a los que se parecen en las cinco métricas.</li>
+      <li>Coloreados por segmento, cada grupo ocupa su propia zona. Las fronteras se tocan: el comportamiento de los clientes es un continuo, no islas.</li>
+      <li>Los <em class="k t0">VIP</em> forman un bloque compacto: vuelan mucho, lejos y hace poco.</li>
+      <li>Dos grupos llevan meses sin volar, pero no se parecen: los <em class="k t3">En riesgo de abandono</em> pagaban el 82 % de la tarifa completa; los <em class="k t4">Cazadores de ofertas</em>, el 50 %.</li>
+    </ol>
+    <figure class="viz" role="img" aria-label="Mapa de 1.500 socios coloreados por segmento: cada segmento ocupa su propia zona."><svg></svg></figure>
+  </div>
+  <div class="steps" aria-hidden="true"><div class="step"></div><div class="step"></div><div class="step"></div><div class="step"></div></div>
+  <details class="data"><summary>Ver los datos</summary><p class="note">Muestra estratificada de 1.500 socios, proyectada con t-SNE (perplexity 30). La fidelidad del mapa (trustworthiness) es de 0,99 sobre 1: casi todos los vecinos cercanos en las cinco métricas siguen siéndolo en el plano. Las distancias entre zonas no se interpretan.</p></details>
+</section>
+
+<!-- 6 · Fiabilidad -->
+<section class="ch paper" id="fiable" data-chart="fiable" data-title="¿Es fiable?">
+  <div class="stage">
+    <h2 class="sr-only">¿Es fiable?</h2>
+    <ol class="says">
+      <li>¿Y si se repite el análisis? Se repitió desde <b>10 puntos de partida</b> distintos: los segmentos coinciden en <b>0,98</b> sobre 1 (el mínimo exigido era 0,90).</li>
+      <li>Entrenando solo con el 80 % de los socios, elegidos al azar, la coincidencia sigue en <b>0,97</b>. Los segmentos no dependen del azar ni de la muestra.</li>
+      <li>Frente a otras técnicas, incluida una segmentación por reglas de hoja de cálculo, <b>K-Means</b> es la que mejor separa a los socios: 0,21 frente a 0,14 de la mejor alternativa.</li>
+    </ol>
+    <figure class="viz" role="img" aria-label="Coincidencia entre repeticiones del análisis, cerca de 1, y separación de cada técnica: K-Means es la mayor."><svg></svg></figure>
+  </div>
+  <div class="steps" aria-hidden="true"><div class="step"></div><div class="step"></div><div class="step"></div></div>
+  <details class="data"><summary>Ver los datos</summary><p class="note">La coincidencia se mide con el ARI (1 = mismos grupos, 0 = coincidencia al azar) y la separación, con el silhouette.</p><div class="tw"><table><thead><tr><th>Comprobación</th><th class="n">Resultado</th></tr></thead><tbody><tr><td>Coincidencia entre 10 puntos de partida (ARI medio)</td><td class="n">0,980</td></tr><tr><td>Peor par de puntos de partida (ARI mínimo)</td><td class="n">0,964</td></tr><tr><td>Entrenando con el 80 % de los socios (ARI medio)</td><td class="n">0,969</td></tr><tr><td>Separación con K-Means (silhouette)</td><td class="n">0,211</td></tr><tr><td>Separación con Reglas por quintiles (silhouette)</td><td class="n">0,109</td></tr><tr><td>Separación con GMM (gaussianas) (silhouette)</td><td class="n">0,118</td></tr><tr><td>Separación con Ward (jerárquico) (silhouette)</td><td class="n">0,140</td></tr></tbody></table></div></details>
+</section>
+
+<!-- 7 · Segmentos -->
+<section class="ch paper" id="segmentos" data-chart="segmentos" data-title="Cinco segmentos, cinco estrategias">
+  <div class="stage">
+    <h2 class="sr-only">Cinco segmentos, cinco estrategias</h2>
+    <ol class="says">
+<li><em class="k t0">VIP</em>. Vuelan mucho, lo han hecho hace poco y pagan tarifas algo por encima de la media: concentran la mayor parte del ingreso.</li>
+<li><em class="k t1">Nuevos con potencial</em>. Socios recientes y activos, con más vuelos que la media: el semillero de los futuros VIP.</li>
+<li><em class="k t2">Veteranos ocasionales</em>. Socios antiguos que siguen volando, pero poco: una fidelidad de largo plazo con baja frecuencia.</li>
+<li><em class="k t3">En riesgo de abandono</em>. Llevan muchos meses sin volar, sus ingresos caen y pagaban tarifas casi completas: valor que se está perdiendo.</li>
+<li><em class="k t4">Cazadores de ofertas</em>. Compran con mucho descuento y vuelan poco; la mayoría lleva meses sin volar.</li>
+    </ol>
+    <div class="viz cards">
+<article class="seg" style="--c:var(--c0);--tc:var(--t0)"><header><p class="seg-n">1 / 5</p><h3>VIP</h3><p class="seg-size">13.240 socios</p></header><div class="seg-kpis"><div><b>21 %</b><span>de los socios</span><i style="--w:21.3%"></i></div><div><b>56 %</b><span>del ingreso</span><i style="--w:55.9%"></i></div></div><p class="seg-why"><span class="lab2">Por qué este nombre</span>Más vuelos, más kilómetros y vuelo más reciente que el socio medio; en menor medida, tarifas más caras.</p><svg class="seg-prof" viewBox="0 0 400 154" role="img" aria-label="Perfil frente al socio medio: Antigüedad 0,7, Meses sin volar -1,0, Vuelos 1,3, Kilómetros 1,2, Precio pagado 0,3, Tendencia del ingreso 0,1"><line x1="236" x2="236" y1="2" y2="132" class="mid"/><text x="0" y="16">Antigüedad</text><rect class="b" x="236.0" y="4" width="49.8" height="14" rx="2"/><text x="0" y="38">Meses sin volar</text><rect class="b" x="169.4" y="26" width="66.6" height="14" rx="2"/><text x="0" y="60">Vuelos</text><rect class="b" x="236.0" y="48" width="88.0" height="14" rx="2"/><text x="0" y="82">Kilómetros</text><rect class="b" x="236.0" y="70" width="84.5" height="14" rx="2"/><text x="0" y="104">Precio pagado</text><rect class="b" x="236.0" y="92" width="21.6" height="14" rx="2"/><text x="0" y="126">Tendencia del ingreso</text><rect class="b" x="236.0" y="114" width="9.0" height="14" rx="2"/><text x="174" y="148" class="ax">menos</text><text x="266" y="148" class="ax">más</text></svg><div class="seg-act"><span class="lab2">Acción prioritaria</span><p>Reconocimiento sin descuento: upgrades, sala VIP y embarque prioritario en sus rutas habituales.</p><p class="kpi">Se mide con: Tasa de retención a 12 meses y vuelos por socio frente a un grupo de control.</p></div></article>
+<article class="seg" style="--c:var(--c1);--tc:var(--t1)"><header><p class="seg-n">2 / 5</p><h3>Nuevos con potencial</h3><p class="seg-size">14.359 socios</p></header><div class="seg-kpis"><div><b>23 %</b><span>de los socios</span><i style="--w:23.1%"></i></div><div><b>23 %</b><span>del ingreso</span><i style="--w:23.2%"></i></div></div><p class="seg-why"><span class="lab2">Por qué este nombre</span>Menos antigüedad y vuelo más reciente que el socio medio; en menor medida, más vuelos.</p><svg class="seg-prof" viewBox="0 0 400 154" role="img" aria-label="Perfil frente al socio medio: Antigüedad -0,9, Meses sin volar -0,4, Vuelos 0,4, Kilómetros 0,4, Precio pagado 0,0, Tendencia del ingreso 0,2"><line x1="236" x2="236" y1="2" y2="132" class="mid"/><text x="0" y="16">Antigüedad</text><rect class="b" x="173.9" y="4" width="62.1" height="14" rx="2"/><text x="0" y="38">Meses sin volar</text><rect class="b" x="207.0" y="26" width="29.0" height="14" rx="2"/><text x="0" y="60">Vuelos</text><rect class="b" x="236.0" y="48" width="30.9" height="14" rx="2"/><text x="0" y="82">Kilómetros</text><rect class="b" x="236.0" y="70" width="28.6" height="14" rx="2"/><text x="0" y="104">Precio pagado</text><rect class="b" x="235.4" y="92" width="0.6" height="14" rx="2"/><text x="0" y="126">Tendencia del ingreso</text><rect class="b" x="236.0" y="114" width="17.2" height="14" rx="2"/><text x="174" y="148" class="ax">menos</text><text x="266" y="148" class="ax">más</text></svg><div class="seg-act"><span class="lab2">Acción prioritaria</span><p>Fast track de nivel: millas bonus al alcanzar un número de vuelos en los primeros 6 meses.</p><p class="kpi">Se mide con: % de socios que suben de nivel (FFP_TIER) en 12 meses.</p></div></article>
+<article class="seg" style="--c:var(--c2);--tc:var(--t2)"><header><p class="seg-n">3 / 5</p><h3>Veteranos ocasionales</h3><p class="seg-size">13.480 socios</p></header><div class="seg-kpis"><div><b>22 %</b><span>de los socios</span><i style="--w:21.7%"></i></div><div><b>12 %</b><span>del ingreso</span><i style="--w:12.0%"></i></div></div><p class="seg-why"><span class="lab2">Por qué este nombre</span>Más antigüedad que el socio medio; en menor medida, menos vuelos y menos kilómetros.</p><svg class="seg-prof" viewBox="0 0 400 154" role="img" aria-label="Perfil frente al socio medio: Antigüedad 0,9, Meses sin volar 0,1, Vuelos -0,2, Kilómetros -0,1, Precio pagado 0,0, Tendencia del ingreso 0,1"><line x1="236" x2="236" y1="2" y2="132" class="mid"/><text x="0" y="16">Antigüedad</text><rect class="b" x="236.0" y="4" width="63.4" height="14" rx="2"/><text x="0" y="38">Meses sin volar</text><rect class="b" x="236.0" y="26" width="7.4" height="14" rx="2"/><text x="0" y="60">Vuelos</text><rect class="b" x="224.9" y="48" width="11.1" height="14" rx="2"/><text x="0" y="82">Kilómetros</text><rect class="b" x="226.1" y="70" width="9.9" height="14" rx="2"/><text x="0" y="104">Precio pagado</text><rect class="b" x="234.1" y="92" width="1.9" height="14" rx="2"/><text x="0" y="126">Tendencia del ingreso</text><rect class="b" x="236.0" y="114" width="5.9" height="14" rx="2"/><text x="174" y="148" class="ax">menos</text><text x="266" y="148" class="ax">más</text></svg><div class="seg-act"><span class="lab2">Acción prioritaria</span><p>Campañas de ocio y temporada alineadas con sus fechas habituales de viaje.</p><p class="kpi">Se mide con: Vuelos por socio al año y tasa de conversión de la campaña.</p></div></article>
+<article class="seg" style="--c:var(--c3);--tc:var(--t3)"><header><p class="seg-n">4 / 5</p><h3>En riesgo de abandono</h3><p class="seg-size">12.049 socios</p></header><div class="seg-kpis"><div><b>19 %</b><span>de los socios</span><i style="--w:19.4%"></i></div><div><b>6 %</b><span>del ingreso</span><i style="--w:6.0%"></i></div></div><p class="seg-why"><span class="lab2">Por qué este nombre</span>Más tiempo sin volar e ingresos en caída que el socio medio; en menor medida, tarifas más caras.</p><svg class="seg-prof" viewBox="0 0 400 154" role="img" aria-label="Perfil frente al socio medio: Antigüedad -0,4, Meses sin volar 0,9, Vuelos -1,0, Kilómetros -1,0, Precio pagado 0,7, Tendencia del ingreso -0,4"><line x1="236" x2="236" y1="2" y2="132" class="mid"/><text x="0" y="16">Antigüedad</text><rect class="b" x="210.8" y="4" width="25.2" height="14" rx="2"/><text x="0" y="38">Meses sin volar</text><rect class="b" x="236.0" y="26" width="64.6" height="14" rx="2"/><text x="0" y="60">Vuelos</text><rect class="b" x="165.9" y="48" width="70.1" height="14" rx="2"/><text x="0" y="82">Kilómetros</text><rect class="b" x="163.3" y="70" width="72.7" height="14" rx="2"/><text x="0" y="104">Precio pagado</text><rect class="b" x="236.0" y="92" width="51.4" height="14" rx="2"/><text x="0" y="126">Tendencia del ingreso</text><rect class="b" x="205.1" y="114" width="30.9" height="14" rx="2"/><text x="174" y="148" class="ax">menos</text><text x="266" y="148" class="ax">más</text></svg><div class="seg-act"><span class="lab2">Acción prioritaria</span><p>Win-back con millas extra de caducidad corta (por ejemplo, 90 días).</p><p class="kpi">Se mide con: % de socios reactivados (al menos un vuelo) en 90 días.</p></div></article>
+<article class="seg" style="--c:var(--c4);--tc:var(--t4)"><header><p class="seg-n">5 / 5</p><h3>Cazadores de ofertas</h3><p class="seg-size">8.916 socios</p></header><div class="seg-kpis"><div><b>14 %</b><span>de los socios</span><i style="--w:14.4%"></i></div><div><b>3 %</b><span>del ingreso</span><i style="--w:2.8%"></i></div></div><p class="seg-why"><span class="lab2">Por qué este nombre</span>Más descuento que el socio medio; en menor medida, menos vuelos.</p><svg class="seg-prof" viewBox="0 0 400 154" role="img" aria-label="Perfil frente al socio medio: Antigüedad -0,5, Meses sin volar 0,7, Vuelos -1,0, Kilómetros -0,8, Precio pagado -1,4, Tendencia del ingreso -0,1"><line x1="236" x2="236" y1="2" y2="132" class="mid"/><text x="0" y="16">Antigüedad</text><rect class="b" x="200.4" y="4" width="35.6" height="14" rx="2"/><text x="0" y="38">Meses sin volar</text><rect class="b" x="236.0" y="26" width="47.2" height="14" rx="2"/><text x="0" y="60">Vuelos</text><rect class="b" x="167.1" y="48" width="68.9" height="14" rx="2"/><text x="0" y="82">Kilómetros</text><rect class="b" x="177.7" y="70" width="58.3" height="14" rx="2"/><text x="0" y="104">Precio pagado</text><rect class="b" x="138.3" y="92" width="97.7" height="14" rx="2"/><text x="0" y="126">Tendencia del ingreso</text><rect class="b" x="227.6" y="114" width="8.4" height="14" rx="2"/><text x="174" y="148" class="ax">menos</text><text x="266" y="148" class="ax">más</text></svg><div class="seg-act"><span class="lab2">Acción prioritaria</span><p>Alertas de tarifas promocionales en sus rutas habituales, solo en temporada baja.</p><p class="kpi">Se mide con: Tasa de reactivación en 90 días e ingreso por km de los vuelos reactivados.</p></div></article>
+    </div>
+  </div>
+  <div class="steps" aria-hidden="true"><div class="step"></div><div class="step"></div><div class="step"></div><div class="step"></div><div class="step"></div></div>
+  <details class="data"><summary>Ver los datos</summary><p class="note">Todas las acciones recomendadas son hipótesis: cada una debería probarse con un grupo de control y medirse con su indicador.</p><div class="tw"><table><thead><tr><th>Segmento</th><th>Acción</th><th>Se mide con</th></tr></thead><tbody><tr><td>VIP</td><td>Reconocimiento sin descuento: upgrades, sala VIP y embarque prioritario en sus rutas habituales.</td><td>Tasa de retención a 12 meses y vuelos por socio frente a un grupo de control.</td></tr><tr><td>VIP</td><td>Acceso anticipado a ventas y un canal de atención dedicado.</td><td>NPS del segmento y reclamaciones por cada 1.000 vuelos.</td></tr><tr><td>VIP</td><td>Alerta temprana cuando un VIP pasa más de 3 meses sin volar, con contacto personal.</td><td>% de VIP que pasan al segmento «En riesgo de abandono» en el trimestre.</td></tr><tr><td>Nuevos con potencial</td><td>Fast track de nivel: millas bonus al alcanzar un número de vuelos en los primeros 6 meses.</td><td>% de socios que suben de nivel (FFP_TIER) en 12 meses.</td></tr><tr><td>Nuevos con potencial</td><td>Bono por vuelo adicional y ofertas de rutas nuevas desde su ciudad.</td><td>Vuelos por socio y % que pasa a «VIP» frente a un grupo de control.</td></tr><tr><td>Veteranos ocasionales</td><td>Campañas de ocio y temporada alineadas con sus fechas habituales de viaje.</td><td>Vuelos por socio al año y tasa de conversión de la campaña.</td></tr><tr><td>Veteranos ocasionales</td><td>Recordatorio de los puntos acumulados y canjes fáciles para mantener el vínculo.</td><td>Tasa de canje y recencia media del segmento.</td></tr><tr><td>En riesgo de abandono</td><td>Win-back con millas extra de caducidad corta (por ejemplo, 90 días).</td><td>% de socios reactivados (al menos un vuelo) en 90 días.</td></tr><tr><td>En riesgo de abandono</td><td>Encuesta breve de satisfacción y contacto de servicio al cliente.</td><td>Tasa de respuesta y distribución de los motivos de abandono.</td></tr><tr><td>En riesgo de abandono</td><td>Ofrecer upgrades o flexibilidad en lugar de descuentos: pagaban tarifas casi completas.</td><td>Ingreso recuperado por socio contactado frente a un grupo de control.</td></tr><tr><td>Cazadores de ofertas</td><td>Alertas de tarifas promocionales en sus rutas habituales, solo en temporada baja.</td><td>Tasa de reactivación en 90 días e ingreso por km de los vuelos reactivados.</td></tr><tr><td>Cazadores de ofertas</td><td>Paquetes (vuelo + servicios) en lugar de descuentos generales sobre la tarifa.</td><td>Margen por pasajero frente a una promoción de descuento directo.</td></tr></tbody></table></div></details>
+</section>
+
+<!-- Cierre -->
+<section class="quiz night" id="preguntas">
+  <h2>Tres preguntas</h2>
+  <div class="qs">
+    <div class="q" data-answer="2">
+      <p class="qn">1 de 3</p>
+      <h3>Los VIP son uno de cada cinco socios. ¿Qué parte del ingreso aportan?</h3>
+      <div class="opts"><button type="button">21 %</button><button type="button">35 %</button><button type="button">56 %</button></div>
+      <p class="why" aria-live="polite">Aportan el 56 % del ingreso siendo el 21 % de los socios: el valor está muy concentrado, y protegerlos es la prioridad.</p>
+    </div>
+    <div class="q" data-answer="1">
+      <p class="qn">2 de 3</p>
+      <h3>«En riesgo de abandono» y «Cazadores de ofertas» llevan meses sin volar. ¿Qué los distingue?</h3>
+      <div class="opts"><button type="button">La edad</button><button type="button">El precio que pagan</button><button type="button">La ciudad donde trabajan</button></div>
+      <p class="why" aria-live="polite">Los primeros pagaban el 82 % de la tarifa completa; los segundos, el 50 %. Un mismo descuento sería un error para uno de los dos.</p>
+    </div>
+    <div class="q" data-answer="0">
+      <p class="qn">3 de 3</p>
+      <h3>Si se repite el análisis desde otro punto de partida, ¿qué pasa con los segmentos?</h3>
+      <div class="opts"><button type="button">Salen prácticamente los mismos</button><button type="button">Salen grupos distintos</button><button type="button">Depende de qué socios se usen</button></div>
+      <p class="why" aria-live="polite">Coinciden en 0,98 sobre 1 entre 10 puntos de partida, y en 0,97 entrenando solo con el 80 % de los socios.</p>
+    </div>
+  </div>
+  <p class="score" aria-live="polite"></p>
+</section>
+
+<section class="limits night" id="limites">
+  <h2>Lo que estos datos no responden</h2>
+  <ul>
+    <li><b>De quién son los datos.</b> Están anonimizados y su procedencia original no está documentada: ilustran el método, no describen a una aerolínea concreta.</li>
+    <li><b>Si los segmentos valen hoy.</b> Cubren 2012–2014; los hábitos de viaje cambiaron mucho después. El tamaño de cada segmento no es extrapolable; el método, sí.</li>
+    <li><b>Cómo se mueven los socios.</b> Es una sola foto: no se ve si un VIP pasa a «En riesgo», ni si «En riesgo» abandona de verdad.</li>
+    <li><b>Cuánto se gana con cada socio.</b> El ingreso no tiene moneda ni descuenta costes: sirve para comparar segmentos, no para medir rentabilidad.</li>
+    <li><b>Si las acciones funcionan.</b> Son hipótesis: hay que probarlas con un grupo de control antes de extenderlas.</li>
+  </ul>
+</section>
+
+<section class="story night" id="texto">
+  <p class="kick">La historia, en texto</p>
+  <h2>Cinco tipos de viajero frecuente</h2>
+  <p>Una aerolínea tiene 62.044 socios en su programa de viajero frecuente y los trataba a todos igual. Para decidir a quién retener, a quién hacer crecer y a quién reactivar, cada socio se describió con cinco métricas de comportamiento, el modelo LRFMC: antigüedad, meses sin volar, número de vuelos, kilómetros y descuento medio de sus tarifas.</p>
+  <p>Como unos pocos socios vuelan muchísimo (hasta 213 vuelos en dos años, frente a una mediana de 7), las métricas se comprimieron y se pusieron en una escala común antes de agruparlas. Se probaron de 2 a 10 grupos y se eligieron 5: es donde coinciden tres criterios técnicos y donde cada grupo cuenta una historia distinta.</p>
+  <p>El algoritmo K-Means formó los segmentos. Son estables: repetirlo desde 10 puntos de partida da una coincidencia de 0,98 sobre 1, y separa mejor a los socios que las alternativas probadas (0,21 frente a 0,14).</p>
+  <p>Los VIP son el 21 % de los socios y aportan el 56 % del ingreso. Saber el segmento de un socio explica el 67 % de las diferencias de ingreso, aunque el ingreso no se usó para formar los grupos. Los Nuevos con potencial son el semillero de futuros VIP; los Veteranos ocasionales, fieles pero poco frecuentes; y dos grupos llevan meses sin volar pero necesitan acciones opuestas: los En riesgo de abandono pagaban el 82 % de la tarifa completa, y los Cazadores de ofertas, el 50 %.</p>
+  <div class="links">
+    <a class="pill cta" href="https://freddxvill.github.io/segmentacion-clientes-aerolinea/">Ver el análisis completo →</a>
+    <a class="pill" href="https://freddxvill.github.io/segmentacion-clientes-aerolinea/glosario.html">Glosario de términos</a>
+    <a class="pill" href="https://github.com/freddxvill/segmentacion-clientes-aerolinea">Código en GitHub</a>
+  </div>
+  <p class="credits">Proyecto de portafolio · Segmentación avanzada de clientes. Datos: competición de Kaggle <i>sa-customer-segmentation</i>, anonimizados y de procedencia original no documentada. Hecho con Python (pandas, scikit-learn), Quarto y SVG. Esta página se genera desde el pipeline del proyecto con <code>uv run poe resumen</code>.</p>
+</section>
+</main>
+
+<script type="application/json" id="data">{"segments":[{"name":"VIP","short":"VIP","pct":0.2134,"rev":0.5593,"med":{"L":68.895,"R":0.633,"F":24.0,"M":34336.5,"C":0.741},"label":{"pct":"21 %","rev":"56 %","med":{"L":"69 meses","R":"0,6 meses","F":"24 vuelos","M":"34.336 km","C":"74 %"}}},{"name":"Nuevos con potencial","short":"Nuevos","pct":0.2314,"rev":0.2321,"med":{"L":23.589,"R":1.933,"F":11.0,"M":15314.0,"C":0.704},"label":{"pct":"23 %","rev":"23 %","med":{"L":"24 meses","R":"1,9 meses","F":"11 vuelos","M":"15.314 km","C":"70 %"}}},{"name":"Veteranos ocasionales","short":"Veteranos","pct":0.2173,"rev":0.1203,"med":{"L":73.758,"R":4.167,"F":6.0,"M":9131.0,"C":0.7},"label":{"pct":"22 %","rev":"12 %","med":{"L":"74 meses","R":"4,2 meses","F":"6 vuelos","M":"9.131 km","C":"70 %"}}},{"name":"En riesgo de abandono","short":"En riesgo","pct":0.1942,"rev":0.0599,"med":{"L":31.704,"R":11.467,"F":3.0,"M":3731.0,"C":0.821},"label":{"pct":"19 %","rev":"6 %","med":{"L":"32 meses","R":"11,5 meses","F":"3 vuelos","M":"3.731 km","C":"82 %"}}},{"name":"Cazadores de ofertas","short":"Cazadores","pct":0.1437,"rev":0.0285,"med":{"L":28.945,"R":8.733,"F":3.0,"M":4422.0,"C":0.505},"label":{"pct":"14 %","rev":"3 %","med":{"L":"29 meses","R":"8,7 meses","F":"3 vuelos","M":"4.422 km","C":"50 %"}}}],"waffle":{"members":[21,23,22,20,14],"revenue":[56,23,12,6,3]},"overall":{"L":41.988,"R":3.5,"F":7.0,"M":10200.0,"C":0.712},"overall_label":{"L":"42 meses","R":"3,5 meses","F":"7 vuelos","M":"10.200 km","C":"71 %"},"hist":{"raw":{"edges":[0,4,8,12,16,20,24,28,32,36,40,44,48,52,56,60,64,68,72,76,80,84,88,92,96,100,104,108,112,116,120],"shares":[0.26017,0.26422,0.14612,0.09332,0.06152,0.04284,0.03088,0.02282,0.01602,0.01285,0.00959,0.00799,0.00612,0.00466,0.00355,0.00329,0.00271,0.00203,0.00153,0.00139,0.00129,0.00098,0.00056,0.0006,0.00061,0.00044,0.00032,0.00027,0.00018,0.00113]},"scaled":{"edges":[-1.5,-1.36,-1.22,-1.08,-0.94,-0.8,-0.66,-0.52,-0.38,-0.24,-0.1,0.04,0.18,0.32,0.46,0.6,0.74,0.88,1.02,1.16,1.3,1.44,1.58,1.72,1.86,2.0,2.14,2.28,2.42,2.56,2.7],"shares":[0.04915,0.04137,0.0362,0.0388,0.04106,0.04196,0.04342,0.04441,0.04507,0.04586,0.04667,0.04736,0.04782,0.04801,0.04781,0.04695,0.04524,0.04279,0.0397,0.03594,0.03147,0.02655,0.02151,0.01658,0.01197,0.00792,0.00467,0.00238,0.00101,0.00035]},"median":7.0,"max":213.0,"tail_from":40.0,"tail_share":0.0492},"k":[{"k":2,"sil":0.2893},{"k":3,"sil":0.2384},{"k":4,"sil":0.2079},{"k":5,"sil":0.212},{"k":6,"sil":0.2011},{"k":7,"sil":0.2084},{"k":8,"sil":0.1992},{"k":9,"sil":0.2039},{"k":10,"sil":0.2092}],"chosen_k":5,"stability":{"seeds":[0.9921,0.9708,0.979,0.9795,0.978,0.9807,0.992,0.9807,0.9801,0.9755,0.9735,0.9747,0.9723,0.9779,0.9873,0.9753,0.9751,0.9807,0.9755,0.9806,0.9737,0.9642,0.9766,0.9719,0.9799,0.9976,0.9829,0.9758,0.994,0.9887,0.9801,0.971,0.9726,0.9777,0.9724,0.9817,0.9743,0.9929,0.9873,0.9793,0.9873,0.9929,0.9791,0.9807,0.9938],"subsample":[0.9734,0.9774,0.9786,0.9733,0.9684,0.9533,0.9708,0.96,0.9717,0.9654],"threshold":0.9},"bench":[{"name":"K-Means","sil":0.2114,"main":true},{"name":"Reglas por quintiles","sil":0.1089,"main":false},{"name":"GMM (gaussianas)","sil":0.118,"main":false},{"name":"Ward (jerárquico)","sil":0.1396,"main":false}],"map":[[0.9487,0.5452,0],[0.4568,0.7202,2],[0.2061,0.3273,3],[0.0442,0.568,3],[0.346,0.861,3],[0.886,0.2653,0],[0.8856,0.2461,0],[0.7258,0.0475,1],[0.4152,0.8506,2],[0.2652,0.3168,3],[0.7008,0.7595,0],[0.4639,0.6041,2],[0.6833,0.1923,1],[0.6438,0.8953,2],[0.3694,0.2762,4],[0.3961,0.8139,2],[0.3508,0.4145,2],[0.4026,0.082,1],[0.1992,0.6473,3],[0.307,0.3331,4],[0.4991,0.8458,2],[0.7105,0.8938,0],[0.5041,0.3664,2],[0.5405,0.7972,2],[0.6478,0.6777,2],[0.4021,0.3596,3],[0.5592,0.8683,2],[0.7231,0.5783,2],[0.3309,0.6886,2],[0.4642,0.7354,2],[0.8188,0.6009,0],[0.6319,0.2179,1],[0.3435,0.5833,2],[0.835,0.4811,0],[0.1585,0.3286,3],[0.2951,0.2556,3],[0.1809,0.4726,3],[0.193,0.5717,3],[0.7913,0.7473,0],[0.1367,0.1255,4],[0.3892,0.4625,2],[0.2386,0.7542,3],[0.2906,0.6658,2],[0.7368,0.4401,0],[0.8919,0.4819,0],[0.2707,0.2765,3],[0.2653,0.2723,3],[0.394,0.3871,3],[0.382,0.0387,1],[0.9447,0.3116,0],[0.6959,0.1123,1],[0.5556,0.1558,1],[0.8559,0.4536,0],[0.4516,0.436,2],[0.6897,0.1255,1],[0.7032,0.2745,1],[0.1027,0.29,4],[0.1525,0.616,3],[0.2764,0.7819,3],[0.6725,0.4729,0],[0.7482,0.3332,1],[0.5738,0.1241,1],[0.2303,0.7875,3],[0.268,0.4421,4],[0.7071,0.0766,1],[0.3973,0.2997,3],[0.3129,0.845,3],[0.969,0.6505,0],[0.5818,0.4966,2],[0.2747,0.5813,4],[0.1842,0.5017,3],[0.4314,0.3193,1],[0.7522,0.3695,1],[0.2884,0.8834,3],[0.5609,0.0934,1],[0.4094,0.6721,2],[0.8528,0.2028,1],[0.6822,0.1753,1],[0.2591,0.3,3],[0.7454,0.4716,0],[0.8686,0.4406,0],[0.0618,0.3437,4],[0.0895,0.5254,3],[0.5581,0.1637,1],[0.7367,0.0866,1],[0.1018,0.3105,4],[0.62,0.1048,1],[0.6999,0.8781,0],[0.7747,0.1559,1],[0.7796,0.4344,0],[0.8021,0.526,0],[0.2403,0.8515,3],[0.0794,0.4597,3],[0.3951,0.4904,2],[0.6454,0.872,0],[0.2356,0.3971,3],[0.0418,0.4364,3],[0.3634,0.0142,4],[0.8241,0.5912,0],[0.0386,0.3863,3],[0.7053,0.8913,0],[0.4799,0.281,1],[0.9143,0.284,0],[0.7782,0.4997,0],[0.3002,0.7943,3],[0.2993,0.5641,4],[0.1282,0.2775,4],[0.807,0.5327,0],[0.3451,0.5666,4],[0.9403,0.4947,0],[0.1581,0.4254,3],[0.714,0.5433,2],[0.61,0.477,1],[0.1896,0.3254,3],[0.2776,0.1733,4],[0.2262,0.7057,3],[0.5688,0.4049,1],[0.0986,0.2244,4],[0.337,0.4291,4],[0.5214,0.3821,0],[0.8817,0.3365,0],[0.4127,0.6776,2],[0.3412,0.8304,2],[0.3365,0.7928,3],[0.2466,0.193,4],[0.4959,0.4673,2],[0.4018,0.8194,2],[0.5814,0.1136,1],[0.6792,0.4792,2],[0.1095,0.4495,3],[0.5011,0.3098,2],[0.3714,0.6108,4],[0.9469,0.3281,0],[0.522,0.7673,2],[0.6797,0.2551,1],[0.1765,0.2178,4],[0.2267,0.3887,3],[0.3173,0.7259,3],[0.7451,0.2539,0],[0.2701,0.3036,3],[0.4046,0.4361,2],[0.5291,0.5884,3],[0.416,0.4347,2],[0.1639,0.532,3],[0.4369,0.1921,1],[0.6934,0.672,2],[0.6558,0.1735,1],[0.656,0.9227,0],[0.0257,0.4712,3],[0.5355,0.008,1],[0.3712,0.4609,2],[0.471,0.3092,2],[0.8182,0.6426,0],[0.5561,0.9135,2],[0.6342,0.2402,1],[0.5781,0.7562,2],[0.8984,0.2814,0],[0.2981,0.4126,4],[0.2307,0.8045,3],[0.3257,0.3365,4],[0.0767,0.4709,3],[0.3769,0.9861,3],[0.6795,0.9089,0],[0.57,0.8961,2],[0.1063,0.3122,4],[0.0963,0.1868,4],[0.4093,0.7811,2],[0.8561,0.5874,0],[0.8668,0.4737,0],[0.1462,0.4939,3],[0.3764,0.9738,3],[0.8805,0.5623,0],[0.0247,0.4935,3],[0.8172,0.2109,1],[0.3644,0.2724,4],[0.4166,0.3209,3],[0.8704,0.2524,0],[0.6183,0.098,1],[0.1456,0.3377,3],[0.6871,0.7351,2],[0.1854,0.4059,3],[0.3741,0.1069,1],[0.1901,0.29,4],[0.4088,0.595,4],[0.3964,0.7627,2],[0.8181,0.2403,1],[0.798,0.5572,0],[0.3742,0.6819,3],[0.8495,0.3182,0],[0.5715,0.78,2],[0.7296,0.3119,1],[0.893,0.2201,0],[0.4619,0.5416,2],[0.5391,0.6471,2],[0.8223,0.679,0],[0.3002,0.1183,4],[0.6265,0.2918,0],[0.0396,0.4244,3],[0.5584,0.3367,1],[0.1841,0.3495,3],[0.914,0.5415,0],[0.6137,0.3919,1],[0.3233,0.2787,3],[0.4199,0.3473,3],[0.4651,0.787,2],[0.8856,0.2082,0],[0.2448,0.0929,4],[0.7556,0.3371,1],[0.3823,0.6875,3],[0.688,0.3469,0],[0.2252,0.1776,4],[0.8802,0.51,0],[0.6703,0.3969,1],[0.4636,0.5104,2],[0.0625,0.661,3],[0.0635,0.6576,3],[0.6123,0.7429,2],[0.0412,0.389,3],[0.407,0.7515,2],[0.2337,0.2417,4],[0.5982,0.7129,2],[0.8697,0.6775,0],[0.5474,0.1454,1],[0.4337,0.1377,1],[0.099,0.55,3],[0.0741,0.472,3],[0.2776,0.5851,4],[0.3377,0.0137,4],[0.5054,0.5132,2],[0.4722,0.6728,2],[0.8842,0.2068,0],[0.2702,0.8736,3],[0.5798,0.336,1],[0.6937,0.7468,0],[0.8191,0.3393,0],[0.7855,0.2479,0],[0.5639,0.6022,2],[0.5018,0.9211,2],[0.4566,0.6608,2],[0.5061,0.496,2],[0.6445,0.4059,1],[0.8185,0.5291,0],[0.688,0.2188,1],[0.3548,0.6493,4],[0.5684,0.1845,1],[0.7467,0.3523,1],[0.6862,0.667,2],[0.7518,0.543,0],[0.6292,0.6426,2],[0.7736,0.1694,1],[0.8728,0.6535,0],[0.1491,0.5256,3],[0.5107,0.3299,2],[0.7262,0.1094,1],[0.8809,0.3759,0],[0.8061,0.2733,0],[0.2503,0.2798,3],[0.5018,0.2523,1],[0.7721,0.6063,0],[0.9568,0.6178,0],[0.9506,0.4967,0],[0.3841,0.4431,3],[0.463,0.263,1],[0.8277,0.3539,0],[0.3295,0.7517,2],[0.708,0.8745,0],[0.3529,0.2053,1],[0.178,0.1882,4],[0.8416,0.4102,0],[0.6629,0.4694,0],[0.3818,0.6664,3],[0.0706,0.2708,4],[0.1906,0.6155,3],[0.3581,0.8087,2],[0.3839,0.0996,1],[0.5245,0.6481,2],[0.6978,0.5383,2],[0.4671,0.8764,2],[0.2963,0.8581,3],[0.4769,0.9087,2],[0.4549,0.5389,2],[0.4902,0.5937,2],[0.3806,0.775,2],[0.2974,0.2356,1],[0.111,0.5939,3],[0.4947,0.1611,1],[0.3743,0.5765,4],[0.347,0.8155,2],[0.4671,0.1258,4],[0.6305,0.7834,2],[0.7796,0.2925,1],[0.766,0.7264,0],[0.1723,0.0766,4],[0.7137,0.5358,2],[0.7233,0.1222,1],[0.6456,0.7836,0],[0.561,0.1106,1],[0.352,0.7976,2],[0.9492,0.4874,0],[0.3296,0.055,1],[0.3793,0.9989,3],[0.661,0.4062,1],[0.3992,0.5122,2],[0.7841,0.3766,0],[0.3528,0.4989,3],[0.0365,0.4144,3],[0.4532,0.8935,2],[0.7554,0.2051,0],[0.6064,0.275,1],[0.207,0.5856,3],[0.0586,0.5701,3],[0.7093,0.7782,2],[0.47,0.4726,3],[0.5111,0.2237,1],[0.7412,0.6597,0],[0.3747,0.0624,1],[0.4654,0.0744,1],[0.7186,0.0456,1],[0.1697,0.4148,3],[0.8204,0.6162,0],[0.7803,0.2353,0],[0.5685,0.8403,2],[0.5436,0.4077,1],[0.6834,0.0939,1],[0.6539,0.1101,1],[0.5045,0.7521,2],[0.3437,0.0539,4],[0.4418,0.8194,2],[0.0564,0.5588,3],[0.2896,0.3678,3],[0.7038,0.5592,2],[0.9479,0.5509,0],[0.3518,0.4493,2],[0.6207,0.5168,0],[0.5911,0.0952,1],[0.8187,0.5121,0],[0.274,0.8821,3],[0.1463,0.31,4],[0.6882,0.0945,1],[0.8494,0.1903,1],[0.3657,0.5993,4],[0.6525,0.3375,1],[0.9071,0.3305,0],[0.5578,0.431,2],[0.8485,0.239,0],[0.9297,0.5182,0],[0.1352,0.3473,3],[0.7901,0.7406,0],[0.4263,0.3452,3],[0.6049,0.6919,2],[0.1945,0.2723,4],[0.7035,0.2624,1],[0.2492,0.4951,4],[0.9194,0.5909,0],[0.7215,0.7685,0],[0.548,0.1449,1],[0.4857,0.0606,1],[0.8836,0.3723,0],[0.4652,0.1476,1],[0.256,0.5119,4],[0.747,0.12,1],[0.9066,0.2822,0],[0.9856,0.5439,0],[0.4961,0.4973,2],[0.7819,0.675,0],[0.8312,0.3073,0],[0.3988,0.2209,4],[0.4879,0.0946,1],[0.3257,0.4378,4],[0.517,0.7743,2],[0.405,0.5955,4],[0.8181,0.6129,0],[0.9703,0.5841,0],[0.8877,0.2537,0],[0.8107,0.5151,0],[0.5754,0.281,1],[0.4005,0.4428,2],[0.5015,0.6434,2],[0.5023,0.7916,2],[0.3501,0.5873,4],[0.5997,0.7774,2],[0.3382,0.8282,2],[0.8338,0.5397,0],[0.875,0.6215,0],[0.6037,0.6356,1],[0.3875,1.0,3],[0.5558,0.7333,2],[0.4081,0.857,2],[0.2243,0.7084,3],[0.7296,0.559,0],[0.593,0.037,1],[0.8786,0.3797,0],[0.6112,0.7178,2],[0.6015,0.0419,1],[0.3899,0.7753,2],[0.5963,0.1943,1],[0.2905,0.8851,3],[0.4925,0.8705,2],[0.4072,0.6713,2],[0.6866,0.258,1],[0.6014,0.2564,0],[0.4293,0.4021,3],[0.5552,0.6528,2],[0.4005,0.8303,2],[0.1799,0.4402,3],[0.8377,0.2846,0],[0.3133,0.3119,3],[0.224,0.8142,3],[0.382,0.2765,4],[0.4868,0.5405,2],[0.6969,0.7266,2],[0.1763,0.5411,3],[0.962,0.655,0],[0.1907,0.2692,4],[0.5948,0.4475,1],[0.6241,0.2564,1],[0.4659,0.1269,4],[0.8724,0.5675,0],[0.4918,0.3143,1],[0.3609,0.742,2],[0.0392,0.4775,3],[0.7025,0.1862,1],[0.1563,0.3818,3],[0.3914,0.0353,1],[0.9051,0.4506,0],[0.7902,0.5071,0],[0.6944,0.9162,0],[0.0337,0.4204,3],[0.2367,0.2484,3],[0.3822,0.4948,2],[0.5392,0.0135,1],[0.3349,0.4809,4],[0.1598,0.3707,3],[0.2136,0.2977,3],[0.5052,0.4423,1],[0.6915,0.2523,1],[0.8911,0.6767,0],[0.3336,0.7235,3],[0.2511,0.6306,4],[0.8687,0.3529,0],[0.8798,0.4306,0],[0.5339,0.1161,1],[0.2943,0.5914,4],[0.3865,0.8774,2],[0.1664,0.1056,4],[0.7531,0.5284,0],[0.9392,0.6243,0],[0.5499,0.1557,1],[0.3365,0.7571,2],[0.4557,0.6454,2],[0.0794,0.5732,3],[0.5643,0.1852,1],[0.315,0.0583,4],[0.8792,0.3868,0],[0.6466,0.4217,1],[0.7392,0.4529,0],[0.4454,0.6672,2],[0.8117,0.402,0],[0.2871,0.0979,4],[0.2461,0.1254,4],[0.6159,0.2461,1],[0.2179,0.7337,3],[0.2308,0.7082,3],[0.803,0.148,1],[0.1458,0.6051,3],[0.6081,0.2829,1],[0.5311,0.1132,1],[0.8974,0.6294,0],[0.485,0.089,1],[0.3528,0.664,2],[0.1969,0.1095,4],[0.8773,0.6564,0],[0.3313,0.8625,3],[0.21,0.7737,3],[0.4147,0.29,1],[0.4694,0.4725,3],[0.5212,0.1903,1],[0.3781,0.5998,4],[0.2154,0.3434,3],[0.5973,0.3572,1],[0.5216,0.8602,2],[0.1746,0.4833,3],[0.9437,0.2931,0],[0.6631,0.3532,2],[0.5348,0.2228,1],[0.8767,0.1752,1],[0.3168,0.4587,4],[0.4956,0.7659,2],[0.3051,0.8136,2],[0.4755,0.4282,1],[0.3121,0.7095,3],[0.8611,0.7205,0],[0.3517,0.593,2],[0.5432,0.6848,2],[0.694,0.5519,2],[0.6549,0.1707,1],[0.7012,0.2052,1],[0.5285,0.5274,4],[0.3943,0.4689,2],[0.8911,0.43,0],[0.4463,0.4652,3],[0.4938,0.8535,2],[0.5981,0.1969,1],[0.3299,0.3562,4],[0.878,0.1713,1],[0.6045,0.7734,2],[0.3022,0.4095,4],[0.2044,0.6097,3],[0.0293,0.4082,3],[0.4039,0.6881,2],[0.2712,0.6956,3],[0.5784,0.3894,1],[0.6824,0.3803,2],[0.4436,0.4395,2],[0.8198,0.5904,0],[0.1983,0.3268,3],[0.2582,0.576,4],[0.2008,0.5368,3],[0.5666,0.821,2],[0.4032,0.2588,2],[0.3916,0.8152,2],[0.9573,0.5678,0],[0.8675,0.2203,0],[0.7319,0.0926,1],[0.7788,0.756,0],[0.8431,0.1938,1],[0.6743,0.1077,1],[0.8532,0.4349,0],[0.1657,0.5161,3],[0.4959,0.0504,1],[0.3922,0.6481,2],[0.3159,0.5977,4],[0.9545,0.5759,0],[0.288,0.6385,2],[0.494,0.0512,1],[0.9177,0.4924,0],[0.6025,0.3714,2],[0.7771,0.5962,0],[0.8018,0.3755,0],[0.0189,0.4937,3],[0.3924,0.4871,2],[0.8156,0.4642,0],[0.1219,0.6159,3],[0.415,0.3009,1],[0.5476,0.9108,2],[0.5858,0.5002,0],[0.7035,0.1653,1],[0.4006,0.2911,3],[0.4049,0.2885,3],[0.1498,0.5284,3],[0.7579,0.2189,1],[0.7128,0.5582,2],[0.7024,0.2582,1],[0.7525,0.5468,2],[0.4647,0.2529,1],[0.2398,0.4633,3],[0.3702,0.1733,3],[0.5465,0.7623,2],[0.8269,0.5675,0],[0.1671,0.171,4],[0.0519,0.3482,4],[0.2984,0.3532,3],[0.3987,0.1074,1],[0.4271,0.5931,2],[0.6013,0.3162,1],[0.3132,0.4808,4],[0.5067,0.0891,1],[0.5525,0.122,1],[0.4349,0.2598,1],[0.701,0.259,1],[0.5437,0.1526,1],[0.3151,0.0704,4],[0.3413,0.4541,2],[0.7167,0.7144,0],[0.4136,0.4248,3],[0.8748,0.2618,0],[0.3861,0.8235,3],[0.09,0.544,3],[0.0303,0.4456,3],[0.6448,0.6131,0],[0.7715,0.5655,0],[0.4297,0.0114,1],[0.7026,0.6867,2],[0.6597,0.8822,0],[0.6014,0.7512,2],[0.4881,0.3409,1],[0.1214,0.3785,3],[0.9152,0.5898,0],[0.5189,0.4776,4],[0.5776,0.4822,2],[0.1591,0.4634,3],[0.1359,0.4314,3],[0.3363,0.0636,4],[0.7956,0.5175,0],[0.4556,0.2484,1],[0.4465,0.884,2],[0.2866,0.6049,4],[0.5232,0.138,1],[0.3435,0.5066,3],[0.3113,0.1226,4],[0.6224,0.4186,1],[0.5845,0.3869,1],[0.6081,0.2978,1],[0.7742,0.5347,0],[0.4201,0.6054,2],[0.4859,0.3274,1],[0.6883,0.7242,2],[0.8073,0.1526,1],[0.567,0.6268,2],[0.0425,0.4409,3],[0.2071,0.5517,3],[0.2188,0.7187,3],[0.0807,0.4992,3],[0.4616,0.7119,2],[0.5388,0.2048,1],[0.7565,0.2478,0],[0.2563,0.2611,3],[0.5338,0.1766,1],[0.3273,0.2468,1],[0.7184,0.877,0],[0.3895,0.7768,2],[0.5335,0.4853,2],[0.645,0.5182,0],[0.0409,0.3803,3],[0.6244,0.2887,1],[0.7677,0.3683,1],[0.8854,0.501,0],[0.7673,0.5404,0],[0.1396,0.1723,4],[0.2149,0.3464,3],[0.5652,0.1834,1],[0.7977,0.6086,0],[0.3384,0.3397,4],[0.8465,0.7082,0],[0.6467,0.1647,1],[0.5734,0.3377,1],[0.6794,0.253,1],[0.6371,0.5902,1],[0.1497,0.1558,4],[0.6328,0.7825,2],[0.5127,0.4851,2],[0.9736,0.5999,0],[0.5171,0.0052,1],[0.4477,0.4953,2],[0.6595,0.8781,1],[0.8207,0.6755,0],[0.5082,0.4754,2],[0.9595,0.6184,0],[0.274,0.2467,3],[0.4702,0.2868,1],[0.1921,0.6376,3],[0.6451,0.5968,1],[0.0991,0.2303,4],[0.2998,0.6925,4],[0.0486,0.3943,3],[0.7941,0.2351,0],[0.8612,0.3913,0],[0.3928,0.7606,2],[0.3604,0.0225,4],[0.4156,0.7576,2],[0.2683,0.1293,4],[0.6939,0.5396,2],[0.8162,0.3564,0],[0.7353,0.1236,1],[0.6386,0.0741,1],[0.5338,0.4094,1],[0.6471,0.4318,1],[0.309,0.2339,1],[0.7297,0.3813,1],[0.3403,0.7962,3],[0.2683,0.0498,4],[0.0907,0.5435,3],[0.754,0.3901,1],[0.2843,0.1284,4],[0.3901,0.2564,4],[0.2653,0.3517,3],[0.2688,0.0428,4],[0.5762,0.0482,1],[0.1267,0.2218,4],[0.3051,0.1385,4],[0.8427,0.4957,0],[0.6474,0.5182,0],[0.2868,0.0725,4],[0.5555,0.7392,2],[0.5496,0.145,1],[0.1021,0.3293,4],[0.5598,0.8427,2],[0.5937,0.3813,1],[0.9795,0.5433,0],[0.994,0.574,0],[0.7496,0.5638,2],[0.6006,0.1784,1],[0.4638,0.3717,1],[0.722,0.9154,0],[0.4752,0.2659,1],[0.2691,0.7971,3],[0.6511,0.7751,2],[0.3485,0.5927,2],[0.5103,0.3914,2],[0.6151,0.7105,0],[0.2726,0.0405,4],[0.9414,0.4743,0],[0.3027,0.4781,4],[0.6006,0.0262,1],[0.3672,0.0101,1],[0.2937,0.1041,4],[0.2249,0.7073,3],[0.7285,0.0471,1],[0.2479,0.8052,3],[0.3766,0.1901,1],[0.5494,0.4031,1],[0.5825,0.1085,1],[0.1577,0.2083,4],[0.493,0.8515,2],[0.353,0.6508,4],[0.151,0.5365,4],[0.7711,0.4581,0],[0.3333,0.4122,4],[0.7258,0.0542,1],[0.2389,0.1439,4],[0.6755,0.4012,1],[0.8165,0.2975,0],[0.622,0.6817,0],[0.5235,0.7956,2],[0.8538,0.6304,0],[0.2593,0.4686,4],[0.382,0.5778,4],[0.8513,0.5274,0],[0.1827,0.1865,4],[0.4899,0.4399,2],[0.3202,0.0297,4],[0.3217,0.2437,1],[0.4409,0.7887,2],[0.0331,0.4532,3],[0.1573,0.1323,4],[0.2438,0.2503,3],[0.0736,0.6683,3],[0.1493,0.4679,3],[0.855,0.2073,1],[0.1555,0.4471,3],[0.2706,0.1636,4],[0.4713,0.2453,1],[0.5855,0.4169,1],[0.5888,0.0871,1],[0.7161,0.6722,0],[0.1642,0.2338,4],[0.2406,0.311,3],[0.1731,0.0885,4],[0.43,0.796,2],[0.8949,0.5705,0],[0.4506,0.5935,2],[0.0515,0.5542,3],[0.7012,0.6512,2],[0.5055,0.7805,2],[0.5041,0.0981,1],[0.2721,0.7007,3],[0.02,0.4949,3],[0.4505,0.6417,2],[0.2636,0.8296,3],[0.0686,0.6704,3],[0.2362,0.0386,4],[0.384,0.4902,2],[0.5806,0.1526,1],[0.2353,0.3342,3],[0.8138,0.6741,0],[0.9693,0.6344,0],[0.2987,0.1165,4],[0.1208,0.2142,4],[0.5677,0.0274,1],[0.2431,0.2397,4],[0.8421,0.4098,0],[0.0819,0.5338,3],[0.4598,0.4744,3],[0.4858,0.2132,1],[0.6178,0.417,1],[0.9625,0.6165,0],[0.4574,0.7075,2],[0.7724,0.5284,0],[0.72,0.9042,0],[0.3246,0.1567,4],[0.3305,0.566,4],[0.7151,0.3062,1],[0.067,0.3544,4],[0.0971,0.5923,3],[0.8633,0.6907,0],[0.7338,0.1244,1],[0.829,0.6517,0],[0.4317,0.7534,2],[0.1339,0.612,3],[0.4838,0.0328,1],[0.429,0.1919,1],[0.8382,0.2723,0],[0.774,0.2184,0],[0.5585,0.8783,2],[0.0587,0.6554,3],[0.6903,0.759,2],[0.7816,0.6889,0],[0.3758,0.7514,2],[0.1911,0.0657,4],[0.6847,0.1962,1],[0.4574,0.6768,2],[0.7994,0.1742,1],[0.8225,0.6885,0],[0.8556,0.4407,0],[0.2091,0.0811,4],[0.2662,0.2745,3],[0.752,0.3079,1],[0.567,0.4919,2],[0.0198,0.4956,3],[0.1049,0.6635,3],[0.1213,0.2569,4],[0.5435,0.661,2],[0.2698,0.7776,3],[0.5158,0.9099,2],[0.1089,0.3125,4],[0.7781,0.7561,0],[0.3478,0.8826,3],[0.6016,0.4228,2],[0.7901,0.5652,0],[0.2576,0.0439,4],[0.2651,0.35,3],[0.627,0.2763,0],[0.5967,0.1664,1],[0.2262,0.8209,3],[0.3833,0.1151,1],[0.2491,0.2503,3],[0.8593,0.3925,0],[0.3969,0.8345,2],[0.4913,0.4334,1],[0.4804,0.6916,2],[0.4077,0.0667,1],[0.1444,0.6024,3],[0.4987,0.0438,1],[0.3935,0.8396,2],[0.1964,0.1001,4],[0.4355,0.454,3],[0.6144,0.6834,0],[0.5605,0.0825,1],[0.404,0.96,2],[0.4617,0.4314,1],[0.7662,0.301,1],[0.297,0.4144,4],[0.6005,0.3123,2],[0.7004,0.3841,1],[0.7824,0.4989,0],[0.8879,0.6738,0],[0.6331,0.7779,0],[0.918,0.5233,0],[0.4374,0.5448,2],[0.1361,0.2318,4],[0.7295,0.7615,0],[0.6678,0.0345,1],[0.9247,0.3227,0],[0.2621,0.8304,3],[0.7432,0.1058,1],[0.5334,0.0163,1],[0.0454,0.3979,3],[0.9349,0.6639,0],[0.7796,0.526,0],[0.8547,0.4906,0],[0.1551,0.5146,3],[0.3144,0.7431,2],[0.0822,0.5953,3],[0.7664,0.5935,0],[0.8961,0.2159,0],[0.3307,0.5541,4],[0.667,0.2702,1],[0.9395,0.66,0],[0.8474,0.6102,0],[0.8834,0.2076,0],[0.4657,0.8424,2],[0.0641,0.4337,3],[0.3484,0.2327,1],[0.5124,0.8912,2],[0.0942,0.4653,3],[0.9573,0.5679,0],[0.4152,0.3128,3],[0.4859,0.7689,2],[0.5465,0.9024,2],[0.4676,0.2036,4],[0.57,0.3694,4],[0.4152,0.5839,4],[0.6271,0.2131,1],[0.8053,0.5063,0],[0.7775,0.2423,0],[0.7394,0.0882,1],[0.893,0.4893,0],[0.6147,0.4518,1],[0.9261,0.472,0],[0.202,0.0704,4],[0.8631,0.3358,0],[0.6629,0.1346,1],[0.4381,0.3992,3],[0.2576,0.7942,3],[0.5424,0.0116,1],[0.726,0.5048,2],[0.0628,0.6778,3],[0.7132,0.5594,2],[0.0608,0.4969,3],[0.0677,0.3365,3],[0.1601,0.3628,4],[0.0637,0.484,3],[0.9385,0.5873,0],[0.4035,0.0904,1],[0.6643,0.7367,2],[0.1017,0.4329,3],[0.5078,0.2623,2],[0.245,0.1059,4],[0.3594,0.1948,1],[0.5202,0.8613,2],[0.6685,0.9214,0],[0.2987,0.7668,2],[0.3104,0.0307,4],[0.2113,0.4223,3],[0.2134,0.1508,4],[0.5932,0.4211,2],[0.4362,0.1409,1],[0.9818,0.6097,0],[0.5821,0.2508,1],[0.2661,0.1288,4],[0.4699,0.7599,2],[0.0999,0.2347,4],[0.9661,0.5541,0],[0.7026,0.3956,0],[0.5328,0.1965,1],[0.155,0.3168,3],[0.2072,0.4064,3],[0.2192,0.0702,4],[0.72,0.1493,1],[0.363,0.1336,4],[0.2895,0.8039,3],[0.4435,0.5356,2],[0.3114,0.2806,3],[0.3769,0.7339,2],[0.8509,0.6398,0],[0.3158,0.2823,3],[0.4728,0.768,2],[0.4791,0.2146,1],[0.288,0.3624,3],[0.2664,0.3115,3],[0.2851,0.738,2],[0.2911,0.3704,3],[0.1859,0.5137,3],[0.0808,0.307,4],[0.0789,0.1864,4],[0.4247,0.1302,1],[0.2769,0.4329,4],[0.4379,0.6954,2],[0.4131,0.6564,2],[0.7203,0.7058,0],[0.4297,0.7638,2],[0.3254,0.4361,4],[0.5645,0.3504,4],[0.4644,0.2468,1],[0.1466,0.1261,4],[0.484,0.0836,1],[0.5382,0.7589,2],[0.402,0.4642,2],[0.944,0.6212,0],[0.2751,0.8068,3],[0.8216,0.5486,0],[0.2797,0.4614,4],[0.4606,0.7633,2],[0.4075,0.1058,1],[0.3823,0.1007,1],[0.5043,0.2531,1],[0.5176,0.0934,1],[0.1035,0.514,3],[0.3986,0.2547,1],[0.1944,0.1017,4],[0.5177,0.4877,4],[0.1285,0.169,4],[0.5543,0.902,2],[0.3759,0.9537,3],[0.6642,0.7796,2],[0.7025,0.725,0],[0.2477,0.4225,4],[0.1797,0.1085,4],[0.6969,0.2077,1],[0.228,0.6401,4],[0.1484,0.1633,4],[0.6832,0.2613,1],[0.6989,0.4137,0],[0.461,0.5418,2],[0.7054,0.7402,2],[0.0597,0.3933,3],[0.2285,0.363,3],[0.7541,0.2022,0],[0.9343,0.5272,0],[0.2507,0.4965,4],[0.8487,0.2852,0],[0.5211,0.8598,2],[0.1817,0.2975,4],[0.7852,0.4545,0],[0.4275,0.5328,2],[0.3194,0.4842,3],[0.1568,0.5075,3],[0.4447,0.3462,1],[0.5452,0.7725,2],[0.2401,0.8512,3],[0.5507,0.1474,1],[0.5782,0.461,1],[0.4539,0.8816,2],[0.3889,0.9877,3],[0.1522,0.3173,3],[0.3121,0.3207,4],[0.798,0.605,0],[0.0745,0.3154,3],[0.307,0.8524,3],[0.0628,0.5795,3],[0.3705,0.0597,1],[0.357,0.5992,4],[0.4289,0.5851,4],[0.5022,0.6132,2],[0.7217,0.5087,2],[0.6293,0.5733,3],[0.4405,0.9128,2],[0.8972,0.238,0],[0.2827,0.2993,1],[0.3156,0.3572,4],[0.4544,0.7097,2],[0.1749,0.4818,3],[0.381,0.4954,2],[0.7963,0.729,0],[0.6691,0.9304,0],[0.5375,0.5416,2],[0.2156,0.7278,3],[0.1376,0.1199,4],[0.7082,0.1193,1],[0.4891,0.799,2],[0.771,0.3825,0],[0.8018,0.5868,0],[0.6499,0.1301,1],[0.1475,0.1571,4],[0.8,0.5465,0],[0.063,0.5862,3],[0.7342,0.122,1],[0.5903,0.2691,1],[0.5448,0.7657,2],[0.7059,0.0808,1],[0.1292,0.6147,3],[0.7413,0.1871,1],[0.5099,0.043,1],[0.1315,0.2681,4],[0.453,0.4697,3],[0.5224,0.6276,2],[0.765,0.7547,0],[0.5199,0.1909,1],[0.5184,0.7052,2],[0.3414,0.0587,4],[0.6309,0.4193,1],[0.6893,0.8978,0],[0.532,0.485,2],[0.8489,0.2023,1],[0.3645,0.9692,3],[0.2692,0.5612,4],[0.0405,0.4147,3],[0.1021,0.4376,3],[0.6439,0.2452,1],[0.4031,0.46,2],[0.3939,0.5019,2],[0.6483,0.5706,1],[0.7055,0.1395,1],[0.376,0.597,4],[0.8606,0.3564,0],[0.5032,0.6407,2],[0.1863,0.4983,3],[0.0667,0.4604,3],[0.6008,0.785,2],[0.8737,0.6415,0],[0.7143,0.1853,1],[0.8043,0.3514,0],[0.4297,0.206,1],[0.3931,0.8616,2],[0.679,0.1602,1],[0.8985,0.6181,0],[0.4471,0.3346,1],[0.327,0.3597,4],[0.3148,0.268,3],[0.4447,0.6719,2],[0.1116,0.4555,3],[0.1889,0.2989,3],[0.2089,0.4304,3],[0.2722,0.2985,3],[0.9614,0.6421,0],[0.6503,0.6776,2],[0.8967,0.6272,0],[0.6865,0.7214,2],[0.3124,0.607,4],[0.8977,0.3261,0],[0.8138,0.3968,0],[0.6441,0.5894,1],[0.8753,0.7075,0],[0.3143,0.0638,4],[0.3498,0.7138,2],[0.4019,0.8272,2],[0.7872,0.1473,1],[0.5884,0.3822,1],[0.3242,0.261,1],[0.3761,0.4829,2],[0.1312,0.3902,3],[0.63,0.1925,1],[0.7385,0.0899,1],[0.5191,0.0623,1],[0.637,0.1238,1],[0.7888,0.4375,0],[0.5163,0.3565,2],[0.4597,0.1498,1],[0.2682,0.6189,4],[0.668,0.0417,1],[0.7201,0.7177,0],[0.5494,0.4071,1],[0.1551,0.1533,4],[0.81,0.19,1],[0.5856,0.0861,1],[0.2573,0.7942,3],[0.3591,0.9713,3],[0.5191,0.0,1],[0.8891,0.4209,0],[0.6508,0.1569,1],[0.8894,0.3426,0],[0.3323,0.4115,4],[0.539,0.5413,2],[0.6558,0.2807,0],[0.8073,0.2936,0],[0.5298,0.2744,1],[0.716,0.526,2],[0.1674,0.135,4],[0.6632,0.8854,0],[0.6667,0.7298,2],[0.4642,0.3991,3],[0.406,0.6455,2],[0.6944,0.4667,2],[0.1414,0.4642,3],[0.8677,0.199,0],[0.9101,0.2723,0],[0.6325,0.1745,1],[0.377,0.7901,2],[0.0352,0.4203,3],[0.4342,0.8347,2],[0.2179,0.6522,3],[0.3072,0.6268,4],[0.5715,0.4824,1],[0.2444,0.0381,4],[0.4375,0.5457,2],[0.4623,0.2579,1],[0.4542,0.3599,1],[0.7569,0.7217,0],[0.0315,0.4218,3],[0.9845,0.5922,0],[0.4426,0.302,1],[0.4225,0.4271,3],[0.7354,0.4459,1],[0.0407,0.4248,3],[0.1058,0.211,4],[0.5322,0.119,1],[0.2913,0.605,4],[0.8187,0.3006,0],[0.303,0.2627,1],[0.4079,0.8468,2],[0.2541,0.4467,3],[0.9755,0.5552,0],[0.4763,0.4312,1],[0.6759,0.0249,1],[0.9495,0.5558,0],[0.0468,0.5768,3],[0.9677,0.5657,0],[0.6584,0.1079,1],[0.1079,0.4467,3],[0.3138,0.5984,4],[0.917,0.286,0],[0.4828,0.0203,1],[0.5987,0.4416,1],[0.6022,0.2514,1],[0.6063,0.3018,1],[0.4404,0.9244,2],[0.2525,0.0484,4],[0.1877,0.2759,4],[0.854,0.5681,0],[1.0,0.5622,0],[0.4983,0.8517,2],[0.3813,0.565,4],[0.7733,0.5553,0],[0.86,0.7185,0],[0.4946,0.5974,2],[0.5436,0.544,2],[0.5951,0.1016,1],[0.1105,0.1815,4],[0.1001,0.5176,3],[0.3789,0.9856,3],[0.494,0.7907,2],[0.5488,0.5452,2],[0.6714,0.7518,2],[0.672,0.0433,1],[0.8347,0.2725,0],[0.0069,0.4243,3],[0.3253,0.5607,4],[0.5865,0.7996,2],[0.2692,0.6001,4],[0.9777,0.6416,0],[0.4949,0.0017,1],[0.4343,0.1919,1],[0.3999,0.5116,2],[0.9705,0.545,0],[0.4661,0.8365,2],[0.8994,0.6033,0],[0.5653,0.4264,2],[0.1522,0.5338,3],[0.4769,0.1904,1],[0.0415,0.4582,3],[0.3325,0.6375,4],[0.247,0.2965,3],[0.6456,0.9031,2],[0.0964,0.5641,3],[0.1279,0.2196,4],[0.3643,0.0225,1],[0.874,0.6366,0],[0.2105,0.705,3],[0.5132,0.7261,2],[0.5398,0.6142,2],[0.71,0.2784,1],[0.3488,0.3529,2],[0.559,0.1233,1],[0.4652,0.7218,2],[0.3951,0.4687,2],[0.9887,0.5847,0],[0.7044,0.7189,2],[0.5413,0.4691,2],[0.5883,0.0318,1],[0.2588,0.1954,4],[0.9884,0.5411,0],[0.7023,0.5467,2],[0.5051,0.4309,1],[0.574,0.8842,2],[0.9085,0.606,0],[0.8874,0.5738,0],[0.3202,0.0306,4],[0.3471,0.424,2],[0.5311,0.1795,1],[0.9025,0.5477,0],[0.3758,0.7205,2],[0.167,0.1676,4],[0.5396,0.1295,1],[0.5131,0.6283,2],[0.7146,0.883,0],[0.5349,0.5158,4],[0.079,0.1856,4],[0.0549,0.4115,3],[0.3593,0.4278,2],[0.2591,0.0929,4],[0.4132,0.8494,2],[0.8457,0.6055,0],[0.1799,0.2323,4],[0.8942,0.6135,0],[0.5055,0.8731,2],[0.9446,0.2903,0],[0.069,0.3377,3],[0.1983,0.6227,3],[0.8371,0.5405,0],[0.6387,0.858,2],[0.8912,0.6677,0],[0.3411,0.4113,2],[0.669,0.0842,1],[0.2533,0.2628,3],[0.5435,0.7245,2],[0.3872,0.1716,3],[0.2403,0.1655,4],[0.2826,0.2634,3],[0.7447,0.1057,1],[0.5037,0.8701,2],[0.4027,0.6762,2],[0.488,0.4197,1],[0.7973,0.5544,0],[0.3424,0.7185,3],[0.3281,0.8787,2],[0.9335,0.2961,0],[0.3073,0.4772,4],[0.2273,0.8157,3],[0.589,0.6196,0],[0.462,0.7287,2],[0.5968,0.0728,1],[0.2051,0.4041,3],[0.2881,0.147,4],[0.9597,0.5471,0],[0.346,0.4284,2],[0.3687,0.0543,1],[0.2442,0.429,4],[0.6713,0.4028,1],[0.9283,0.4929,0],[0.3832,0.5981,4],[0.9397,0.5479,0],[0.4421,0.3878,3],[0.136,0.4468,3],[0.6949,0.7337,2],[0.0,0.4824,3],[0.1443,0.2282,4],[0.6011,0.675,2],[0.3114,0.0344,4],[0.6695,0.045,1],[0.3949,0.29,3],[0.4884,0.6899,2],[0.5168,0.7108,2],[0.8126,0.6406,0],[0.0926,0.4613,3],[0.5796,0.7768,2],[0.863,0.288,0],[0.2472,0.2461,3],[0.6956,0.3952,1],[0.1024,0.1913,4],[0.224,0.6679,4],[0.3795,0.1148,1],[0.4942,0.372,2],[0.6218,0.2963,0],[0.533,0.8487,2],[0.3119,0.7353,2],[0.3681,0.4795,2],[0.1356,0.42,3],[0.9348,0.5042,0],[0.7637,0.5549,2],[0.7468,0.3024,1],[0.5231,0.7294,2],[0.379,0.8482,2],[0.4348,0.935,2],[0.4158,0.3134,3],[0.5201,0.1744,1],[0.6458,0.1419,1],[0.513,0.6124,2],[0.9405,0.5299,0],[0.6836,0.4644,1],[0.6715,0.0483,1],[0.4631,0.6074,2],[0.5298,0.7504,2],[0.3406,0.8177,2],[0.2918,0.7564,2],[0.5093,0.7798,2],[0.5995,0.0979,1],[0.7117,0.262,1],[0.7636,0.4701,0],[0.7053,0.3199,1],[0.6647,0.4732,1],[0.7045,0.1626,1],[0.7381,0.5411,0],[0.5008,0.7614,2],[0.5436,0.603,2],[0.5367,0.2474,1],[0.8401,0.4107,0],[0.6925,0.464,1],[0.4654,0.6314,2],[0.5586,0.0904,1],[0.5541,0.4336,2],[0.2175,0.7363,3],[0.0584,0.3092,4],[0.7289,0.5021,0],[0.806,0.151,1],[0.5461,0.86,2],[0.5771,0.2702,1],[0.9455,0.6585,0],[0.808,0.6303,0],[0.9118,0.5782,0],[0.3135,0.4385,4],[0.1693,0.47,3],[0.5922,0.0531,1],[0.8875,0.5921,0],[0.1445,0.3398,3],[0.5538,0.1225,1],[0.4332,0.8335,2],[0.4657,0.6274,2],[0.7387,0.7154,0],[0.4237,0.2066,1],[0.7,0.3918,1],[0.9362,0.3266,0],[0.4366,0.1863,1],[0.6057,0.3017,1],[0.2121,0.0718,4],[0.3201,0.2277,1],[0.09,0.6522,3],[0.2018,0.4175,3],[0.9387,0.5838,0],[0.9671,0.6334,0],[0.8708,0.4383,0],[0.5638,0.4188,1],[0.1974,0.2703,4],[0.1152,0.1611,4],[0.7448,0.4718,0],[0.1965,0.0727,4],[0.9287,0.5485,0],[0.1203,0.3902,3],[0.3703,0.4801,3],[0.1801,0.5171,3],[0.4353,0.4541,3],[0.4244,0.348,3],[0.7461,0.3256,1],[0.7959,0.6119,0],[0.6603,0.4599,0],[0.7125,0.129,1],[0.797,0.521,0],[0.4936,0.6773,2],[0.6459,0.141,1],[0.2382,0.6709,4],[0.3053,0.0827,4],[0.6975,0.5466,2],[0.9751,0.6467,0],[0.3211,0.7114,3],[0.137,0.3662,3],[0.382,0.2532,4],[0.6375,0.3904,1],[0.191,0.3937,3],[0.5549,0.5937,1],[0.884,0.5614,0],[0.8481,0.4832,0],[0.2877,0.3113,3],[0.5851,0.0283,1],[0.0539,0.4388,3],[0.9416,0.462,0],[0.4161,0.7776,2],[0.062,0.5563,3],[0.3426,0.7865,2],[0.8049,0.1446,1],[0.3997,0.3356,3],[0.9097,0.4523,0],[0.2218,0.1429,4],[0.1723,0.0885,4],[0.6987,0.069,1],[0.2167,0.7591,3],[0.538,0.0299,1],[0.8484,0.461,0],[0.7122,0.1868,1],[0.4487,0.6234,2],[0.6842,0.4474,0],[0.7301,0.5571,0],[0.566,0.4273,2],[0.8609,0.6328,0],[0.3534,0.0644,4],[0.3124,0.3419,4],[0.384,0.0988,1],[0.631,0.0802,1],[0.4079,0.8317,2],[0.5295,0.5199,2],[0.1742,0.189,4],[0.4611,0.6336,2],[0.7857,0.3728,0],[0.5864,0.1683,1],[0.5355,0.62,2],[0.4767,0.2602,1],[0.2445,0.7535,3],[0.3218,0.4341,4],[0.2784,0.3096,3],[0.7162,0.1694,1],[0.1834,0.2996,3],[0.3508,0.7287,2],[0.0687,0.3559,4],[0.7002,0.3139,1],[0.1331,0.2239,4],[0.7709,0.1718,1],[0.6896,0.3489,0],[0.6276,0.2166,1],[0.4605,0.9018,2],[0.5423,0.0014,1],[0.4556,0.6025,2],[0.5028,0.2598,1],[0.7161,0.6652,0],[0.3048,0.0341,4],[0.8045,0.3786,0],[0.5369,0.0512,1],[0.5192,0.1745,1],[0.6704,0.8983,0],[0.3965,0.3009,3],[0.7526,0.5853,0],[0.5619,0.0725,1],[0.0924,0.5329,3],[0.2911,0.5876,4],[0.6928,0.7103,2],[0.069,0.4254,3],[0.6844,0.7621,2],[0.4272,0.4564,3],[0.982,0.5349,0],[0.5923,0.6613,2],[0.2718,0.8784,3],[0.5622,0.0756,1],[0.4287,0.9139,2],[0.3369,0.3008,3],[0.3734,0.1126,1],[0.5256,0.5488,2],[0.1226,0.2234,4],[0.7889,0.3894,0],[0.6651,0.7979,0],[0.5983,0.635,2],[0.1768,0.3022,4],[0.5126,0.8682,2],[0.4065,0.3672,3],[0.554,0.681,2],[0.1111,0.4542,3],[0.3002,0.5724,4],[0.8055,0.4017,0],[0.841,0.6425,0],[0.8801,0.3339,0],[0.5791,0.8181,2],[0.9674,0.567,0],[0.3758,0.6169,2],[0.9068,0.2718,0]],"quality":{"min_silhouette":0.2}}</script>
+<script>
+(() => {
+  'use strict';
+  const D = JSON.parse(document.getElementById('data').textContent);
+  const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+  const lerp = (a, b, p) => a + (b - a) * p;
+  const ease = p => (p < .5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2);
+  const NS = 'http://www.w3.org/2000/svg';
+  const el = (tag, attrs, parent) => {
+    const node = document.createElementNS(NS, tag);
+    for (const key in attrs) node.setAttribute(key, attrs[key]);
+    if (parent) parent.appendChild(node);
+    return node;
+  };
+  const txt = (parent, x, y, str, cls, attrs) => {
+    const node = el('text', Object.assign({ x, y }, cls ? { class: cls } : {}, attrs || {}), parent);
+    node.textContent = str;
+    return node;
+  };
+  // Mismo formato que segmentacion.viz.fmt: miles con punto, decimales con coma.
+  const num = (v, d = 0) => {
+    const [int, dec] = Math.abs(v).toFixed(d).split('.');
+    return (v < 0 ? '−' : '') + int.replace(/\B(?=(\d{3})+(?!\d))/g, '.') + (dec ? ',' + dec : '');
+  };
+  const pct = (v, d = 0) => num(v * 100, d) + ' %';
+  const W = 600, H = 520;
+  const prep = svg => {
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+    return svg;
+  };
+  const middleOf = values => [...values].sort((a, b) => a - b)[Math.floor(values.length / 2)];
+
+  // Cada gráfico es una función de t: progreso continuo del capítulo (0 = paso 1, 1 = paso 2…).
+  const CHARTS = {};
+
+  CHARTS.valor = (svg, c) => {
+    const expand = counts => counts.flatMap((n, s) => Array(n).fill(s));
+    const A = expand(D.waffle.members), B = expand(D.waffle.revenue);
+    const size = 32, gap = 5, y0 = 66;
+    const cap = txt(svg, 0, 40, 'Cada cuadrado = 1 % de los socios', 'cap');
+    const cells = Array.from({ length: 100 }, (_, i) => el('rect', {
+      x: Math.floor(i / 10) * (size + gap), y: y0 + (i % 10) * (size + gap),
+      width: size, height: size, rx: 3, class: 'cell fn',
+    }, svg));
+    const legend = D.segments.map((s, i) => {
+      const g = el('g', { transform: `translate(404,${y0 + 14 + i * 74})` }, svg);
+      el('rect', { x: 0, y: -12, width: 13, height: 13, rx: 2, class: 'f' + i }, g);
+      txt(g, 22, 0, s.name, 'leg-name');
+      txt(g, 22, 22, s.label.pct + ' de los socios', 'lab num');
+      const rev = txt(g, 22, 41, s.label.rev + ' del ingreso', 'lab num');
+      return { g, rev };
+    });
+    const born = performance.now();
+    c.busy = !REDUCED;
+    return (t, now) => {
+      const entry = REDUCED ? 1 : clamp((now - born) / 1400);
+      if (entry >= 1) c.busy = false;
+      const paint = clamp((t - .4) / .6), dim = clamp((t - 1.5) / .45), money = clamp((t - 2.4) / .6);
+      cells.forEach((cell, i) => {
+        const seg = money > (i / 100) * .97 ? B[i] : A[i];
+        const cls = 'cell ' + (paint > (i / 100) * .97 ? 'f' + seg : 'fn');
+        if (cell.getAttribute('class') !== cls) cell.setAttribute('class', cls);
+        cell.style.opacity = entry * 100 < i ? 0 : seg === 0 ? 1 : 1 - .6 * dim;
+      });
+      cap.textContent = money > .5 ? 'Cada cuadrado = 1 % del ingreso' : 'Cada cuadrado = 1 % de los socios';
+      legend.forEach((l, i) => {
+        l.g.style.opacity = clamp((t - .35) / .5) * (i === 0 ? 1 : 1 - .5 * dim);
+        l.rev.style.opacity = .3 + .7 * clamp((t - 2.4) / .4);
+      });
+    };
+  };
+
+  CHARTS.metricas = (svg, c) => {
+    const names = { L: 'Antigüedad', R: 'Meses sin volar (más es peor)', F: 'Vuelos en dos años', M: 'Kilómetros volados', C: 'Precio pagado frente a la tarifa completa' };
+    // Etiquetas ya formateadas en Python, para que coincidan con el texto (mismo redondeo).
+    const x0 = 64, x1 = 586;
+    const anchor = x => (x < x0 + 80 ? 'start' : x > x1 - 80 ? 'end' : 'middle');
+    const rows = ['L', 'R', 'F', 'M', 'C'].map((m, k) => {
+      const vals = D.segments.map(s => s.med[m]), all = vals.concat(D.overall[m]);
+      const lo = m === 'C' ? Math.min(...all) - .05 : 0, hi = m === 'C' ? Math.max(...all) + .05 : Math.max(...all) * 1.08;
+      const sx = v => x0 + (v - lo) / (hi - lo) * (x1 - x0);
+      const g = el('g', { class: 'mrow next', transform: `translate(0,${16 + k * 100})` }, svg);
+      txt(g, 0, 52, m, 'letter');
+      txt(g, x0, 8, names[m], 'lab');
+      el('line', { x1: x0, x2: x1, y1: 44, y2: 44, class: 'axis' }, g);
+      const xo = sx(D.overall[m]);
+      el('line', { x1: xo, x2: xo, y1: 32, y2: 56, class: 'medline' }, g);
+      txt(g, xo, 76, 'socio típico: ' + D.overall_label[m], 'lab num', { 'text-anchor': anchor(xo) });
+      const dots = vals.map((_, i) => el('circle', { cx: xo, cy: 44, r: 8, class: 'dot f' + i }, g));
+      const iMin = vals.indexOf(Math.min(...vals)), iMax = vals.indexOf(Math.max(...vals));
+      const labs = [iMin, iMax].map(i => txt(g, sx(vals[i]), 28, D.segments[i].short + ' · ' + D.segments[i].label.med[m], 'vlab t' + i, { 'text-anchor': anchor(sx(vals[i])) }));
+      return { g, dots, labs, vals, sx, xo };
+    });
+    c.onStep = step => rows.forEach((r, k) => r.g.setAttribute('class', 'mrow ' + (k < step ? 'past' : k === step ? 'now' : 'next')));
+    return t => rows.forEach((r, k) => {
+      const p = ease(clamp((t - (k - .6)) / .6));
+      r.dots.forEach((d, i) => { d.setAttribute('cx', lerp(r.xo, r.sx(r.vals[i]), p).toFixed(1)); d.style.opacity = p > 0 ? 1 : 0; });
+      r.labs.forEach(l => { l.style.opacity = p; });
+    });
+  };
+
+  CHARTS.cola = svg => {
+    const h = D.hist, n = h.raw.shares.length, x0 = 30, x1 = 590, base = 420, hmax = 300, bw = (x1 - x0) / n;
+    const e0 = h.raw.edges[0], eN = h.raw.edges[n];
+    const xr = v => x0 + (v - e0) / (eN - e0) * (x1 - x0);
+    const rmax = Math.max(...h.raw.shares), smax = Math.max(...h.scaled.shares);
+    txt(svg, x0, 36, 'Socios según su número de vuelos (cada barra, un tramo)', 'cap');
+    const bars = h.raw.shares.map((_, i) => el('rect', { x: x0 + i * bw + 1.5, width: bw - 3, y: base, height: 0, rx: 1.5, class: 'hbar' }, svg));
+    el('line', { x1: x0, x2: x1, y1: base, y2: base, class: 'axis' }, svg);
+    const raw = el('g', {}, svg);
+    [0, 20, 40, 60, 80, 100, 120].forEach(v => txt(raw, xr(v), base + 22, v === eN ? num(v) + '+' : num(v), 'lab num', { 'text-anchor': 'middle' }));
+    txt(raw, x1, base + 46, 'vuelos en dos años', 'lab', { 'text-anchor': 'end' });
+    const common = el('g', { opacity: 0 }, svg);
+    txt(common, x0, base + 22, '← menos vuelos', 'lab');
+    txt(common, x1, base + 22, 'más vuelos →', 'lab', { 'text-anchor': 'end' });
+    txt(common, x1, base + 46, 'tras comprimir: escala común', 'lab', { 'text-anchor': 'end' });
+    const xm = xr(h.median), median = el('g', {}, svg);
+    el('line', { x1: xm, x2: xm, y1: 80, y2: base, class: 'medline' }, median);
+    txt(median, xm + 10, 96, 'la mitad: ' + num(h.median) + ' vuelos o menos', 'ann');
+    const xt = xr(h.tail_from), yb = base - 64, tail = el('g', { opacity: 0 }, svg);
+    el('path', { d: `M${xt} ${yb + 10}V${yb}H${x1 - 2}V${yb + 10}`, class: 'bracket' }, tail);
+    txt(tail, x1, yb - 32, 'el ' + pct(h.tail_share) + ' que más vuela', 'ann', { 'text-anchor': 'end' });
+    txt(tail, x1, yb - 12, 'de ' + num(h.tail_from) + ' a ' + num(h.max) + ' vuelos', 'lab num', { 'text-anchor': 'end' });
+    return t => {
+      // Cada transición termina antes de llegar a su paso (t entero): el paso se ve completo.
+      const grow = ease(clamp((t + .5) / .8)), hot = clamp((t - .55) / .4) * (1 - clamp((t - 1.1) / .35)), morph = ease(clamp((t - 1.15) / .75));
+      bars.forEach((b, i) => {
+        const v = lerp(h.raw.shares[i] / rmax, h.scaled.shares[i] / smax, morph);
+        const hh = Math.max(v > 0 ? 2 : 0, v * hmax) * grow;
+        b.setAttribute('y', (base - hh).toFixed(1));
+        b.setAttribute('height', hh.toFixed(1));
+        const isTail = h.raw.edges[i] >= h.tail_from;
+        const cls = isTail && hot > .3 ? 'hbar hot' : 'hbar';
+        if (b.getAttribute('class') !== cls) b.setAttribute('class', cls);
+        b.style.opacity = isTail ? 1 : 1 - .6 * hot;
+      });
+      raw.style.opacity = 1 - morph;
+      common.style.opacity = morph;
+      median.style.opacity = grow * (1 - morph) * (1 - .6 * hot);
+      tail.style.opacity = hot;
+    };
+  };
+
+  CHARTS.cuantos = svg => {
+    const K = D.k, x0 = 70, x1 = 570, y0 = 96, y1 = 420, lo = .19, hi = .30;
+    const sx = k => x0 + (k - K[0].k) / (K[K.length - 1].k - K[0].k) * (x1 - x0);
+    const sy = v => y1 - (v - lo) / (hi - lo) * (y1 - y0);
+    txt(svg, 0, 36, 'Separación entre grupos (silhouette) · más alto, mejor', 'cap');
+    [.20, .22, .24, .26, .28, .30].forEach(v => {
+      el('line', { x1: x0, x2: x1, y1: sy(v), y2: sy(v), class: 'grid' }, svg);
+      txt(svg, x0 - 12, sy(v) + 4, num(v, 2), 'lab num', { 'text-anchor': 'end' });
+    });
+    K.forEach(r => txt(svg, sx(r.k), y1 + 26, String(r.k), 'lab num', { 'text-anchor': 'middle' }));
+    txt(svg, (x0 + x1) / 2, y1 + 52, 'número de grupos', 'lab', { 'text-anchor': 'middle' });
+    const ck = D.chosen_k, i5 = K.findIndex(r => r.k === ck);
+    const band = el('rect', { x: sx(ck) - 24, y: y0 - 30, width: 48, height: y1 - y0 + 30, rx: 8, class: 'band' }, svg);
+    const thr = D.quality.min_silhouette;
+    el('line', { x1: x0, x2: x1, y1: sy(thr), y2: sy(thr), class: 'thr' }, svg);
+    txt(svg, x1, sy(thr) + 18, 'mínimo exigido', 'lab', { 'text-anchor': 'end' });
+    const path = el('path', { d: K.map((r, i) => (i ? 'L' : 'M') + sx(r.k).toFixed(1) + ' ' + sy(r.sil).toFixed(1)).join(''), class: 'sil' }, svg);
+    const L = path.getTotalLength();
+    path.style.strokeDasharray = `${L} ${L}`;
+    const pts = K.map(r => el('circle', { cx: sx(r.k), cy: sy(r.sil), r: 5.5, class: 'pt' }, svg));
+    const two = el('g', { opacity: 0 }, svg);
+    txt(two, sx(K[0].k) + 16, sy(K[0].sil) + 5, 'la mayor separación…', 'ann');
+    txt(two, sx(K[0].k) + 16, sy(K[0].sil) + 25, 'pero solo «vuela» frente a «no vuela»', 'lab');
+    const chosen = el('g', { opacity: 0 }, svg);
+    txt(chosen, sx(ck), y0 - 40, 'elegido: ' + ck + ' grupos', 'ann', { 'text-anchor': 'middle' });
+    return t => {
+      const d = ease(clamp((t + .6) / 1.2));
+      path.style.strokeDashoffset = L * (1 - d);
+      pts.forEach((p, i) => { p.style.opacity = d * (K.length - 1) >= i - .05 ? 1 : 0; });
+      const s2 = clamp((t - .55) / .4) * (1 - clamp((t - 1.55) / .4)), s5 = clamp((t - 1.55) / .4);
+      two.style.opacity = s2;
+      chosen.style.opacity = s5;
+      band.style.opacity = s5;
+      pts[0].classList.toggle('hot', s2 > .5);
+      pts[i5].classList.toggle('hot', s5 > .5);
+    };
+  };
+
+  CHARTS.mapa = (svg, c) => {
+    const P = D.map, x0 = 10, x1 = 590, y0 = 16, y1 = 486;
+    const X = x => x0 + x * (x1 - x0), Y = y => y1 - y * (y1 - y0);
+    const g = el('g', { class: 'pts' }, svg);
+    const dots = P.map(p => el('circle', { cx: X(p[0]).toFixed(1), cy: Y(p[1]).toFixed(1), r: 2.7, class: 's' + p[2] + ' off' }, g));
+    const labs = D.segments.map((s, i) => {
+      const mine = P.filter(p => p[2] === i);
+      return txt(svg, X(middleOf(mine.map(p => p[0]))), Y(middleOf(mine.map(p => p[1]))), s.name, 'maplab halo t' + i, { 'text-anchor': 'middle', opacity: 0 });
+    });
+    txt(svg, x1, H - 4, 'Muestra de ' + num(P.length) + ' socios', 'lab', { 'text-anchor': 'end' });
+    const focus = [null, null, [0], [3, 4]];
+    c.onStep = step => {
+      const hl = focus[step];
+      g.setAttribute('class', 'pts' + (step >= 1 ? ' colored' : '') + (hl ? ' hl ' + hl.map(i => 'hl-' + i).join(' ') : ''));
+      labs.forEach((l, i) => { l.style.opacity = step < 1 ? 0 : hl && !hl.includes(i) ? .3 : 1; });
+    };
+    let shown = 0;
+    return t => {
+      const k = Math.round(clamp((t + .9) / 1.1) * dots.length);
+      for (let i = Math.min(k, shown); i < Math.max(k, shown); i++) dots[i].classList.toggle('off', i >= k);
+      shown = k;
+    };
+  };
+
+  CHARTS.fiable = svg => {
+    const S = D.stability, x0 = 190, x1 = 580, lo = .85, hi = 1, ya = 214;
+    const sx = v => x0 + (v - lo) / (hi - lo) * (x1 - x0);
+    txt(svg, 0, 30, 'Coincidencia al repetir el análisis (ARI · 1 = idénticos)', 'cap');
+    [.85, .90, .95, 1].forEach(v => {
+      el('line', { x1: sx(v), x2: sx(v), y1: 52, y2: ya - 14, class: 'grid' }, svg);
+      txt(svg, sx(v), ya + 4, num(v, 2), 'lab num', { 'text-anchor': 'middle' });
+    });
+    el('line', { x1: sx(S.threshold), x2: sx(S.threshold), y1: 48, y2: ya - 14, class: 'thr' }, svg);
+    txt(svg, sx(S.threshold) - 8, 60, 'mínimo exigido', 'lab', { 'text-anchor': 'end' });
+    const row = (vals, y, title, sub) => {
+      const g = el('g', {}, svg);
+      txt(g, 0, y - 2, title, 'rowlab');
+      txt(g, 0, y + 16, sub, 'lab');
+      const dots = vals.map((v, i) => el('circle', { cx: sx(v).toFixed(1), cy: y + ((i % 3) - 1) * 7, r: 4.5, class: 'adot' }, g));
+      const m = vals.reduce((a, b) => a + b, 0) / vals.length;
+      const mark = el('g', {}, g);
+      el('path', { d: `M${sx(m).toFixed(1)} ${y - 15}l7 7-7 7-7-7z`, class: 'mean' }, mark);
+      txt(mark, sx(m), y - 22, num(m, 2), 'ann num', { 'text-anchor': 'middle' });
+      return { g, dots, mark };
+    };
+    const seeds = row(S.seeds, 104, 'Otro punto de partida', S.seeds.length + ' comparaciones');
+    const subs = row(S.subsample, 168, 'Con una parte de los socios', S.subsample.length + ' comparaciones');
+    const yb = 284, bx = 190, bw = 330, bmax = .25;
+    txt(svg, 0, yb, 'Separación entre grupos según la técnica (silhouette)', 'cap');
+    const bars = D.bench.map((b, i) => {
+      const y = yb + 26 + i * 46, g = el('g', {}, svg);
+      txt(g, 0, y + 16, b.name, b.main ? 'rowlab' : 'lab');
+      const r = el('rect', { x: bx, y, width: 0, height: 22, rx: 3, class: b.main ? 'bmain' : 'bother' }, g);
+      const v = txt(g, bx + 8, y + 16, num(b.sil, 2), 'lab num');
+      return { g, r, v, w: b.sil / bmax * bw };
+    });
+    return t => {
+      const a = clamp((t + .6) / .8);
+      seeds.dots.forEach((d, i) => { d.style.opacity = a * seeds.dots.length > i ? 1 : 0; });
+      seeds.mark.style.opacity = clamp((t + .1) / .4);
+      subs.g.style.opacity = .16 + .84 * clamp((t - .55) / .45);
+      const p = ease(clamp((t - 1.4) / .5));
+      bars.forEach(b => {
+        b.r.setAttribute('width', (b.w * p).toFixed(1));
+        b.v.setAttribute('x', (bx + b.w * p + 8).toFixed(1));
+        b.g.style.opacity = .22 + .78 * clamp((t - 1.4) / .3);
+      });
+    };
+  };
+
+  CHARTS.segmentos = (box, c) => {
+    const cards = [...box.querySelectorAll('.seg')];
+    c.onStep = step => cards.forEach((card, i) => card.classList.toggle('on', i === step));
+    return () => {};
+  };
+
+  // Motor de scroll ----------------------------------------------------------------------------
+  const body = document.body;
+  const sections = [...document.querySelectorAll('main > section')];
+  const chapters = [...document.querySelectorAll('section.ch')].map((sec, i, all) => {
+    const c = { sec, i, total: all.length, title: sec.dataset.title, says: [...sec.querySelectorAll('.says > li')], t: null, step: -1, drawn: null, busy: false };
+    c.n = c.says.length;
+    c.says.forEach((li, k) => { li.dataset.n = k + 1; });
+    // El lienzo es el <svg> hijo directo de .viz; si no hay (fichas de segmento), el propio .viz.
+    const viz = sec.querySelector('.viz'), canvas = viz.querySelector(':scope > svg'), make = CHARTS[sec.dataset.chart];
+    try {
+      c.draw = make ? make(canvas ? prep(canvas) : viz, c) : () => {};
+    } catch (error) {
+      console.error('Gráfico «' + sec.id + '»:', error);
+      c.draw = () => {};
+    }
+    return c;
+  });
+
+  function setStep(c) {
+    c.says.forEach((li, k) => { li.className = k < c.step ? 'past' : k === c.step ? 'now' : 'next'; });
+    if (c.onStep) c.onStep(c.step);
+  }
+
+  let stops = [];
+  function layout() {
+    for (const s of sections) { s._top = s.getBoundingClientRect().top + scrollY; s._h = s.offsetHeight; }
+    stops = [];
+    for (const c of chapters) {
+      c.top = c.sec._top;
+      c.h = c.sec._h;
+      c.stepH = c.sec.querySelector('.step').offsetHeight || innerHeight;
+      for (let k = 0; k < c.n; k++) stops.push(Math.round(c.top + k * c.stepH));
+    }
+    for (const s of sections) if (!s.classList.contains('ch')) stops.push(Math.round(s._top));
+    stops.sort((a, b) => a - b);
+  }
+
+  // Migas: «03 / 07  Capítulo», con un fundido al cambiar de capítulo.
+  const crumbLine = document.querySelector('.crumb .cc');
+  const [crumbNum, crumbName] = crumbLine.children;
+  let current, crumbTimer;
+  function showCrumb(c) {
+    body.classList.toggle('inch', !!c);
+    if (!c) return;
+    const put = () => {
+      crumbNum.textContent = String(c.i + 1).padStart(2, '0') + ' / ' + String(c.total).padStart(2, '0');
+      crumbName.textContent = c.title;
+      crumbLine.classList.remove('off');
+    };
+    clearTimeout(crumbTimer);
+    if (REDUCED || !crumbName.textContent) { put(); return; }
+    crumbLine.classList.add('off');
+    crumbTimer = setTimeout(put, 220);
+  }
+
+  // Portada: título palabra a palabra, constelación de socios y parallax.
+  const cover = document.getElementById('portada');
+  const title = cover.querySelector('h1');
+  const words = title.textContent.trim().split(/\s+/);
+  title.textContent = '';
+  words.forEach((word, i) => {
+    const span = document.createElement('span');
+    span.className = 'w';
+    span.style.setProperty('--i', i);
+    span.textContent = word;
+    title.append(span, i < words.length - 1 ? ' ' : '');
+  });
+  const sky = cover.querySelector('.sky');
+  const skySvg = sky.querySelector('svg');
+  D.map.forEach(p => el('circle', { cx: (p[0] * 600).toFixed(1), cy: ((1 - p[1]) * 520).toFixed(1), r: 1.9, class: 'f' + p[2] }, skySvg));
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver(entries => {
+      if (entries.some(e => e.isIntersecting)) { cover.classList.add('go'); io.disconnect(); }
+    }, { threshold: .3 });
+    io.observe(cover);
+  } else {
+    cover.classList.add('go');
+  }
+
+  const bar = document.querySelector('.bar');
+  function frame(now) {
+    const y = scrollY;
+    bar.style.transform = `scaleX(${clamp(y / Math.max(1, document.documentElement.scrollHeight - innerHeight)).toFixed(4)})`;
+    let here = null;
+    for (const c of chapters) {
+      const target = (y - c.top) / c.stepH;
+      if (y >= c.top - 2 && y < c.top + c.h - c.stepH * .5) here = c;
+      if ((target < -1.3 || target > c.n + .3) && !c.busy && c.t !== null) continue;
+      c.t = c.t === null || REDUCED ? target : c.t + (target - c.t) * .14;
+      if (Math.abs(target - c.t) < 1e-3) c.t = target;
+      const step = clamp(Math.floor(target + .4), 0, c.n - 1);
+      if (step !== c.step) { c.step = step; setStep(c); }
+      if (c.busy || c.drawn === null || Math.abs(c.t - c.drawn) > 1e-4) {
+        try { c.draw(clamp(c.t, -1.5, c.n + .5), now); } catch (error) { console.error(error); c.draw = () => {}; }
+        c.drawn = c.t;
+      }
+    }
+    if (here !== current) { current = here; showCrumb(here); }
+    let lit = false;
+    for (const s of sections) {
+      if (s._top <= y + 32 && s._top + s._h > y + 32) { lit = s.classList.contains('paper'); break; }
+    }
+    body.classList.toggle('lit', lit);
+    if (!REDUCED) {
+      const past = y - cover._top;
+      if (past > -innerHeight && past < innerHeight * 1.2) sky.style.transform = `translate3d(0,${(past * .3).toFixed(1)}px,0) scale(1.05)`;
+    }
+    requestAnimationFrame(frame);
+  }
+
+  // Navegación por pasos: botones ‹ › y teclas ← →.
+  function go(direction) {
+    const y = scrollY;
+    const target = direction > 0 ? stops.find(v => v > y + 4) : [...stops].reverse().find(v => v < y - 4);
+    const top = target === undefined ? (direction > 0 ? document.documentElement.scrollHeight : 0) : target;
+    scrollTo({ top, behavior: REDUCED ? 'auto' : 'smooth' });
+  }
+  document.getElementById('prev').addEventListener('click', () => go(-1));
+  document.getElementById('next').addEventListener('click', () => go(1));
+  addEventListener('keydown', e => {
+    if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+    if (e.key === 'ArrowRight') { e.preventDefault(); go(1); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); go(-1); }
+  });
+
+  // Cuestionario.
+  const quiz = [...document.querySelectorAll('.q')];
+  const score = document.querySelector('.score');
+  quiz.forEach(q => {
+    const right = Number(q.dataset.answer), buttons = [...q.querySelectorAll('.opts button')];
+    buttons.forEach((button, j) => button.addEventListener('click', () => {
+      if (q.classList.contains('done')) return;
+      q.classList.add('done');
+      q.dataset.ok = String(j === right);
+      buttons.forEach((b, k) => { b.disabled = true; if (k === right) b.classList.add('right'); });
+      if (j !== right) button.classList.add('wrong');
+      const done = quiz.filter(x => x.classList.contains('done'));
+      if (done.length === quiz.length) {
+        const ok = quiz.filter(x => x.dataset.ok === 'true').length;
+        score.textContent = `Aciertos: ${ok} de ${quiz.length}.` + (ok === quiz.length ? ' Ya tienes los tres mensajes clave.' : ' Las explicaciones están bajo cada pregunta.');
+      }
+    }));
+  });
+
+  // Estado inicial: cada capítulo en su paso 1 y con sus elementos futuros tenues.
+  layout();
+  const start = performance.now();
+  chapters.forEach(c => { c.step = 0; setStep(c); try { c.draw(c.i === 0 ? 0 : -1.5, start); } catch (error) { console.error(error); } });
+  addEventListener('resize', layout, { passive: true });
+  addEventListener('load', layout);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(layout);
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

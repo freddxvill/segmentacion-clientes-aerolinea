@@ -21,41 +21,6 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
-/* CSS for syntax highlighting */
-html { -webkit-text-size-adjust: 100%; }
-pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
-pre > code.sourceCode > span:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode > span { color: inherit; text-decoration: inherit; }
-div.sourceCode { margin: 1em 0; }
-pre.sourceCode { margin: 0; }
-@media screen {
-div.sourceCode { overflow: auto; }
-}
-@media print {
-pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
-}
-pre.numberSource code
-  { counter-reset: source-line 0; }
-pre.numberSource code > span
-  { position: relative; left: -4em; counter-increment: source-line; }
-pre.numberSource code > span > a:first-child::before
-  { content: counter(source-line);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; display: inline-block;
-    -webkit-touch-callout: none; -webkit-user-select: none;
-    -khtml-user-select: none; -moz-user-select: none;
-    -ms-user-select: none; user-select: none;
-    padding: 0 4px; width: 4em;
-  }
-pre.numberSource { margin-left: 3em;  padding-left: 4px; }
-div.sourceCode
-  {   }
-@media screen {
-pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
-}
 </style>
 
 
@@ -77,9 +42,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="site_libs/quarto-html/quarto-syntax-highlighting-e1a5c8363afafaef2c763b6775fbf3ca.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-628db3fb6a0efd94e422bffd96040bf0.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="site_libs/bootstrap/bootstrap-dark-8d74bbc2ee5d6c9226c9607137fb9405.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="site_libs/bootstrap/bootstrap-628db3fb6a0efd94e422bffd96040bf0.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-66877eef761f0ea22bb07511e0e88aad.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-6dbb3941f245be64c78f15ac264a6a39.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-66877eef761f0ea22bb07511e0e88aad.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -298,22 +263,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span class="menu-text">Inicio</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="./01-datos.html"> 
-<span class="menu-text">Datos</span></a>
-  </li>  
-  <li class="nav-item">
-    <a class="nav-link" href="./02-eda.html"> 
-<span class="menu-text">EDA</span></a>
-  </li>  
-  <li class="nav-item">
-    <a class="nav-link" href="./03-lrfmc.html"> 
-<span class="menu-text">LRFMC</span></a>
-  </li>  
-  <li class="nav-item">
-    <a class="nav-link" href="./04-clustering.html"> 
-<span class="menu-text">Clustering</span></a>
-  </li>  
-  <li class="nav-item">
     <a class="nav-link" href="./05-segmentos.html"> 
 <span class="menu-text">Segmentos</span></a>
   </li>  
@@ -321,8 +270,40 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <a class="nav-link active" href="./06-conclusiones.html" aria-current="page"> 
 <span class="menu-text">Conclusiones</span></a>
   </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-cómo-se-hizo" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Cómo se hizo</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-cómo-se-hizo">    
+        <li>
+    <a class="dropdown-item" href="./01-datos.html">
+ <span class="dropdown-text">1 · Datos</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./02-eda.html">
+ <span class="dropdown-text">2 · Exploración de los datos</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./03-lrfmc.html">
+ <span class="dropdown-text">3 · Métricas LRFMC</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./04-clustering.html">
+ <span class="dropdown-text">4 · Modelo de segmentación</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="./glosario.html"> 
+<span class="menu-text">Glosario</span></a>
+  </li>  
 </ul>
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="./resumen.html"> <i class="bi bi-play-circle" role="img">
+</i> 
+<span class="menu-text">Resumen interactivo</span></a>
+  </li>  
   <li class="nav-item compact">
     <a class="nav-link" href="https://github.com/freddxvill/segmentacion-clientes-aerolinea"> <i class="bi bi-github" role="img" aria-label="Código en GitHub">
 </i> 
@@ -349,7 +330,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul class="collapse">
   <li><a href="#plan-de-acción" id="toc-plan-de-acción" class="nav-link" data-scroll-target="#plan-de-acción">Plan de acción</a></li>
   </ul></li>
-  <li><a href="#solidez-del-modelo" id="toc-solidez-del-modelo" class="nav-link" data-scroll-target="#solidez-del-modelo">Solidez del modelo</a></li>
+  <li><a href="#solidez-del-modelo" id="toc-solidez-del-modelo" class="nav-link" data-scroll-target="#solidez-del-modelo">¿Son fiables los segmentos?</a></li>
   <li><a href="#limitaciones" id="toc-limitaciones" class="nav-link" data-scroll-target="#limitaciones">Limitaciones</a></li>
   <li><a href="#próximos-pasos" id="toc-próximos-pasos" class="nav-link" data-scroll-target="#próximos-pasos">Próximos pasos</a></li>
   </ul>
@@ -387,18 +368,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="conclusiones-de-negocio">Conclusiones de negocio</h2>
 <p><strong>1. El valor está muy concentrado y hay que protegerlo.</strong> Los <strong>VIP</strong> son el 21,3 % de los socios y aportan el 55,9 % del ingreso. Vuelan una mediana de 24 veces en dos años y su último vuelo fue hace menos de un mes. Para ellos el descuento no es la palanca: pagan tarifas por encima de la media. Lo que funciona es el reconocimiento (upgrades, prioridad, atención dedicada) y una <strong>alerta temprana</strong> cuando un VIP deja de volar.</p>
 <p><strong>2. El crecimiento está en los socios recientes.</strong> Los <strong>Nuevos con potencial</strong> son el segmento más grande (23,1 %), llevan una mediana de 24 meses en el programa y ya vuelan más que la media. Son el grupo con mejor tendencia de ingreso (mediana 0,16): un <em>fast track</em> de nivel puede convertir una parte en VIP.</p>
-<p><strong>3. Hay que reactivar a dos grupos, con acciones distintas.</strong> <strong>En riesgo de abandono</strong> (19,4 %) y <strong>Cazadores de ofertas</strong> (14,4 %) llevan meses sin volar (medianas de 11,5 y 8,7 meses). Pero los primeros pagaban tarifas casi completas (C = 0,82) y el 61 % tiene una caída fuerte de ingreso: se recuperan con servicio y flexibilidad, no con precio. Los segundos compran con mucho descuento (C = 0,50): las ofertas los reactivan, pero conviene limitarlas a temporada baja para no erosionar el margen.</p>
+<p><strong>3. Hay que reactivar a dos grupos, con acciones distintas.</strong> <strong>En riesgo de abandono</strong> (19,4 %) y <strong>Cazadores de ofertas</strong> (14,4 %) llevan meses sin volar (<a href="./glosario.html#mediana" class="term" data-def="El valor del medio: la mitad de los socios está por encima y la otra mitad por debajo. A diferencia de la media, no se deja arrastrar por unos pocos valores extremos." data-term="Mediana">medianas</a> de 11,5 y 8,7 meses). Pero los primeros pagaban tarifas casi completas (de media, el 82 % de la tarifa completa) y el 61 % tiene una caída fuerte de ingreso: se recuperan con servicio y flexibilidad, no con precio. Los segundos compran con mucho descuento (pagan de media el 50 % de la tarifa): las ofertas los reactivan, pero conviene limitarlas a temporada baja para no erosionar el margen.</p>
 <p><strong>4. Los Veteranos ocasionales son fieles, pero de baja frecuencia.</strong> Llevan una mediana de 74 meses en el programa y siguen volando, poco (6 vuelos). No necesitan reactivación sino recordatorios oportunos: campañas de ocio en sus fechas habituales y canjes fáciles de sus puntos.</p>
-<p><strong>5. Los segmentos son de comportamiento, no de demografía.</strong> Edad y género apenas difieren entre segmentos (efectos pequeños), mientras que el ingreso sí (ε² = 0,67, efecto grande). Segmentar por datos demográficos habría dejado fuera lo que de verdad separa a los socios.</p>
+<p><strong>5. Los segmentos son de comportamiento, no de demografía.</strong> Edad y género apenas difieren entre segmentos, mientras que el ingreso sí: el segmento explica el 67 % de las diferencias de ingreso entre socios (un <a href="./glosario.html#tamano-efecto" class="term" data-def="Mide cuánto difieren los segmentos, no solo si difieren. Se etiqueta como pequeño, mediano o grande según umbrales habituales en estadística." data-term="Tamaño del efecto">efecto</a> grande). Segmentar por datos demográficos habría dejado fuera lo que de verdad separa a los socios.</p>
 <section id="plan-de-acción" class="level3">
 <h3 class="anchored" data-anchor-id="plan-de-acción">Plan de acción</h3>
 <div class="cell" data-execution_count="2">
-<details class="code-fold">
-<summary>Ver código</summary>
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>plan <span class="op">=</span> pd.DataFrame(recommendations_table())</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>plan.columns <span class="op">=</span> [<span class="st">"Segmento"</span>, <span class="st">"Acción"</span>, <span class="st">"KPI"</span>]</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>plan.style.hide(axis<span class="op">=</span><span class="st">"index"</span>).set_properties(<span class="op">**</span>{<span class="st">"text-align"</span>: <span class="st">"left"</span>})</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 <div id="tbl-plan" class="cell quarto-float quarto-figure quarto-figure-center anchored" data-execution_count="2">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-plan-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -407,79 +382,79 @@ Tabla&nbsp;1: Acciones recomendadas por segmento y KPI con el que medir cada una
 <div aria-describedby="tbl-plan-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <div class="cell-output cell-output-display" data-execution_count="2">
 <style type="text/css">
-#T_d81c9_row0_col0, #T_d81c9_row0_col1, #T_d81c9_row0_col2, #T_d81c9_row1_col0, #T_d81c9_row1_col1, #T_d81c9_row1_col2, #T_d81c9_row2_col0, #T_d81c9_row2_col1, #T_d81c9_row2_col2, #T_d81c9_row3_col0, #T_d81c9_row3_col1, #T_d81c9_row3_col2, #T_d81c9_row4_col0, #T_d81c9_row4_col1, #T_d81c9_row4_col2, #T_d81c9_row5_col0, #T_d81c9_row5_col1, #T_d81c9_row5_col2, #T_d81c9_row6_col0, #T_d81c9_row6_col1, #T_d81c9_row6_col2, #T_d81c9_row7_col0, #T_d81c9_row7_col1, #T_d81c9_row7_col2, #T_d81c9_row8_col0, #T_d81c9_row8_col1, #T_d81c9_row8_col2, #T_d81c9_row9_col0, #T_d81c9_row9_col1, #T_d81c9_row9_col2, #T_d81c9_row10_col0, #T_d81c9_row10_col1, #T_d81c9_row10_col2, #T_d81c9_row11_col0, #T_d81c9_row11_col1, #T_d81c9_row11_col2 {
+#T_9ecb3_row0_col0, #T_9ecb3_row0_col1, #T_9ecb3_row0_col2, #T_9ecb3_row1_col0, #T_9ecb3_row1_col1, #T_9ecb3_row1_col2, #T_9ecb3_row2_col0, #T_9ecb3_row2_col1, #T_9ecb3_row2_col2, #T_9ecb3_row3_col0, #T_9ecb3_row3_col1, #T_9ecb3_row3_col2, #T_9ecb3_row4_col0, #T_9ecb3_row4_col1, #T_9ecb3_row4_col2, #T_9ecb3_row5_col0, #T_9ecb3_row5_col1, #T_9ecb3_row5_col2, #T_9ecb3_row6_col0, #T_9ecb3_row6_col1, #T_9ecb3_row6_col2, #T_9ecb3_row7_col0, #T_9ecb3_row7_col1, #T_9ecb3_row7_col2, #T_9ecb3_row8_col0, #T_9ecb3_row8_col1, #T_9ecb3_row8_col2, #T_9ecb3_row9_col0, #T_9ecb3_row9_col1, #T_9ecb3_row9_col2, #T_9ecb3_row10_col0, #T_9ecb3_row10_col1, #T_9ecb3_row10_col2, #T_9ecb3_row11_col0, #T_9ecb3_row11_col1, #T_9ecb3_row11_col2 {
   text-align: left;
 }
 </style>
 
-<table id="T_d81c9" class="do-not-create-environment cell caption-top table table-sm table-striped small" data-quarto-postprocess="true">
+<table id="T_9ecb3" class="do-not-create-environment cell caption-top table table-sm table-striped small" data-quarto-postprocess="true">
 <thead>
 <tr class="header">
-<th id="T_d81c9_level0_col0" class="col_heading level0 col0" data-quarto-table-cell-role="th">Segmento</th>
-<th id="T_d81c9_level0_col1" class="col_heading level0 col1" data-quarto-table-cell-role="th">Acción</th>
-<th id="T_d81c9_level0_col2" class="col_heading level0 col2" data-quarto-table-cell-role="th">KPI</th>
+<th id="T_9ecb3_level0_col0" class="col_heading level0 col0" data-quarto-table-cell-role="th">Segmento</th>
+<th id="T_9ecb3_level0_col1" class="col_heading level0 col1" data-quarto-table-cell-role="th">Acción</th>
+<th id="T_9ecb3_level0_col2" class="col_heading level0 col2" data-quarto-table-cell-role="th">KPI</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td id="T_d81c9_row0_col0" class="data row0 col0">VIP</td>
-<td id="T_d81c9_row0_col1" class="data row0 col1">Reconocimiento sin descuento: upgrades, sala VIP y embarque prioritario en sus rutas habituales.</td>
-<td id="T_d81c9_row0_col2" class="data row0 col2">Tasa de retención a 12 meses y vuelos por socio frente a un grupo de control.</td>
+<td id="T_9ecb3_row0_col0" class="data row0 col0">VIP</td>
+<td id="T_9ecb3_row0_col1" class="data row0 col1">Reconocimiento sin descuento: upgrades, sala VIP y embarque prioritario en sus rutas habituales.</td>
+<td id="T_9ecb3_row0_col2" class="data row0 col2">Tasa de retención a 12 meses y vuelos por socio frente a un grupo de control.</td>
 </tr>
 <tr class="even">
-<td id="T_d81c9_row1_col0" class="data row1 col0">VIP</td>
-<td id="T_d81c9_row1_col1" class="data row1 col1">Acceso anticipado a ventas y un canal de atención dedicado.</td>
-<td id="T_d81c9_row1_col2" class="data row1 col2">NPS del segmento y reclamaciones por cada 1.000 vuelos.</td>
+<td id="T_9ecb3_row1_col0" class="data row1 col0">VIP</td>
+<td id="T_9ecb3_row1_col1" class="data row1 col1">Acceso anticipado a ventas y un canal de atención dedicado.</td>
+<td id="T_9ecb3_row1_col2" class="data row1 col2">NPS del segmento y reclamaciones por cada 1.000 vuelos.</td>
 </tr>
 <tr class="odd">
-<td id="T_d81c9_row2_col0" class="data row2 col0">VIP</td>
-<td id="T_d81c9_row2_col1" class="data row2 col1">Alerta temprana cuando un VIP pasa más de 3 meses sin volar, con contacto personal.</td>
-<td id="T_d81c9_row2_col2" class="data row2 col2">% de VIP que pasan al segmento «En riesgo de abandono» en el trimestre.</td>
+<td id="T_9ecb3_row2_col0" class="data row2 col0">VIP</td>
+<td id="T_9ecb3_row2_col1" class="data row2 col1">Alerta temprana cuando un VIP pasa más de 3 meses sin volar, con contacto personal.</td>
+<td id="T_9ecb3_row2_col2" class="data row2 col2">% de VIP que pasan al segmento «En riesgo de abandono» en el trimestre.</td>
 </tr>
 <tr class="even">
-<td id="T_d81c9_row3_col0" class="data row3 col0">Nuevos con potencial</td>
-<td id="T_d81c9_row3_col1" class="data row3 col1">Fast track de nivel: millas bonus al alcanzar un número de vuelos en los primeros 6 meses.</td>
-<td id="T_d81c9_row3_col2" class="data row3 col2">% de socios que suben de nivel (FFP_TIER) en 12 meses.</td>
+<td id="T_9ecb3_row3_col0" class="data row3 col0">Nuevos con potencial</td>
+<td id="T_9ecb3_row3_col1" class="data row3 col1">Fast track de nivel: millas bonus al alcanzar un número de vuelos en los primeros 6 meses.</td>
+<td id="T_9ecb3_row3_col2" class="data row3 col2">% de socios que suben de nivel (FFP_TIER) en 12 meses.</td>
 </tr>
 <tr class="odd">
-<td id="T_d81c9_row4_col0" class="data row4 col0">Nuevos con potencial</td>
-<td id="T_d81c9_row4_col1" class="data row4 col1">Bono por vuelo adicional y ofertas de rutas nuevas desde su ciudad.</td>
-<td id="T_d81c9_row4_col2" class="data row4 col2">Vuelos por socio y % que pasa a «VIP» frente a un grupo de control.</td>
+<td id="T_9ecb3_row4_col0" class="data row4 col0">Nuevos con potencial</td>
+<td id="T_9ecb3_row4_col1" class="data row4 col1">Bono por vuelo adicional y ofertas de rutas nuevas desde su ciudad.</td>
+<td id="T_9ecb3_row4_col2" class="data row4 col2">Vuelos por socio y % que pasa a «VIP» frente a un grupo de control.</td>
 </tr>
 <tr class="even">
-<td id="T_d81c9_row5_col0" class="data row5 col0">Veteranos ocasionales</td>
-<td id="T_d81c9_row5_col1" class="data row5 col1">Campañas de ocio y temporada alineadas con sus fechas habituales de viaje.</td>
-<td id="T_d81c9_row5_col2" class="data row5 col2">Vuelos por socio al año y tasa de conversión de la campaña.</td>
+<td id="T_9ecb3_row5_col0" class="data row5 col0">Veteranos ocasionales</td>
+<td id="T_9ecb3_row5_col1" class="data row5 col1">Campañas de ocio y temporada alineadas con sus fechas habituales de viaje.</td>
+<td id="T_9ecb3_row5_col2" class="data row5 col2">Vuelos por socio al año y tasa de conversión de la campaña.</td>
 </tr>
 <tr class="odd">
-<td id="T_d81c9_row6_col0" class="data row6 col0">Veteranos ocasionales</td>
-<td id="T_d81c9_row6_col1" class="data row6 col1">Recordatorio de los puntos acumulados y canjes fáciles para mantener el vínculo.</td>
-<td id="T_d81c9_row6_col2" class="data row6 col2">Tasa de canje y recencia media del segmento.</td>
+<td id="T_9ecb3_row6_col0" class="data row6 col0">Veteranos ocasionales</td>
+<td id="T_9ecb3_row6_col1" class="data row6 col1">Recordatorio de los puntos acumulados y canjes fáciles para mantener el vínculo.</td>
+<td id="T_9ecb3_row6_col2" class="data row6 col2">Tasa de canje y recencia media del segmento.</td>
 </tr>
 <tr class="even">
-<td id="T_d81c9_row7_col0" class="data row7 col0">En riesgo de abandono</td>
-<td id="T_d81c9_row7_col1" class="data row7 col1">Win-back con millas extra de caducidad corta (por ejemplo, 90 días).</td>
-<td id="T_d81c9_row7_col2" class="data row7 col2">% de socios reactivados (al menos un vuelo) en 90 días.</td>
+<td id="T_9ecb3_row7_col0" class="data row7 col0">En riesgo de abandono</td>
+<td id="T_9ecb3_row7_col1" class="data row7 col1">Win-back con millas extra de caducidad corta (por ejemplo, 90 días).</td>
+<td id="T_9ecb3_row7_col2" class="data row7 col2">% de socios reactivados (al menos un vuelo) en 90 días.</td>
 </tr>
 <tr class="odd">
-<td id="T_d81c9_row8_col0" class="data row8 col0">En riesgo de abandono</td>
-<td id="T_d81c9_row8_col1" class="data row8 col1">Encuesta breve de satisfacción y contacto de servicio al cliente.</td>
-<td id="T_d81c9_row8_col2" class="data row8 col2">Tasa de respuesta y distribución de los motivos de abandono.</td>
+<td id="T_9ecb3_row8_col0" class="data row8 col0">En riesgo de abandono</td>
+<td id="T_9ecb3_row8_col1" class="data row8 col1">Encuesta breve de satisfacción y contacto de servicio al cliente.</td>
+<td id="T_9ecb3_row8_col2" class="data row8 col2">Tasa de respuesta y distribución de los motivos de abandono.</td>
 </tr>
 <tr class="even">
-<td id="T_d81c9_row9_col0" class="data row9 col0">En riesgo de abandono</td>
-<td id="T_d81c9_row9_col1" class="data row9 col1">Ofrecer upgrades o flexibilidad en lugar de descuentos: pagaban tarifas casi completas.</td>
-<td id="T_d81c9_row9_col2" class="data row9 col2">Ingreso recuperado por socio contactado frente a un grupo de control.</td>
+<td id="T_9ecb3_row9_col0" class="data row9 col0">En riesgo de abandono</td>
+<td id="T_9ecb3_row9_col1" class="data row9 col1">Ofrecer upgrades o flexibilidad en lugar de descuentos: pagaban tarifas casi completas.</td>
+<td id="T_9ecb3_row9_col2" class="data row9 col2">Ingreso recuperado por socio contactado frente a un grupo de control.</td>
 </tr>
 <tr class="odd">
-<td id="T_d81c9_row10_col0" class="data row10 col0">Cazadores de ofertas</td>
-<td id="T_d81c9_row10_col1" class="data row10 col1">Alertas de tarifas promocionales en sus rutas habituales, solo en temporada baja.</td>
-<td id="T_d81c9_row10_col2" class="data row10 col2">Tasa de reactivación en 90 días e ingreso por km de los vuelos reactivados.</td>
+<td id="T_9ecb3_row10_col0" class="data row10 col0">Cazadores de ofertas</td>
+<td id="T_9ecb3_row10_col1" class="data row10 col1">Alertas de tarifas promocionales en sus rutas habituales, solo en temporada baja.</td>
+<td id="T_9ecb3_row10_col2" class="data row10 col2">Tasa de reactivación en 90 días e ingreso por km de los vuelos reactivados.</td>
 </tr>
 <tr class="even">
-<td id="T_d81c9_row11_col0" class="data row11 col0">Cazadores de ofertas</td>
-<td id="T_d81c9_row11_col1" class="data row11 col1">Paquetes (vuelo + servicios) en lugar de descuentos generales sobre la tarifa.</td>
-<td id="T_d81c9_row11_col2" class="data row11 col2">Margen por pasajero frente a una promoción de descuento directo.</td>
+<td id="T_9ecb3_row11_col0" class="data row11 col0">Cazadores de ofertas</td>
+<td id="T_9ecb3_row11_col1" class="data row11 col1">Paquetes (vuelo + servicios) en lugar de descuentos generales sobre la tarifa.</td>
+<td id="T_9ecb3_row11_col2" class="data row11 col2">Margen por pasajero frente a una promoción de descuento directo.</td>
 </tr>
 </tbody>
 </table>
@@ -488,16 +463,16 @@ Tabla&nbsp;1: Acciones recomendadas por segmento y KPI con el que medir cada una
 </figure>
 </div>
 </div>
-<p>Cada acción es una <strong>hipótesis</strong>: debería lanzarse como experimento, con un grupo de control dentro del segmento, y medirse con su KPI antes de extenderla.</p>
+<p>Cada acción es una <strong>hipótesis</strong>: debería lanzarse como experimento, con un <a href="./glosario.html#grupo-control" class="term" data-def="Parte de los clientes que, a propósito, no recibe una acción. Comparar sus resultados con los de quienes sí la recibieron mide el efecto real de la acción." data-term="Grupo de control y experimento A/B">grupo de control</a> dentro del segmento, y medirse con su <a href="./glosario.html#kpi" class="term" data-def="Indicador clave de desempeño (Key Performance Indicator): la cifra concreta con la que se mide si una acción funciona, por ejemplo la tasa de reactivación o el ingreso por socio." data-term="KPI">KPI</a> antes de extenderla.</p>
 </section>
 </section>
 <section id="solidez-del-modelo" class="level2">
-<h2 class="anchored" data-anchor-id="solidez-del-modelo">Solidez del modelo</h2>
+<h2 class="anchored" data-anchor-id="solidez-del-modelo">¿Son fiables los segmentos?</h2>
 <ul>
-<li><strong>Reproducible.</strong> Con 10 semillas distintas, el ARI medio es 0,98 (mínimo 0,96), y con submuestras del 80 % de los socios, 0,97. El criterio principal del proyecto (ARI ≥ 0,90) se cumple con holgura.</li>
-<li><strong>Separación moderada, como es de esperar.</strong> El silhouette es 0,21, por encima del umbral de 0,20. El comportamiento de los clientes es un continuo, no grupos aislados: los segmentos son una partición útil de ese continuo.</li>
-<li><strong>Mejor que las alternativas.</strong> K-Means supera en silhouette a GMM, Ward y al <em>baseline</em> por quintiles (máximo de los tres: 0,14). DBSCAN encuentra un único grupo denso más un 1,2 % de socios atípicos, lo que confirma que no hay grupos naturales separados.</li>
-<li><strong>Nombres robustos.</strong> La asignación de nombres no cambia en el 100 % de 500 perturbaciones de los pesos de las reglas.</li>
+<li><strong>Reproducibles.</strong> Repetir el análisis con 10 puntos de partida distintos (<a href="./glosario.html#semilla" class="term" data-def="Número que fija el punto de partida de un proceso con azar, como la colocación inicial de los centros de K-Means. Con la misma semilla, el resultado se repite exactamente." data-term="Semilla aleatoria">semillas</a>) da prácticamente los mismos segmentos: el índice de coincidencia (<a href="./glosario.html#ari" class="term" data-def="Mide de 0 a 1 cuánto coinciden dos formas de agrupar a los mismos socios: 1 = idénticas, 0 = coincidencia al azar. En este proyecto, por encima de 0,9 se considera estable." data-term="ARI (Adjusted Rand Index)">ARI</a>) es de 0,98 sobre un máximo de 1 (mínimo 0,96). Entrenando solo con el 80 % de los socios, elegido al azar, es de 0,97. El criterio principal del proyecto (≥ 0,90) se cumple con holgura.</li>
+<li><strong>Separación moderada, como es de esperar.</strong> El <a href="./glosario.html#silhouette" class="term" data-def="Mide de −1 a 1 si cada socio está más cerca de su propio grupo que del grupo vecino: cerca de 1 = grupos bien separados, 0 = socio en la frontera, negativo = quizá encajaría mejor en otro grupo." data-term="Silhouette (coeficiente de silueta)">silhouette</a> es 0,21, por encima del mínimo exigido de 0,20. Los clientes no forman grupos aislados, sino un continuo de comportamientos: los segmentos son una partición útil de ese continuo, con socios a medio camino en las fronteras.</li>
+<li><strong>Mejor que las alternativas.</strong> K-Means separa mejor que <a href="./glosario.html#gmm" class="term" data-def="Algoritmo de agrupación que supone que cada grupo tiene forma de nube elíptica y da a cada socio una probabilidad de pertenecer a cada grupo, en lugar de una asignación tajante." data-term="GMM (mezcla de gaussianas)">GMM</a>, <a href="./glosario.html#ward" class="term" data-def="Algoritmo que empieza con cada socio como un grupo propio y va uniendo, paso a paso, los dos grupos más parecidos hasta quedarse con el número deseado." data-term="Ward (clustering jerárquico)">Ward</a> y una segmentación por reglas de hoja de cálculo (<a href="./glosario.html#baseline" class="term" data-def="Segmentación de referencia sin algoritmos: cada métrica se puntúa de 1 a 5 según el quintil del socio y se aplican reglas fijas (Campeones, Leales, En riesgo…). Es lo que haría un equipo con una hoja de cálculo." data-term="Baseline por quintiles">quintiles</a>): el mejor silhouette de los tres es 0,14. <a href="./glosario.html#dbscan" class="term" data-def="Algoritmo que forma grupos con las zonas donde los socios están muy juntos y deja fuera, como «ruido», a los socios aislados. No necesita que se le diga cuántos grupos buscar." data-term="DBSCAN">DBSCAN</a> encuentra un único grupo denso más un 1,2 % de socios <a href="./glosario.html#atipico" class="term" data-def="Cliente con una combinación de métricas poco común, lejos del resto. No forma un segmento propio, pero conviene revisarlo antes de incluirlo en campañas masivas." data-term="Atípico (outlier)">atípicos</a>, lo que confirma que no hay grupos naturales separados.</li>
+<li><strong>Nombres robustos.</strong> Al cambiar al azar los pesos de las reglas de nombres, la asignación no cambia en el 100 % de 500 pruebas.</li>
 </ul>
 </section>
 <section id="limitaciones" class="level2">
@@ -521,9 +496,9 @@ Procedencia del dataset
 <li>Los hábitos de viaje cambiaron mucho después (por ejemplo, con la pandemia), así que los tamaños de los segmentos no son extrapolables a hoy; el método sí.</li>
 </ol></li>
 <li><strong>Una sola foto.</strong> Hay una fecha de corte para todos los socios: no se puede ver cómo se mueven entre segmentos con el tiempo, ni validar que «En riesgo de abandono» abandone de verdad.</li>
-<li><strong>Ingreso sin moneda ni margen.</strong> <code>SUM_YR_1</code> y <code>SUM_YR_2</code> son ingresos por tarifas en una moneda no documentada y sin costes: sirven para comparar segmentos, no para estimar rentabilidad.</li>
+<li><strong>Ingreso sin moneda ni margen.</strong> Los ingresos de los dos años (<code>SUM_YR_1</code> y <code>SUM_YR_2</code>) son ingresos por tarifas, en una moneda no documentada y sin descontar costes: sirven para comparar segmentos, no para estimar rentabilidad.</li>
 <li><strong>Sesgos de la limpieza.</strong> Se excluyeron 944 socios (1,5 %), entre ellos 255 que solo volaron con canjes de puntos: ese comportamiento queda fuera de la segmentación.</li>
-<li><strong>Sesgo de la partición de Kaggle.</strong> El archivo de test de la competición solo tiene socios con 2 a 10 vuelos; por eso se usan train y test juntos. Usar solo uno sesgaría los segmentos.</li>
+<li><strong>Sesgo de la partición de Kaggle.</strong> Kaggle reparte los datos en dos archivos (<em>train</em> y <em>test</em>), y el segundo solo tiene socios con 2 a 10 vuelos. Por eso se usan los dos juntos: usar solo uno sesgaría los segmentos.</li>
 <li><strong>Variables limitadas.</strong> No hay rutas, clase de cabina, canal de compra ni motivo del viaje (ocio o negocio), que afinarían los perfiles y las recomendaciones.</li>
 <li><strong>Recomendaciones sin validar.</strong> Las acciones salen del perfil de cada segmento, no de experimentos: su efecto real está por medir.</li>
 </ul>
@@ -531,9 +506,9 @@ Procedencia del dataset
 <section id="próximos-pasos" class="level2">
 <h2 class="anchored" data-anchor-id="próximos-pasos">Próximos pasos</h2>
 <ol type="1">
-<li><strong>Probar las acciones</strong> con experimentos A/B por segmento y los KPIs del plan de acción.</li>
+<li><strong>Probar las acciones</strong> con <a href="./glosario.html#grupo-control" class="term" data-def="Parte de los clientes que, a propósito, no recibe una acción. Comparar sus resultados con los de quienes sí la recibieron mide el efecto real de la acción." data-term="Grupo de control y experimento A/B">experimentos A/B</a> por segmento y los KPIs del plan de acción.</li>
 <li><strong>Re-segmentar periódicamente</strong> (por ejemplo, cada trimestre) y seguir las transiciones entre segmentos, sobre todo de VIP a En riesgo de abandono.</li>
-<li><strong>Añadir un modelo de abandono</strong> supervisado cuando haya datos de varios periodos, para priorizar a quién contactar dentro de cada segmento.</li>
+<li><strong>Añadir un modelo que prediga el abandono</strong> cuando haya datos de varios periodos, para priorizar a quién contactar dentro de cada segmento.</li>
 <li><strong>Enriquecer los datos</strong> con rutas, clase y canal, y estimar el margen por socio en lugar del ingreso bruto.</li>
 </ol>
 
@@ -542,10 +517,50 @@ Procedencia del dataset
 
 </main> <!-- /main -->
 <script>
-  // Los gráficos Altair con width="container" que están en una pestaña oculta se dibujan con
-  // ancho 0. vega-embed recalcula el ancho con el evento "resize" de la ventana, así que se lanza
-  // uno cada vez que se muestra una pestaña.
-  document.addEventListener("shown.bs.tab", () => window.dispatchEvent(new Event("resize")));
+  // Los gráficos Altair con width="container" que están en una pestaña oculta o en un bloque
+  // plegado se dibujan con ancho 0. vega-embed recalcula el ancho con el evento "resize" de la
+  // ventana, así que se lanza uno cada vez que se muestra una pestaña o se despliega un bloque.
+  for (const shown of ["shown.bs.tab", "shown.bs.collapse"]) {
+    document.addEventListener(shown, () => window.dispatchEvent(new Event("resize")));
+  }
+</script>
+<script>
+  // Términos enlazados con el shortcode `term` (a.term): muestran su definición en un tooltip (tippy, que Quarto
+  // ya carga) al pasar el cursor o al enfocarlos con el teclado. En pantallas táctiles el primer
+  // toque abre el tooltip en vez de navegar; el tooltip lleva el enlace a la ficha del glosario.
+  document.addEventListener("DOMContentLoaded", () => {
+    const touch = window.matchMedia("(hover: none)").matches;
+    document.querySelectorAll("a.term").forEach((link) => {
+      if (typeof window.tippy !== "function") {
+        link.title = link.dataset.def;
+        return;
+      }
+      const box = document.createElement("div");
+      box.className = "term-tip";
+      const title = document.createElement("strong");
+      title.textContent = link.dataset.term;
+      const text = document.createElement("p");
+      text.textContent = link.dataset.def;
+      const more = document.createElement("a");
+      more.href = link.href;
+      more.textContent = "Ver en el glosario →";
+      box.append(title, text, more);
+      window.tippy(link, {
+        content: box,
+        theme: "quarto",
+        maxWidth: 340,
+        placement: "top",
+        interactive: true,
+        interactiveBorder: 8,
+        appendTo: () => document.body,
+        trigger: touch ? "click" : "mouseenter focus",
+        delay: touch ? 0 : [150, 0],
+      });
+      if (touch) {
+        link.addEventListener("click", (event) => event.preventDefault());
+      }
+    });
+  });
 </script>
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
